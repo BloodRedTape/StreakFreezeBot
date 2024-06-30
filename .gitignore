@@ -6,3 +6,6 @@ enc
 .vs
 .vscode
 .idea
+
+CMakeUserPresets.json
+CMakeSettings.json
