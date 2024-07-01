@@ -13,3 +13,6 @@
 [submodule "libs/tgbot-cpp"]
 	path = libs/tgbot-cpp
 	url = https://github.com/reo7sp/tgbot-cpp.git
+[submodule "libs/date"]
+	path = libs/date
+	url = https://github.com/HowardHinnant/date.git

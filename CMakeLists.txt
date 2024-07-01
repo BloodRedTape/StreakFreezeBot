@@ -12,13 +12,15 @@ set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF)
 add_subdirectory(libs/cpp-httplib)
 add_subdirectory(libs/json)
 add_subdirectory(libs/tgbot-cpp)
+add_subdirectory(libs/date)
 
 find_package(openssl)
 
 add_executable(StreakFreezeBot
 	"./sources/main.cpp"
 	"./sources/simple_bot.cpp"
-)
+	"./sources/time.cpp"
+ "sources/bot.cpp" "sources/model.cpp")
 
 target_link_libraries(StreakFreezeBot
 	bsl
@@ -27,7 +29,9 @@ target_link_libraries(StreakFreezeBot
 	httplib
 	openssl::openssl
 	TgBot
+	date
 )
 
 target_compile_features(StreakFreezeBot PRIVATE cxx_std_17)
+target_compile_definitions(StreakFreezeBot PRIVATE WITH_ADVANCE_DATE=1)
 
