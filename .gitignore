@@ -2,6 +2,8 @@ out
 build
 enc
 
+run_tree
+
 
 .vs
 .vscode
