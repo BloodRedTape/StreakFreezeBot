@@ -27,9 +27,11 @@ enum class Protection{
 };
 
 struct User {
+    static constexpr size_t InvalidIndex = -1;
 	std::vector<StreakFreeze> Freezes;
 	Date StreakStart = DateUtils::Now();
-    Date LastCommitment = DateUtils::Now();
+    std::vector<Protection> History;
+    std::int64_t NotificationChat = 0;
 
     bool IsCommitedAt(Date date)const;
 
@@ -37,13 +39,15 @@ struct User {
 
     bool IsProtected(Date date)const{ return IsCommitedAt(date) || IsFreezedAt(date); }
     
-    bool IsBurnedOutAt(Date date)const;
-    
     bool HasFreezeAt(Date date)const;
 
-    std::vector<std::pair<Date, Protection>> GatherHistory(Date from, Date to)const;
+    void Protect(Protection prot, Date date);
 
-    std::vector<std::pair<Date, Protection>> GatherHistory()const;
+    std::size_t DateIndexUnsafe(Date date)const;
+
+    std::size_t DateIndex(Date date)const;
+
+    const std::vector<Protection> &HistoryAsOf(Date today);
 };
 
 class StreakDatabase{
@@ -58,6 +62,8 @@ public:
 
 	std::vector<StreakFreeze> AvailableFreezes(std::int64_t user)const;
 
+	std::optional<StreakFreeze> UseFreeze(std::int64_t user, Date date);
+
 	std::optional<StreakFreeze> UseFreeze(std::int64_t user);
 
 	std::int64_t Streak(std::int64_t user)const;
@@ -70,9 +76,17 @@ public:
 
     bool IsFreezedToday(std::int64_t user)const;
 
+    bool IsProtectedToday(std::int64_t user)const;
+
+    bool IsProtected(std::int64_t user, Date date)const;
+
     bool IsStreakBurnedOut(std::int64_t user)const;
 
-    std::vector<std::pair<Date, Protection>> GatherHistory(std::int64_t user)const;
+    const std::vector<Protection> &History(std::int64_t user)const;
+
+    Date StreakStart(std::int64_t user)const;
+
+    void EnsureNotificationChat(std::int64_t user, std::int64_t chat);
 
     const std::unordered_map<std::int64_t, User> &Users()const{ return m_Users; }
 
@@ -103,11 +117,13 @@ inline void to_json(nlohmann::json& j, const User& user) {
         {"Freezes", user.Freezes}
     };
     to_json(j["StreakStart"], user.StreakStart);
-    to_json(j["LastCommitment"], user.LastCommitment);
+    to_json(j["History"], user.History);
+    to_json(j["NotificationChat"], user.NotificationChat);
 }
 
 inline void from_json(const nlohmann::json& j, User& user) {
     j.at("Freezes").get_to(user.Freezes);
     from_json(j["StreakStart"], user.StreakStart);
-    from_json(j["LastCommitment"], user.LastCommitment);
+    from_json(j["History"], user.History);
+    from_json(j["NotificationChat"], user.NotificationChat);
 }

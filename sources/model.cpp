@@ -13,51 +13,48 @@ bool StreakFreeze::CanBeUsedAt(Date date) const{
 }
 
 bool User::IsCommitedAt(Date date)const {
-	return !IsFreezedAt(date) && date <= LastCommitment;
+	auto idx = DateIndex(date);
+
+	if(idx == InvalidIndex || idx >= History.size())
+		return false;
+
+	return History[idx] == Protection::Commit;
 }
 
 bool User::IsFreezedAt(Date date)const {
-	for (auto freeze : Freezes) {
-		if(freeze.UsedAt.has_value() && freeze.UsedAt.value() == date)
-			return true;
-	}
+	auto idx = DateIndex(date);
 
-	return false;
+	if(idx == InvalidIndex || idx >= History.size())
+		return false;
+
+	return History[idx] == Protection::Freeze;
 }
 
-bool User::IsBurnedOutAt(Date date)const {
-	auto history = GatherHistory(StreakStart, date);
+std::size_t User::DateIndex(Date date)const {
+	if(date < StreakStart)
+		return InvalidIndex;
 
-	if(history.size())
-		history.pop_back();
+	return (date::sys_days(date) - date::sys_days(StreakStart)).count();
+}
+
+void User::Protect(Protection prot, Date date) {
+	auto idx = DateIndex(date);
+
+	assert(idx == History.size());
+
+	History.push_back(prot);
+}
+
+const std::vector<Protection>& User::HistoryAsOf(Date today) {
+	auto idx = DateIndex(today);
+
+	if(idx == User::InvalidIndex)
+		return History;
 	
-	for (auto it = history.rbegin(); it != history.rend(); ++it) {
-		if(it->second == Protection::None)
-			return true;
-	}
+	for(int i = History.size(); i<idx; i++) 
+		Protect(Protection::None, date::sys_days(StreakStart) + date::days(i));
 
-	return false;
-}
-
-std::vector<std::pair<Date, Protection>> User::GatherHistory(Date from, Date to)const {
-	std::vector<std::pair<Date, Protection>> history;
-
-	for (Date date : DateUtils::Range(from, to)) {
-		assert(!(IsFreezedAt(date) && IsCommitedAt(date)));
-
-		if(IsFreezedAt(date))
-			history.emplace_back(date, Protection::Freeze);
-		else if(IsCommitedAt(date))
-			history.emplace_back(date, Protection::Commit);
-		else
-			history.emplace_back(date, Protection::None);
-	}
-
-	return history;
-}
-
-std::vector<std::pair<Date, Protection>> User::GatherHistory()const {
-	return GatherHistory(StreakStart, DateUtils::Now());
+	return History;
 }
 
 StreakDatabase::StreakDatabase(const INIReader& config):
@@ -93,30 +90,34 @@ std::vector<StreakFreeze> StreakDatabase::AvailableFreezes(std::int64_t user) co
 	return result;
 }
 
-std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user){
+std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, Date now){
+	if(IsProtectedToday(user))
+		return std::nullopt;
+
 	auto &freezes = m_Users[user].Freezes;
 	std::sort(freezes.begin(), freezes.end());
 
-	Date now = DateUtils::Now();
-
 	for (auto& freeze : freezes) {
-		if (!freeze.CanBeUsedAt(now))
-			continue;
-		freeze.UsedAt = std::make_optional(now);
-		SaveToFile();
-		return {freeze};
+		if (freeze.CanBeUsedAt(now)) {
+			freeze.UsedAt = std::make_optional(now);
+			m_Users[user].Protect(Protection::Freeze, now);
+			SaveToFile();
+			return {freeze};
+		}
 	}
 
 	return std::nullopt;
 }
 
+std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user){
+	return UseFreeze(user, DateUtils::Now());
+}
+
 std::int64_t StreakDatabase::Streak(std::int64_t user)const {
-	auto history = GatherHistory(user);
-	
 	std::int64_t streak = 0;
 
-	for (auto day : history) {
-		if(day.second == Protection::None)
+	for (auto day : History(user)) {
+		if(day == Protection::None)
 			break;
 
 		streak++;
@@ -127,19 +128,20 @@ std::int64_t StreakDatabase::Streak(std::int64_t user)const {
 
 void StreakDatabase::ResetStreak(std::int64_t user) {
 	m_Users[user].StreakStart = DateUtils::Now();
-	m_Users[user].LastCommitment = (date::sys_days)m_Users[user].StreakStart - date::days(1);
 	m_Users[user].Freezes.clear();
+	m_Users[user].History.clear();
 	SaveToFile();
 }
 
 bool StreakDatabase::Commit(std::int64_t user) {
-	if(IsCommitedToday(user))
+	if(IsProtectedToday(user))
 		return true;
 
 	if(IsStreakBurnedOut(user))
 		return (ResetStreak(user), false); // Streak is burned out, Reset
+	
+	m_Users[user].Protect(Protection::Commit, DateUtils::Now());
 
-	m_Users[user].LastCommitment = DateUtils::Now();
 	SaveToFile();
 
 	return true;
@@ -153,12 +155,35 @@ bool StreakDatabase::IsFreezedToday(std::int64_t user)const {
 	return m_Users[user].IsFreezedAt(DateUtils::Now());
 }
 
-bool StreakDatabase::IsStreakBurnedOut(std::int64_t user)const {
-	return m_Users[user].IsBurnedOutAt(DateUtils::Now());
+bool StreakDatabase::IsProtectedToday(std::int64_t user)const {
+	return IsProtected(user, DateUtils::Now());
+}
+bool StreakDatabase::IsProtected(std::int64_t user, Date date)const {
+	return m_Users[user].IsProtected(date);
 }
 
-std::vector<std::pair<Date, Protection>> StreakDatabase::GatherHistory(std::int64_t user)const {
-	return m_Users[user].GatherHistory();
+bool StreakDatabase::IsStreakBurnedOut(std::int64_t user)const {
+	for (auto day : History(user)) {
+		if(day == Protection::None)
+			return true;
+	}
+	return false;
+}
+
+const std::vector<Protection> &StreakDatabase::History(std::int64_t user)const {
+	return m_Users[user].HistoryAsOf(DateUtils::Now());
+}
+
+Date StreakDatabase::StreakStart(std::int64_t user)const {
+	return m_Users[user].StreakStart;
+}
+
+void StreakDatabase::EnsureNotificationChat(std::int64_t user, std::int64_t chat) {
+	if(m_Users[user].NotificationChat == chat)
+		return;
+
+	m_Users[user].NotificationChat = chat;
+	SaveToFile();
 }
 
 void StreakDatabase::SaveToFile(){

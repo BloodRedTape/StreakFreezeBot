@@ -16,6 +16,11 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	StreakBot(config).LongPoll();
+	StreakBot bot(config);
+
+	while (true) {
+		bot.LongPollIteration();
+		bot.Tick();
+	}
 	return 0;
 }

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <bsl/format.hpp>
 #include <tgbot/Bot.h>
+#include <tgbot/net/TgLongPoll.h>
 
 #undef SendMessage
 
@@ -162,3 +163,11 @@ template<typename Type>
 void SimpleBot::OnMyChatMember(Type* object, void (Type::* handler)(TgBot::ChatMemberUpdated::Ptr)) {
     OnMyChatMember(std::bind(handler, object, std::placeholders::_1));
 }
+
+class SimplePollBot: public SimpleBot{
+    TgBot::TgLongPoll m_Poll;
+public:
+    SimplePollBot(const std::string &token, std::int32_t limit = 100, std::int32_t timeout = 10);
+    
+    void LongPollIteration();
+};

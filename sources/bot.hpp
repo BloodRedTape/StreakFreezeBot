@@ -4,13 +4,16 @@
 #include "simple_bot.hpp"
 #include "model.hpp"
 
-class StreakBot: public SimpleBot{
+class StreakBot: public SimplePollBot{
 	static constexpr const char *SectionName = "Bot";
 	using ThisClass = StreakBot;
 private:
 	StreakDatabase m_DB;
+	Date m_LastDate = DateUtils::Now();
 public:
 	StreakBot(const INIReader &config);
+
+	void Tick();
 
 	void Start(TgBot::Message::Ptr message);
 
@@ -24,7 +27,20 @@ public:
 
 	void Streak(TgBot::Message::Ptr message);
 
+	static bool IsPrivate(TgBot::Message::Ptr message);
+
 	void OnNewDay();
+
+	void OnDayAlmostOver();
+
+	Date Yesterday();
+
+	Date Tomorrow();
+
+	Date AfterTomorrow();
+
+	Date Today();
+
 #if WITH_ADVANCE_DATE	
 	void AdvanceDate(TgBot::Message::Ptr message);
 #endif

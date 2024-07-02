@@ -302,3 +302,13 @@ std::string SimpleBot::ParseCommand(TgBot::Message::Ptr message)
     
     return command;
 }
+
+
+SimplePollBot::SimplePollBot(const std::string &token, std::int32_t limit, std::int32_t timeout):
+    SimpleBot(token),
+    m_Poll(*this, limit, timeout)
+{}
+
+void SimplePollBot::LongPollIteration() {
+    m_Poll.start();
+}
