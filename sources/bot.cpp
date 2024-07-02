@@ -14,7 +14,8 @@ StreakBot::StreakBot(const INIReader& config):
 		100,
 		config.GetInteger(SectionName, "TickPeriodSeconds", 10)
 	),
-	m_DB(config)
+	m_DB(config),
+	m_Logger(config)
 {
 	OnCommand("start", this, &ThisClass::Start);
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze);
@@ -25,6 +26,8 @@ StreakBot::StreakBot(const INIReader& config):
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate);
 #endif
+
+	OnLog(&m_Logger, &Logger::Log);
 }
 
 void StreakBot::Tick() {

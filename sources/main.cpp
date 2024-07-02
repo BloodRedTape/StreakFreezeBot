@@ -18,9 +18,15 @@ int main(int argc, char *argv[]) {
 
 	StreakBot bot(config);
 
-	while (true) {
-		bot.LongPollIteration();
-		bot.Tick();
+	bot.Log("Started");
+
+	try{
+		while (true) {
+			bot.LongPollIteration();
+			bot.Tick();
+		}
+	} catch (const std::exception& e) {
+		bot.Log("Crashed: %", e.what());
 	}
 	return 0;
 }

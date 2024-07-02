@@ -3,11 +3,13 @@
 #include <INIReader.h>
 #include "simple_bot.hpp"
 #include "model.hpp"
+#include "logger.hpp"
 
 class StreakBot: public SimplePollBot{
 	static constexpr const char *SectionName = "Bot";
 	using ThisClass = StreakBot;
 private:
+	TelegramLogger m_Logger;
 	StreakDatabase m_DB;
 	Date m_LastDate = DateUtils::Now();
 public:
