@@ -1,0 +1,22 @@
+name: Deploy-To-Server
+on:
+  workflow_run:
+    workflows: ["CMake-Build-Linux"]
+    types:
+      - completed
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: sudo apt-get install sshpass
+    - name: Actual deploy
+      run: |
+          sshpass -p '${{ secrets.SERVER_PASS }}' ssh -v -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'ENDSSH'
+          echo "Building"
+          cd '${{ secrets.SERVER_DEPLOY_PATH }}'
+          bash streak_build.sh
+          echo "Running"
+          pm2 restart streak
+          ENDSSH
+          
