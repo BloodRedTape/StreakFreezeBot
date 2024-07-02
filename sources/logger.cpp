@@ -14,7 +14,7 @@ bool FileLogger::IsValid() const {
 }
 
 void FileLogger::Log(const std::string& message) {
-    m_LogFile << "[" << CurrentDataAndTime() << "]: " << message << std::endl;
+    m_LogFile << message << std::endl;
 }
 
 RedirectingLogger::RedirectingLogger(std::initializer_list<Logger*> loggers):

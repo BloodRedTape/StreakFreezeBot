@@ -19,8 +19,9 @@ add_executable(StreakFreezeBot
 	"./sources/main.cpp"
 	"./sources/simple_bot.cpp"
 	"./sources/time.cpp"
-	"sources/bot.cpp" 
-	"sources/model.cpp"
+	"./sources/bot.cpp" 
+	"./sources/model.cpp"
+	"./sources/logger.cpp"
 )
 
 target_link_libraries(StreakFreezeBot
