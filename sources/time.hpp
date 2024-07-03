@@ -8,9 +8,13 @@
 using Date = date::year_month_day;
 
 namespace DateUtils{
-extern Date Now();
-extern Date NowImpl();
-extern std::vector<Date> Range(Date from, Date to);
+    extern Date Now();
+
+    extern std::vector<Date> Range(Date from, Date to);
+
+    namespace Debug{
+        extern void AdvanceCurrentDate();
+    }
 }
 
 inline void to_json(nlohmann::json& j, const date::year_month_day& date) {

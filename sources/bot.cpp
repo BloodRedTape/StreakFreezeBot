@@ -198,12 +198,8 @@ Date StreakBot::Today() {
 }
 
 #if WITH_ADVANCE_DATE
-namespace DateUtils{
-extern Date s_Now;
-}
-
 void StreakBot::AdvanceDate(TgBot::Message::Ptr message) {
-	DateUtils::s_Now = (date::sys_days)DateUtils::s_Now + date::days(1);
+	DateUtils::Debug::AdvanceCurrentDate();
 
 	ReplyMessage(message, Format("Advanced date by 1 day: %", DateUtils::Now()));
 }
