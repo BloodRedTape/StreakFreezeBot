@@ -4,30 +4,37 @@
 #include <INIReader.h>
 #include "bot.hpp"
 
-const char *WebPage = (const char*)u8R"(<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Растянутый текст</title>
-</head>
-<body>
-<div class="container">
-    <div class="text">Сиськи</div>
-</div>
-</body>
-</html>
-)";
-
 void ServerMain(const INIReader &config) {
 	static const char *SectionName = "MiniAppHttpServer";
 	using namespace httplib;
 
 	Server server;
+	
+	std::string WebPagePath = config.Get(SectionName, "WebAppHtmlPath", "mini_app/index.html");
 
-	server.Get("/", [](const Request &req, Response &resp) {
+	server.Get("/", [&](const Request &req, Response &resp) {
+		std::string WebPage = ReadEntireFile(WebPagePath);
         resp.status = 200;
 		resp.set_content(WebPage, "text/html");
+	});
+
+	server.Get("/history/:user", [&](const Request& req, Response& resp) {
+		StreakDatabase db(config);
+
+		auto user_id = req.path_params.at("user");
+		//auto chat_id = req.path_params.at("chat");
+
+		if (!user_id.size()) {
+			resp.status = 404;
+			return;
+		}
+
+		std::int64_t user = std::atoll(user_id.c_str());
+
+		auto history = db.History(user);
+
+		resp.status = 200;
+		resp.set_content(nlohmann::json(history).dump(), "application/json");
 	});
 
 	server.listen(
