@@ -46,4 +46,8 @@ public:
 #if WITH_ADVANCE_DATE	
 	void AdvanceDate(TgBot::Message::Ptr message);
 #endif
+
+#if WITH_DAY_ALMOST_OVER
+	void DayAlmostOver(TgBot::Message::Ptr message);
+#endif
 };

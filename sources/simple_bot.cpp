@@ -248,8 +248,9 @@ TgBot::Message::Ptr SimpleBot::EnsureKeyboard(TgBot::Message::Ptr ensurable, std
     return EnsureMessage(ensurable, chat, topic, message, ToInlineKeyboardMarkup(keyboard));
 }
 
-void SimpleBot::OnCommand(const std::string& command, CommandHandler handler){
-    m_CommandHandlers.emplace(command, handler);
+void SimpleBot::OnCommand(const std::string& command, CommandHandler handler, std::string &&description){
+    m_CommandHandlers[command] = std::move(handler);
+    m_CommandDescriptions[command] = std::move(description);
 }
 
 void SimpleBot::BroadcastCommand(const std::string& command, TgBot::Message::Ptr message){
@@ -273,6 +274,18 @@ void SimpleBot::OnCallbackQuery(CallbackQueryHandler handler){
 
 void SimpleBot::OnMyChatMember(ChatMemberStatusHandler chat_member){
     getEvents().onMyChatMember(chat_member);
+}
+
+void SimpleBot::UpdateCommandDescriptions() {
+    std::vector<TgBot::BotCommand::Ptr> commands;
+    for (const auto& [command, descr] : m_CommandDescriptions) {
+        auto bot_command = std::make_shared<TgBot::BotCommand>();
+        bot_command->command = command;
+        bot_command->description = descr;
+        commands.push_back(bot_command);
+    }
+
+    getApi().setMyCommands(commands);
 }
 
 std::string SimpleBot::ParseCommand(TgBot::Message::Ptr message)

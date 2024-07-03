@@ -51,6 +51,7 @@ private:
     LogHandler m_Log;
 
     std::unordered_map<std::string, CommandHandler> m_CommandHandlers;
+    std::unordered_map<std::string, std::string> m_CommandDescriptions;
 
     std::string m_Username;
 public:
@@ -109,10 +110,10 @@ public:
 
     bool AnswerCallbackQuery(const std::string& callbackQueryId, const std::string& text = "");
 
-    void OnCommand(const std::string &command, CommandHandler handler);
+    void OnCommand(const std::string &command, CommandHandler handler, std::string &&description = "");
     
     template<typename Type>
-    void OnCommand(const std::string &command, Type *object, void (Type::*handler)(TgBot::Message::Ptr));
+    void OnCommand(const std::string &command, Type *object, void (Type::*handler)(TgBot::Message::Ptr), std::string &&description = "");
 
     void BroadcastCommand(const std::string &command, TgBot::Message::Ptr message);
 
@@ -131,6 +132,8 @@ public:
     template<typename Type>
     void OnMyChatMember(Type *object, void (Type::*handler)(TgBot::ChatMemberUpdated::Ptr));
 
+    void UpdateCommandDescriptions();
+
     std::string ParseCommand(TgBot::Message::Ptr message);
 };
 
@@ -145,8 +148,8 @@ void SimpleBot::Log(const char* fmt, const ArgsType&...args) {
 }
 
 template<typename Type>
-void SimpleBot::OnCommand(const std::string& command, Type *object, void (Type::* handler)(TgBot::Message::Ptr)) {
-    OnCommand(command, std::bind(handler, object, std::placeholders::_1));
+void SimpleBot::OnCommand(const std::string& command, Type *object, void (Type::* handler)(TgBot::Message::Ptr), std::string &&description) {
+    OnCommand(command, std::bind(handler, object, std::placeholders::_1), std::move(description));
 }
 
 template<typename Type>

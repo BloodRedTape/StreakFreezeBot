@@ -17,16 +17,21 @@ StreakBot::StreakBot(const INIReader& config):
 	m_DB(config),
 	m_Logger(config)
 {
-	OnCommand("start", this, &ThisClass::Start);
-	OnCommand("add_freeze", this, &ThisClass::AddFreeze);
-	OnCommand("use_freeze", this, &ThisClass::UseFreeze);
-	OnCommand("freezes", this, &ThisClass::Freezes);
-	OnCommand("commit", this, &ThisClass::Commit);
-	OnCommand("streak", this, &ThisClass::Streak);
+	OnCommand("start", this, &ThisClass::Start, "Reset streak");
+	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
+	OnCommand("use_freeze", this, &ThisClass::UseFreeze, "Use one freeze from storage");
+	OnCommand("freezes", this, &ThisClass::Freezes, "List available freezes");
+	OnCommand("commit", this, &ThisClass::Commit, "Commit to protect streak");
+	OnCommand("streak", this, &ThisClass::Streak, "Show streak progress");
 #if WITH_ADVANCE_DATE
-	OnCommand("advance_date", this, &ThisClass::AdvanceDate);
+	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
+#endif
+#if WITH_DAY_ALMOST_OVER
+	OnCommand("day_almost_over", this, &ThisClass::DayAlmostOver, "Debug - Trigger DayAlmostOver");
 #endif
 
+	UpdateCommandDescriptions();
+	
 	OnLog(&m_Logger, &Logger::Log);
 }
 
@@ -201,5 +206,11 @@ void StreakBot::AdvanceDate(TgBot::Message::Ptr message) {
 	DateUtils::s_Now = (date::sys_days)DateUtils::s_Now + date::days(1);
 
 	ReplyMessage(message, Format("Advanced date by 1 day: %", DateUtils::Now()));
+}
+#endif
+
+#if WITH_DAY_ALMOST_OVER
+void StreakBot::DayAlmostOver(TgBot::Message::Ptr message) {
+	OnDayAlmostOver();
 }
 #endif
