@@ -106,7 +106,9 @@ inline void from_json(const nlohmann::json& j, StreakFreeze& sf) {
     from_json(j.at("EarnedAt"), sf.EarnedAt);
     from_json(j.at("ExpireAt"),sf.ExpireAt);
     if (j.contains("UsedAt") && !j.at("UsedAt").is_null()) {
-        from_json(j.at("UsedAt"), sf.UsedAt.value());
+        Date used;
+        from_json(j["UsedAt"], used);
+        sf.UsedAt = used;
     } else {
         sf.UsedAt.reset();
     }

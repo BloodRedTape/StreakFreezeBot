@@ -1,5 +1,6 @@
 #include "model.hpp"
 #include <bsl/file.hpp>
+#include <bsl/format.hpp>
 #include <cassert>
 
 bool StreakFreeze::CanBeUsed() const{
@@ -64,7 +65,9 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 {
 	try{
 		m_Users = nlohmann::json::parse(ReadEntireFile(m_Filepath), nullptr, false, true);
-	}catch(...){}
+	}catch(const std::exception &e){
+		Println("Can't parse json at %, because: %", m_Filepath, e.what());
+	}
 }
 
 void StreakDatabase::AddFreeze(std::int64_t user, std::int32_t expire_in_days){
