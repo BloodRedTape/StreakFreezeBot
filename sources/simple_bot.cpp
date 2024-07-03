@@ -111,7 +111,7 @@ TgBot::Message::Ptr SimpleBot::SendMessage(std::int64_t chat, std::int32_t topic
     return SendMessage(chat, topic, message, nullptr, reply_message);
 }
 
-TgBot::Message::Ptr SimpleBot::SendMessage(std::int64_t chat, std::int32_t topic, const std::string& message, TgBot::InlineKeyboardMarkup::Ptr reply, std::int64_t reply_message) {
+TgBot::Message::Ptr SimpleBot::SendMessage(std::int64_t chat, std::int32_t topic, const std::string& message, TgBot::GenericReply::Ptr reply, std::int64_t reply_message) {
     if (!message.size()) {
         Log("Can't send empty messages");
         return nullptr;

@@ -15,7 +15,10 @@ StreakBot::StreakBot(const INIReader& config):
 		config.GetInteger(SectionName, "TickPeriodSeconds", 10)
 	),
 	m_DB(config),
-	m_Logger(config)
+	m_Logger(config),
+	m_WebAppUrl(
+		config.Get(SectionName, "WebAppUrl", "")
+	)
 {
 	OnCommand("start", this, &ThisClass::Start, "Reset streak");
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
@@ -52,8 +55,9 @@ void StreakBot::Tick() {
 void StreakBot::Start(TgBot::Message::Ptr message) {
 	ENSURE_PRIVATE_COMMAND(message, m_DB)
 
+
 	m_DB.ResetStreak(message->from->id);
-	ReplyMessage(message, Format("Started streak"));
+	SetupUserUiWith(message, "Started streak");
 }
 
 void StreakBot::AddFreeze(TgBot::Message::Ptr message) {
@@ -116,7 +120,7 @@ void StreakBot::Freezes(TgBot::Message::Ptr message) {
 
 void StreakBot::Streak(TgBot::Message::Ptr message) {
 	ENSURE_PRIVATE_COMMAND(message, m_DB)
-
+	
 	auto history = m_DB.History(message->from->id);
 
 	std::string text;
@@ -210,3 +214,37 @@ void StreakBot::DayAlmostOver(TgBot::Message::Ptr message) {
 	OnDayAlmostOver();
 }
 #endif
+
+void StreakBot::SetupUserUiWith(TgBot::Message::Ptr source, const std::string& text) {
+	auto web_app = std::make_shared<TgBot::WebAppInfo>();
+	web_app->url = m_WebAppUrl;
+
+	{
+		auto menu_button = std::make_shared<TgBot::MenuButtonWebApp>();
+		menu_button->text = "Streak";
+		menu_button->webApp = web_app;
+
+		getApi().setChatMenuButton(source->chat->id, menu_button);
+	}
+
+	{
+		auto streak_button = std::make_shared<TgBot::KeyboardButton>();
+		streak_button->text = "Streak";
+		streak_button->webApp = web_app;
+
+		auto commit_button = std::make_shared<TgBot::KeyboardButton>();
+		commit_button->text = "/commit";
+
+		auto markup = std::make_shared<TgBot::ReplyKeyboardMarkup>();
+		markup->isPersistent = true;
+		markup->keyboard = {
+			{streak_button}, 
+			{commit_button}
+		};
+
+		if(!text.size())
+			SendMessage(source->chat->id, source->isTopicMessage ? source->messageThreadId : 0, text, markup);
+		else
+			SendMessage(source->chat->id, source->isTopicMessage ? source->messageThreadId : 0, text, markup, source->messageId);
+	}
+}

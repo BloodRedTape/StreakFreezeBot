@@ -78,7 +78,7 @@ public:
     TgBot::Message::Ptr ReplyMessage(TgBot::Message::Ptr source, const std::string& message){return SendMessage(source, message, true); }
 
     //source->isTopicMessage ? source->messageThreadId : 0
-    TgBot::Message::Ptr SendMessage(std::int64_t chat, std::int32_t topic, const std::string& message, TgBot::InlineKeyboardMarkup::Ptr reply, std::int64_t reply_message = 0);
+    TgBot::Message::Ptr SendMessage(std::int64_t chat, std::int32_t topic, const std::string& message, TgBot::GenericReply::Ptr reply, std::int64_t reply_message = 0);
 
     TgBot::Message::Ptr SendKeyboard(std::int64_t chat, std::int32_t topic, const std::string& message, const KeyboardLayout& keyboard, std::int64_t reply_message = 0);
 

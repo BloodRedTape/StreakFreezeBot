@@ -12,6 +12,7 @@ private:
 	TelegramLogger m_Logger;
 	StreakDatabase m_DB;
 	Date m_LastDate = DateUtils::Now();
+	std::string m_WebAppUrl;
 public:
 	StreakBot(const INIReader &config);
 
@@ -50,4 +51,5 @@ public:
 #if WITH_DAY_ALMOST_OVER
 	void DayAlmostOver(TgBot::Message::Ptr message);
 #endif
+	void SetupUserUiWith(TgBot::Message::Ptr source, const std::string &text = "");
 };

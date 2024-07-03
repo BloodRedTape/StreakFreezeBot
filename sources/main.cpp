@@ -4,6 +4,38 @@
 #include <INIReader.h>
 #include "bot.hpp"
 
+const char *WebPage = (const char*)u8R"(<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Растянутый текст</title>
+</head>
+<body>
+<div class="container">
+    <div class="text">Сиськи</div>
+</div>
+</body>
+</html>
+)";
+
+void ServerMain(const INIReader &config) {
+	static const char *SectionName = "MiniAppHttpServer";
+	using namespace httplib;
+
+	Server server;
+
+	server.Get("/", [](const Request &req, Response &resp) {
+        resp.status = 200;
+		resp.set_content(WebPage, "text/html");
+	});
+
+	server.listen(
+		config.Get(SectionName, "Hostname", "localhost"),
+		config.GetInteger(SectionName, "Port", 2024)
+	);
+}
+
 int main(int argc, char *argv[]) {
 
 	std::string config_name = (argc == 2 ? argv[1] : "Config.ini");
@@ -15,6 +47,8 @@ int main(int argc, char *argv[]) {
 		Println("Can't parse config file: %, %", config_name, error);
 		return EXIT_FAILURE;
 	}
+
+	std::thread server_thread(ServerMain, std::ref(config));
 
 	StreakBot bot(config);
 
