@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--tg-theme-secondary-bg-color);
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+  display: inline-block;
+  margin-right: 10px; /* add spacing between items */
+}

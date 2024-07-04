@@ -3,7 +3,8 @@ build
 enc*
 
 run_tree
-
+mini_app_react/node_modules
+mini_app_react/yarn.lock
 
 .vs
 .vscode
