@@ -1,9 +1,11 @@
 import { Banner, List, Text, Breadcrumbs, Divider, Blockquote} from '@xelene/tgui';
 import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
+import { useStreakContext } from '../core/StreakContext';
 import { Calendar } from './Calendar';
 
 export const StreakSection = () => {
-	let streak = 2345;
+	const [streakContext] = useStreakContext()
+
 	let quote = 'There is nothing better than extending your streak!'
 	let month = 'July'
 
@@ -15,7 +17,7 @@ export const StreakSection = () => {
 	return (
 		<Banner header="Streak">
 			<List>
-				<Text weight="3">{ streak } days</Text>
+				<Text weight="3">{ streakContext.Days } days</Text>
 				<br />
 				<br />
 				<Blockquote type="text"> { quote } </Blockquote>

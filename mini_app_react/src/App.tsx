@@ -1,10 +1,12 @@
 import React from 'react';
 
 import { AppRoot } from '@xelene/tgui';
-import { StreakSection } from './components/StreakSection';
+import { RootTabBar } from './RootTabBar';
+
+
 
 export const App = () => (
   <AppRoot>
-    <StreakSection/>
+    <RootTabBar/>
   </AppRoot>
 );
