@@ -15,13 +15,14 @@ enum DayType{
 const GetColorFor = (type: DayType) => {
     switch (type) {
         case DayType.None:
-            return ['red', 'white']
+            return ['white', 'white', ""]
         case DayType.Freeze:
             return ['#4da9fa', 'white', 'https://duoplanet.com/wp-content/uploads/2023/02/Duolingo-streak-freeze-1.png']
         case DayType.Commit:
             return ['#f59842', 'white', 'https://i.redd.it/streak-flame-updated-v0-3n46sx7a0e9b1.png?width=283&format=png&auto=webp&s=74253ccd745fc4cf470e99c589921ce4d83c4d10']
         case DayType.Empty:
-            return ['white', 'white']
+        default:
+            return ['white', 'white', ""]
 	}
 }
 
@@ -29,7 +30,7 @@ const GetColorFor = (type: DayType) => {
 const CalendarDay: React.FC<CalendarDayProps> = ({ day }) => {
     let type: DayType = Math.random() > 0.7 ? DayType.Freeze : DayType.Commit;
 
-    if (day == 0 || day == null)
+    if (day === 0 || day === null)
         type = DayType.Empty;
 
     const [textColor, imageLink] = GetColorFor(type).splice(1)
@@ -67,12 +68,19 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day }) => {
     );
 };
 
-export const Calendar = () => {
+export type CalendarProps = {
+    month: number,
+    year: number
+}
+
+export const Calendar = (props: CalendarProps) => {
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const date = new Date(2024, 8, 0)
+    const date = new Date(props.year, props.month, 0)
 
     const daysInMonth = date.getDate();
-    const startWeekDay = (new Date(date.getFullYear(), date.getMonth(), 1).getDay() - 1) % 7;
+    let startWeekDay = (new Date(date.getFullYear(), date.getMonth(), 1).getDay() - 1) % 7;
+
+    startWeekDay = startWeekDay < 0 ? 0 : startWeekDay
 
     let daysArray = Array(startWeekDay).fill(0).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
 
