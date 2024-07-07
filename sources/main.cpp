@@ -4,20 +4,8 @@
 #include <INIReader.h>
 #include "bot.hpp"
 
-void ServerMain(const INIReader &config) {
-	static const char *SectionName = "MiniAppHttpServer";
-	using namespace httplib;
-
-	Server server;
-	
-	std::string WebPagePath = config.Get(SectionName, "WebAppHtmlPath", "mini_app/index.html");
-
-	server.Get("/", [&](const Request &req, Response &resp) {
-		std::string WebPage = ReadEntireFile(WebPagePath);
-        resp.status = 200;
-		resp.set_content(WebPage, "text/html");
-	});
-
+#if 0	
+void ApiMain(const INIReader& config) {
 	server.Get("/history/:user", [&](const Request& req, Response& resp) {
 		StreakDatabase db(config);
 
@@ -36,6 +24,18 @@ void ServerMain(const INIReader &config) {
 		resp.status = 200;
 		resp.set_content(nlohmann::json(history).dump(), "application/json");
 	});
+}
+#endif
+
+void ServerMain(const INIReader &config) {
+	static const char *SectionName = "MiniAppHttpServer";
+	using namespace httplib;
+
+	Server server;
+	
+	std::string WebAppPath = config.Get(SectionName, "WebAppPath", "");
+
+	server.set_mount_point("/", WebAppPath);
 
 	server.listen(
 		config.Get(SectionName, "Hostname", "localhost"),
