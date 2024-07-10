@@ -189,6 +189,10 @@ void StreakDatabase::EnsureNotificationChat(std::int64_t user, std::int64_t chat
 	SaveToFile();
 }
 
+const User& StreakDatabase::GetUser(std::int64_t user)const {
+	return m_Users[user];
+}
+
 void StreakDatabase::SaveToFile(){
 	WriteEntireFile(m_Filepath, nlohmann::json(m_Users).dump());
 }

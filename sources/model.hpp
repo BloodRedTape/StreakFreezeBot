@@ -88,6 +88,8 @@ public:
 
     void EnsureNotificationChat(std::int64_t user, std::int64_t chat);
 
+    const User &GetUser(std::int64_t user)const;
+
     const std::unordered_map<std::int64_t, User> &Users()const{ return m_Users; }
 
 private:

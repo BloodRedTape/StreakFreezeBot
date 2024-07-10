@@ -57,7 +57,7 @@ export const StreakSection = () => {
 	return (
 		<Banner header="Streak">
 			<List>
-				<Text weight="3">{ userContext.Days } days</Text>
+				<Text weight="3">{ userContext?.Days } days</Text>
 				<br />
 				<br />
 				<Blockquote type="text"> { quote } </Blockquote>

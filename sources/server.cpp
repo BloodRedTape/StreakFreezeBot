@@ -4,7 +4,7 @@
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 
-HttpApiServer::HttpApiServer(const INIReader& config):
+HttpApiServer::HttpApiServer(const INIReader& config, MessageQueue &queue):
 	m_Config(
 		config
 	),
@@ -16,12 +16,16 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	),
 	m_WebAppPath(
 		config.Get(SectionName, "WebAppPath", ".")
-	)
+	),
+	m_Queue(queue)
 {
 	Super::set_mount_point("/", m_WebAppPath);
 	
 	Get("/user/:id", &ThisClass::GetUser);
 	Post("/debug/log", &ThisClass::PostDebugLog);
+	Post("/user/:id/commit",	 &ThisClass::Commit);
+	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
+	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
 }
 
 void HttpApiServer::Run(){
@@ -39,19 +43,48 @@ void HttpApiServer::GetUser(const httplib::Request& req, httplib::Response& resp
 
 	StreakDatabase db(m_Config);
 
-	const auto &users = db.Users();
-
-	if (!users.count(id)) {
-		resp.status = httplib::StatusCode::NotFound_404;
-		return;
-	}
-	
-	const auto &user = users.at(id);
+	const auto &user = db.GetUser(id);
 
 	std::string content = nlohmann::json(user).dump();
 
 	resp.status = httplib::StatusCode::OK_200;
 	resp.set_content(content, "application/json");
+}
+
+void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
+	if (!req.path_params.count("id")) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	const std::string &user_id = req.path_params.at("id");
+	std::int64_t id = std::atoll(user_id.c_str());
+
+	m_Queue.Post(id, "commit");
+}
+
+void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
+	if (!req.path_params.count("id")) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	const std::string &user_id = req.path_params.at("id");
+	std::int64_t id = std::atoll(user_id.c_str());
+
+	m_Queue.Post(id, "use_freeze");
+}
+
+void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& resp) {
+	if (!req.path_params.count("id")) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	const std::string &user_id = req.path_params.at("id");
+	std::int64_t id = std::atoll(user_id.c_str());
+
+	m_Queue.Post(id, "add_freeze");
 }
 
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){

@@ -8,7 +8,7 @@
 // Better way to show available freezes, also add to botfather
 // TeamCity
 
-StreakBot::StreakBot(const INIReader& config):
+StreakBot::StreakBot(const INIReader& config, MessageQueue &queue):
 	SimplePollBot(
 		config.Get(SectionName, "Token", ""),
 		100,
@@ -18,7 +18,8 @@ StreakBot::StreakBot(const INIReader& config):
 	m_Logger(config),
 	m_WebAppUrl(
 		config.Get(SectionName, "WebAppUrl", "")
-	)
+	),
+	m_Queue(queue)
 {
 	OnCommand("start", this, &ThisClass::Start, "Reset streak");
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
@@ -36,6 +37,18 @@ StreakBot::StreakBot(const INIReader& config):
 	UpdateCommandDescriptions();
 	
 	OnLog(&m_Logger, &Logger::Log);
+
+	m_QueueDispatcher.On("add_freeze", [this](auto user, auto data) {
+		m_DB.AddFreeze(user, 4);
+	});
+
+	m_QueueDispatcher.On("use_freeze", [this](auto user, auto data) {
+		m_DB.UseFreeze(user);
+	});
+
+	m_QueueDispatcher.On("commit", [this](auto user, auto data) {
+		m_DB.Commit(user);
+	});
 }
 
 void StreakBot::Tick() {
@@ -45,6 +58,8 @@ void StreakBot::Tick() {
 		m_LastDate = now;
 		OnNewDay();
 	}
+
+	m_QueueDispatcher.Dispatch(m_Queue);
 }
 
 #define ENSURE_PRIVATE_COMMAND(message, db) \

@@ -2,6 +2,7 @@
 
 #include <httplib.h>
 #include <INIReader.h>
+#include "queue.hpp"
 
 class HttpApiServer : public httplib::Server {
 	using Super = httplib::Server;
@@ -15,12 +16,19 @@ private:
 	std::string m_WebAppPath;
 	std::string m_Hostname;
 	int m_Port;
+	MessageQueue &m_Queue;
 public:	
-	HttpApiServer(const INIReader &config);
+	HttpApiServer(const INIReader &config, MessageQueue &queue);
 
 	void Run();
 
 	void GetUser(const httplib::Request &req, httplib::Response &resp);
+
+	void Commit(const httplib::Request &req, httplib::Response &resp);
+
+	void UseFreeze(const httplib::Request &req, httplib::Response &resp);
+
+	void AddFreeze(const httplib::Request &req, httplib::Response &resp);
 	
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
 

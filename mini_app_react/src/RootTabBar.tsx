@@ -1,10 +1,9 @@
 import { Tabbar, List } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CommitSection } from './components/CommitSection';
 import { StreakSection } from './components/StreakSection';
-import { UserContext, ParseUserContextType, UserContextType } from './core/UserContext'
-import { retrieveLaunchParams } from '@telegram-apps/sdk';
+import { FetchUserContext, UserContext, UserContextType } from './core/UserContext'
 
 class Tab {
     public Id: number = 0
@@ -23,24 +22,13 @@ const CurrentTab = (Id: number) => {
     return tabs[Id].Content;
 }
 
-const FetchUserContext = async () => {
-    const launchParams = retrieveLaunchParams();
-
-    const resp = await fetch(window.location.origin + '/user/' + launchParams.initData?.user?.id)
-
-    return ParseUserContextType(await resp.json())
-}
-
 export const RootTabBar = () => {
     const [currentTab, setCurrentTab] = useState(tabs[0].Id);
 
-    const [userContext, setUserContext] = useState<UserContextType>(new UserContextType())
+    const [userContext, setUserContext] = useState<UserContextType | undefined>(undefined)
 
-    useEffect(() => {
-        FetchUserContext().then((value) => {
-            setUserContext(value)
-		})
-	})
+    if (userContext == undefined)
+        FetchUserContext().then(setUserContext);
     
     return (
         <UserContext.Provider value = {[userContext, setUserContext]}>

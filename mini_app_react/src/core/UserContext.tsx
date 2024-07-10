@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { DebugLog } from '../helpers/Debug'
+import { MakeUserRequestLocation } from "../helpers/Requests"
 
 export class StreakFreezeType {
 	public EarnedAt: Date = new Date(0, 0, 0)
@@ -88,7 +89,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 
 
 
-type UserContextPairType = [UserContextType, Dispatch<SetStateAction<UserContextType>>]
+type UserContextPairType = [UserContextType | undefined, Dispatch<SetStateAction<UserContextType | undefined>>]
 
 export const UserContext = React.createContext<UserContextPairType | undefined>(undefined)
 
@@ -99,4 +100,14 @@ export const useUserContext = () => {
 		throw "very sad"
 
 	return ctx
+}
+
+export const useSetUserContext = () => {
+	return useUserContext()[1]
+}
+
+export const FetchUserContext = async () => {
+	const resp = await fetch(MakeUserRequestLocation())
+
+	return ParseUserContextType(await resp.json())
 }
