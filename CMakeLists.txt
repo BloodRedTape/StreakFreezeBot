@@ -22,7 +22,7 @@ add_executable(StreakFreezeBot
 	"./sources/bot.cpp" 
 	"./sources/model.cpp"
 	"./sources/logger.cpp"
-)
+ "sources/server.cpp")
 
 target_link_libraries(StreakFreezeBot
 	bsl

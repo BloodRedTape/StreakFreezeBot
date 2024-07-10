@@ -1,9 +1,10 @@
-import { Tabbar, List} from '@xelene/tgui';
+import { Tabbar, List } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommitSection } from './components/CommitSection';
 import { StreakSection } from './components/StreakSection';
-import { StreakContext, StreakContextType } from './core/StreakContext'
+import { UserContext, ParseUserContextType, UserContextType } from './core/UserContext'
+import { retrieveLaunchParams } from '@telegram-apps/sdk';
 
 class Tab {
     public Id: number = 0
@@ -22,19 +23,33 @@ const CurrentTab = (Id: number) => {
     return tabs[Id].Content;
 }
 
+const FetchUserContext = async () => {
+    const launchParams = retrieveLaunchParams();
+
+    const resp = await fetch(window.location.origin + '/user/' + launchParams.initData?.user?.id)
+
+    return ParseUserContextType(await resp.json())
+}
+
 export const RootTabBar = () => {
     const [currentTab, setCurrentTab] = useState(tabs[0].Id);
 
-    const streakContext = useState<StreakContextType>({Days: 1234})
+    const [userContext, setUserContext] = useState<UserContextType>(new UserContextType())
+
+    useEffect(() => {
+        FetchUserContext().then((value) => {
+            setUserContext(value)
+		})
+	})
     
     return (
-        <StreakContext.Provider value = {streakContext}>
+        <UserContext.Provider value = {[userContext, setUserContext]}>
             <List>
                 {CurrentTab(currentTab)}
                 <Tabbar>
                     {tabs.map(({ Id, Name }) => <Tabbar.Item key={Id} text={Name} selected={Id === currentTab} onClick={() => setCurrentTab(Id)}></Tabbar.Item>)}
                 </Tabbar>
             </List>
-        </StreakContext.Provider>
+        </UserContext.Provider>
     );
 }

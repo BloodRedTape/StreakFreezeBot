@@ -21,9 +21,9 @@ inline bool operator<(const StreakFreeze& lhs, const StreakFreeze& rhs) {
 }
 
 enum class Protection{
+    None,
     Commit,
-    Freeze,
-    None
+    Freeze
 };
 
 struct User {

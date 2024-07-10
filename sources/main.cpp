@@ -1,46 +1,12 @@
 #include <bsl/log.hpp>
 #include <bsl/file.hpp>
-#include <httplib.h>
 #include <INIReader.h>
+#include "server.hpp"
 #include "bot.hpp"
 
-#if 0	
-void ApiMain(const INIReader& config) {
-	server.Get("/history/:user", [&](const Request& req, Response& resp) {
-		StreakDatabase db(config);
-
-		auto user_id = req.path_params.at("user");
-		//auto chat_id = req.path_params.at("chat");
-
-		if (!user_id.size()) {
-			resp.status = 404;
-			return;
-		}
-
-		std::int64_t user = std::atoll(user_id.c_str());
-
-		auto history = db.History(user);
-
-		resp.status = 200;
-		resp.set_content(nlohmann::json(history).dump(), "application/json");
-	});
-}
-#endif
 
 void ServerMain(const INIReader &config) {
-	static const char *SectionName = "MiniAppHttpServer";
-	using namespace httplib;
-
-	Server server;
-	
-	std::string WebAppPath = config.Get(SectionName, "WebAppPath", "");
-
-	server.set_mount_point("/", WebAppPath);
-
-	server.listen(
-		config.Get(SectionName, "Hostname", "localhost"),
-		config.GetInteger(SectionName, "Port", 2024)
-	);
+	HttpApiServer(config).Run();
 }
 
 int main(int argc, char *argv[]) {

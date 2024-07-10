@@ -1,7 +1,7 @@
 import { Banner, List, Text, Breadcrumbs, Divider, Blockquote, IconButton} from '@xelene/tgui';
 import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
 import { useState } from 'react';
-import { useStreakContext } from '../core/StreakContext';
+import { useUserContext } from '../core/UserContext';
 import { Calendar } from './Calendar';
 import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
 import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
@@ -35,7 +35,7 @@ const GetFreezedAt = (date: Date) => {
 }
 
 export const StreakSection = () => {
-	const [streakContext] = useStreakContext()
+	const [userContext] = useUserContext()
 
 	let quote = 'There is nothing better than extending your streak!'
 	const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -57,7 +57,7 @@ export const StreakSection = () => {
 	return (
 		<Banner header="Streak">
 			<List>
-				<Text weight="3">{ streakContext.Days } days</Text>
+				<Text weight="3">{ userContext.Days } days</Text>
 				<br />
 				<br />
 				<Blockquote type="text"> { quote } </Blockquote>
