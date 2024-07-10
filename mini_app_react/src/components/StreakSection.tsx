@@ -59,6 +59,7 @@ export const StreakSection = () => {
 			<List>
 				<Text weight="3">{ userContext?.Days } days</Text>
 				<br />
+				<Text weight="3">{ userContext?.Freezes.length } freezes</Text>
 				<br />
 				<Blockquote type="text"> { quote } </Blockquote>
 				<Divider />

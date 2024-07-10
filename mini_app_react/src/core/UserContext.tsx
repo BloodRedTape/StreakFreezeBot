@@ -106,6 +106,10 @@ export const useSetUserContext = () => {
 	return useUserContext()[1]
 }
 
+export const useGetUserContext = () => {
+	return useUserContext()[0]
+}
+
 export const FetchUserContext = async () => {
 	const resp = await fetch(MakeUserRequestLocation())
 
