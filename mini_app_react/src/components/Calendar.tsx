@@ -1,15 +1,18 @@
 import { Text, List, Image} from '@xelene/tgui';
 import { CSSProperties } from 'react';
-
-type CalendarDayProps = {
-    day: number
-}
+import { ProtectionType, useGetUserContext } from '../core/UserContext';
+import { differenceInDays } from 'date-fns';
 
 enum DayType{
     Empty,
     None,
     Freeze,
     Commit
+}
+
+type CalendarDayProps = {
+    day: number
+    type: DayType
 }
 
 const GetColorFor = (type: DayType) => {
@@ -26,13 +29,7 @@ const GetColorFor = (type: DayType) => {
 	}
 }
 
-
-const CalendarDay: React.FC<CalendarDayProps> = ({ day }) => {
-    let type: DayType = Math.random() > 0.7 ? DayType.Freeze : DayType.Commit;
-
-    if (day === 0 || day === null)
-        type = DayType.Empty;
-
+const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
     const [textColor, imageLink] = GetColorFor(type).splice(1)
 
     const containerStyle: CSSProperties = {
@@ -73,6 +70,30 @@ export type CalendarProps = {
     year: number
 }
 
+
+const ProtectionToDayType = (protection: ProtectionType) => {
+    switch (protection) {
+        case ProtectionType.Commit:
+            return DayType.Commit
+        case ProtectionType.Freeze:
+            return DayType.Freeze
+        case ProtectionType.None:
+        default:
+            return DayType.None
+	}
+}
+
+const GetDayTypeFor = (date: Date) => {
+    const userContext = useGetUserContext()
+
+    if (userContext == undefined)
+        return DayType.Empty
+
+    const index = differenceInDays(date, userContext.StreakStart)
+
+    return ProtectionToDayType(userContext.History[index])
+}
+
 export const Calendar = (props: CalendarProps) => {
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const date = new Date(props.year, props.month, 0)
@@ -102,7 +123,7 @@ export const Calendar = (props: CalendarProps) => {
                 {weeks.map((week, index) => (
                     <tr key={index}>
                         {week.map(day => (
-                            <td><CalendarDay day={ day }/></td>
+                            <td><CalendarDay day={day} type={ day == 0 ? DayType.Empty : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day)) }/></td>
                         ))}
                     </tr>
                 ))}
