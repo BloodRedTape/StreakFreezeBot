@@ -1,8 +1,15 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
 
+const GatherCurrentUserId = (): number => {
+	const debugId = 399828804
+	try {
+		const launchParams = retrieveLaunchParams();
+		return launchParams.initData?.user?.id ?? debugId;
+	} catch (e) {
+		return debugId;
+	}
+}
 
 export const MakeUserRequestLocation = () => {
-	const launchParams = retrieveLaunchParams();
-
-    return window.location.origin + '/user/' + launchParams.initData?.user?.id
+    return window.location.origin + '/user/' + GatherCurrentUserId()
 }

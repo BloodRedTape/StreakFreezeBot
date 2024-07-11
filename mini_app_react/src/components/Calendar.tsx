@@ -1,4 +1,4 @@
-import { Text, List, Image} from '@xelene/tgui';
+import { Text, Image} from '@xelene/tgui';
 import { CSSProperties } from 'react';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
 
@@ -33,7 +33,6 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
 
     const containerStyle: CSSProperties = {
         position: 'relative',
-        display: 'inline-block',
     };
 
     if (type == DayType.NotADay)
@@ -47,8 +46,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
 
     const textStyle: CSSProperties = {
         position: 'absolute',
-        top: '20px',
         left: '50%',
+        top: '50%',
         transform: 'translate(-50%, -50%)',
         color: textColor, // Color of the text, ensure it contrasts with the image
         fontWeight: 'bold',
@@ -57,10 +56,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
 
 
     return (
-        <List style={ containerStyle }>
+        <div style={ containerStyle }>
             <Image src={ imageLink } style={imageStyle}/>
             <Text weight="3" style={textStyle}>{ day }</Text>
-        </List>
+        </div>
     );
 };
 
@@ -108,7 +107,7 @@ export const Calendar = (props: CalendarProps) => {
     }
 
     return (
-        <table>
+        <table style={{ width: '100%', tableLayout: 'fixed' }}>
             <thead>
                 <tr>
                     {daysOfWeek.map((day, index) => (

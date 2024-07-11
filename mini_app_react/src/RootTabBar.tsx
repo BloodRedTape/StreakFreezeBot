@@ -1,8 +1,9 @@
-import { Tabbar, List } from '@xelene/tgui';
+import { Tabbar } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
 import { useState } from 'react';
 import { CommitSection } from './components/CommitSection';
 import { StreakSection } from './components/StreakSection';
+import { Background } from './core/Background';
 import { FetchUserContext, UserContext, UserContextType } from './core/UserContext'
 
 class Tab {
@@ -32,12 +33,14 @@ export const RootTabBar = () => {
     
     return (
         <UserContext.Provider value = {[userContext, setUserContext]}>
-            <List>
+            <div>
                 {CurrentTab(currentTab)}
+                <Background>
                 <Tabbar>
-                    {tabs.map(({ Id, Name }) => <Tabbar.Item key={Id} text={Name} selected={Id === currentTab} onClick={() => setCurrentTab(Id)}></Tabbar.Item>)}
+                        {tabs.map(({ Id, Name }) => <Tabbar.Item style={{height: '15vh'}} key={Id} text={Name} selected={Id === currentTab} onClick={() => setCurrentTab(Id)}></Tabbar.Item>)}
                 </Tabbar>
-            </List>
+                </Background>
+            </div>
         </UserContext.Provider>
     );
 }
