@@ -1,3 +1,4 @@
+import { differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { DebugLog } from '../helpers/Debug'
 import { MakeUserRequestLocation } from "../helpers/Requests"
@@ -21,6 +22,24 @@ export class UserContextType {
 
 	public get Days() {
         return this.History.length;
+	}
+
+	public ProtectionAt(date: Date): ProtectionType{
+		const index = differenceInDays(date, this.StreakStart)
+
+		return this.History[index]
+	}
+
+	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{
+		let count = 0;
+
+		for (let i = 0; i < getDaysInMonth(anchor); i++) {
+			const date = new Date(anchor.getFullYear(), anchor.getMonth(), i + 1);
+
+			count += this.ProtectionAt(date) == protection ? 1 : 0;
+		}
+
+		return count;
 	}
 }
 

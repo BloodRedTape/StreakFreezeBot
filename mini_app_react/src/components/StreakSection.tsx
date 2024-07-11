@@ -1,37 +1,16 @@
 import { Banner, List, Text, Breadcrumbs, Divider, Blockquote, IconButton} from '@xelene/tgui';
 import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
 import { useState } from 'react';
-import { useUserContext } from '../core/UserContext';
+import { ProtectionType, useUserContext } from '../core/UserContext';
 import { Calendar } from './Calendar';
 import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
 import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
+import { addMonths } from 'date-fns';
 
-const AdvanceMonth = (date: Date, months: number) => {
-    const newDate = new Date(date.getTime());
+const GetAnchorDate = () => {
+	const date = new Date(Date.now())
 
-    const currentMonth = newDate.getMonth();
-    const currentYear = newDate.getFullYear();
-    const totalMonths = currentMonth + months;
-    
-    const targetYear = currentYear + Math.floor(totalMonths / 12);
-    const targetMonth = totalMonths % 12;
-
-    newDate.setFullYear(targetYear);
-    newDate.setMonth(targetMonth);
-
-    if (newDate.getMonth() !== targetMonth % 12) {
-        newDate.setDate(0);
-    }
-
-	return newDate;
-}
-
-const GetCommitedAt = (date: Date) => {
-	return Math.floor(Math.random() * date.getDay())
-}
-
-const GetFreezedAt = (date: Date) => {
-	return Math.floor(Math.random() * date.getDay())
+	return new Date(date.getFullYear(), date.getMonth(), 1)
 }
 
 export const StreakSection = () => {
@@ -42,7 +21,7 @@ export const StreakSection = () => {
 		"July", "August", "September", "October", "November", "December"
 	];
 
-	let [anchor, setAnchor] = useState(new Date(2024, 7, 0))
+	let [anchor, setAnchor] = useState(GetAnchorDate())
 
 	let monthIndex = anchor.getMonth()
 	let month = monthIndex + 1
@@ -50,8 +29,8 @@ export const StreakSection = () => {
 	let monthName = monthNames[monthIndex]
 
 	let stats = Object.entries({
-		'Commited': GetCommitedAt(anchor),
-		'Freezed': GetFreezedAt(anchor)
+		'Commited': userContext?.CountProtectionsInMonth(anchor, ProtectionType.Commit),
+		'Freezed': userContext?.CountProtectionsInMonth(anchor, ProtectionType.Freeze)
 	})
 
 	return (
@@ -59,14 +38,13 @@ export const StreakSection = () => {
 			<List>
 				<Text weight="3">{ userContext?.Days } days</Text>
 				<br />
-				<Text weight="3">{ userContext?.Freezes.length } freezes</Text>
 				<br />
 				<Blockquote type="text"> { quote } </Blockquote>
 				<Divider />
 				<div style={{ display: 'inline' }}>
 					<Text weight="2">{monthName} {year}</Text>
-					<IconButton style={{float: 'right'}} size="s" onClick={ ()=>setAnchor(AdvanceMonth(anchor, 1)) }><Icon24ChevronRight/></IconButton>
-					<IconButton style={{marginRight: '10px', float: 'right'}} size="s" onClick={ ()=>setAnchor(AdvanceMonth(anchor,-1)) }><Icon24ChevronLeft/></IconButton>
+					<IconButton style={{float: 'right'}} size="s" onClick={ ()=>setAnchor(addMonths(anchor, 1)) }><Icon24ChevronRight/></IconButton>
+					<IconButton style={{marginRight: '10px', float: 'right'}} size="s" onClick={ ()=>setAnchor(addMonths(anchor,-1)) }><Icon24ChevronLeft/></IconButton>
 				</div>
 				<br />
 				<br />

@@ -1,10 +1,9 @@
 import { Text, List, Image} from '@xelene/tgui';
 import { CSSProperties } from 'react';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
-import { differenceInDays } from 'date-fns';
 
 enum DayType{
-    Empty,
+    NotADay,
     None,
     Freeze,
     Commit
@@ -23,7 +22,7 @@ const GetColorFor = (type: DayType) => {
             return ['#4da9fa', 'white', 'https://duoplanet.com/wp-content/uploads/2023/02/Duolingo-streak-freeze-1.png']
         case DayType.Commit:
             return ['#f59842', 'white', 'https://i.redd.it/streak-flame-updated-v0-3n46sx7a0e9b1.png?width=283&format=png&auto=webp&s=74253ccd745fc4cf470e99c589921ce4d83c4d10']
-        case DayType.Empty:
+        case DayType.NotADay:
         default:
             return ['white', 'white', ""]
 	}
@@ -37,7 +36,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
         display: 'inline-block',
     };
 
-    if (type == DayType.Empty)
+    if (type == DayType.NotADay)
         return (<div style={containerStyle}></div>);
 
     const imageStyle: CSSProperties = {
@@ -87,11 +86,9 @@ const GetDayTypeFor = (date: Date) => {
     const userContext = useGetUserContext()
 
     if (userContext == undefined)
-        return DayType.Empty
+        return DayType.NotADay
 
-    const index = differenceInDays(date, userContext.StreakStart)
-
-    return ProtectionToDayType(userContext.History[index])
+    return ProtectionToDayType(userContext.ProtectionAt(date))
 }
 
 export const Calendar = (props: CalendarProps) => {
@@ -123,7 +120,7 @@ export const Calendar = (props: CalendarProps) => {
                 {weeks.map((week, index) => (
                     <tr key={index}>
                         {week.map(day => (
-                            <td><CalendarDay day={day} type={ day == 0 ? DayType.Empty : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day)) }/></td>
+                            <td><CalendarDay day={day} type={ day == 0 ? DayType.NotADay : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day)) }/></td>
                         ))}
                     </tr>
                 ))}
