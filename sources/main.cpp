@@ -5,30 +5,8 @@
 #include "server.hpp"
 #include "bot.hpp"
 
-
-class AsyncMessageQueue : public MessageQueue {
-	std::vector<Message> m_Messages;
-	std::mutex m_Lock;
-public:	
-	void Post(std::int64_t user, const std::string& type, const std::string& data)override{
-		std::unique_lock lock(m_Lock);
-
-		m_Messages.emplace_back(user, type, data);
-	}
-
-	std::vector<Message> Collect()override{
-		std::unique_lock lock(m_Lock);
-		
-		auto messages = std::move(m_Messages);
-
-		return messages;
-	}
-};
-
-static AsyncMessageQueue s_Queue;
-
 void ServerMain(const INIReader &config) {
-	HttpApiServer(config, s_Queue).Run();
+	HttpApiServer(config).Run();
 }
 
 int main(int argc, char *argv[]) {
@@ -45,7 +23,7 @@ int main(int argc, char *argv[]) {
 
 	std::thread server_thread(ServerMain, std::ref(config));
 
-	StreakBot bot(config, s_Queue);
+	StreakBot bot(config);
 
 	bot.Log("Started");
 

@@ -4,20 +4,16 @@
 #include "simple_bot.hpp"
 #include "model.hpp"
 #include "logger.hpp"
-#include "queue.hpp"
 
 class StreakBot: public SimplePollBot{
 	static constexpr const char *SectionName = "Bot";
 	using ThisClass = StreakBot;
 private:
 	TelegramLogger m_Logger;
-	StreakDatabase m_DB;
 	Date m_LastDate = DateUtils::Now();
 	std::string m_WebAppUrl;
-	MessageQueue &m_Queue;
-	MessageQueueDispatcher m_QueueDispatcher;
 public:
-	StreakBot(const INIReader &config, MessageQueue &queue);
+	StreakBot(const INIReader &config);
 
 	void Tick();
 

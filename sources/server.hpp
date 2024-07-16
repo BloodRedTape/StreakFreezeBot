@@ -2,7 +2,7 @@
 
 #include <httplib.h>
 #include <INIReader.h>
-#include "queue.hpp"
+#include "model.hpp"
 
 class HttpApiServer : public httplib::Server {
 	using Super = httplib::Server;
@@ -16,21 +16,27 @@ private:
 	std::string m_WebAppPath;
 	std::string m_Hostname;
 	int m_Port;
-	MessageQueue &m_Queue;
+	StreakDatabase m_DB;
 public:	
-	HttpApiServer(const INIReader &config, MessageQueue &queue);
+	HttpApiServer(const INIReader &config);
 
 	void Run();
 
-	void GetUser(const httplib::Request &req, httplib::Response &resp);
+	void GetFullUser(const httplib::Request &req, httplib::Response &resp);
 
 	void Commit(const httplib::Request &req, httplib::Response &resp);
 
 	void UseFreeze(const httplib::Request &req, httplib::Response &resp);
 
 	void AddFreeze(const httplib::Request &req, httplib::Response &resp);
-	
+
+	void GetAvailableFreezes(const httplib::Request &req, httplib::Response &resp);
+
+	void ResetStreak(const httplib::Request &req, httplib::Response &resp);
+
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
+
+	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 
 	HttpApiServer &Get(const std::string &pattern, HttpApiHandler handler);
 

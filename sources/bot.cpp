@@ -1,6 +1,11 @@
 ﻿#include "bot.hpp"
 #include <bsl/format.hpp>
 #include <thread>
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <httplib.h>
+#include <boost/algorithm/string.hpp>
+
+#undef SendMessage
 
 // Streak Freeze limits
 // OnDayAlmostOver
@@ -8,18 +13,59 @@
 // Better way to show available freezes, also add to botfather
 // TeamCity
 
-StreakBot::StreakBot(const INIReader& config, MessageQueue &queue):
+const char *Ok = "Ok";
+const char *Fail = "Fail";
+
+std::optional<std::string> HttpGet(const std::string& endpoint, const std::string &path) {
+    httplib::Client client(endpoint);
+
+	auto resp = client.Get(path);
+
+	if (!resp || resp->status != 200)
+		return std::nullopt;
+
+	return resp->body;
+}
+
+nlohmann::json HttpGetJson(const std::string& endpoint, const std::string &path) {
+	auto res = HttpGet(endpoint, path);
+
+	if(!res.has_value())
+		return {};
+
+	return nlohmann::json::parse(res.value(), nullptr, false, false);
+}
+
+std::optional<std::string> HttpPost(const std::string& endpoint, const std::string &path) {
+    httplib::Client client(endpoint);
+
+	auto resp = client.Post(path);
+
+	if (!resp || resp->status != 200)
+		return std::nullopt;
+
+	return resp->body;
+}
+
+nlohmann::json HttpPostJson(const std::string& endpoint, const std::string &path) {
+	auto res = HttpPost(endpoint, path);
+
+	if(!res.has_value())
+		return {};
+
+	return nlohmann::json::parse(res.value(), nullptr, false, false);
+}
+
+StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
 		config.Get(SectionName, "Token", ""),
 		100,
 		config.GetInteger(SectionName, "TickPeriodSeconds", 10)
 	),
-	m_DB(config),
 	m_Logger(config),
 	m_WebAppUrl(
 		config.Get(SectionName, "WebAppUrl", "")
-	),
-	m_Queue(queue)
+	)
 {
 	OnCommand("start", this, &ThisClass::Start, "Reset streak");
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
@@ -37,18 +83,6 @@ StreakBot::StreakBot(const INIReader& config, MessageQueue &queue):
 	UpdateCommandDescriptions();
 	
 	OnLog(&m_Logger, &Logger::Log);
-
-	m_QueueDispatcher.On("add_freeze", [this](auto user, auto data) {
-		m_DB.AddFreeze(user, 4);
-	});
-
-	m_QueueDispatcher.On("use_freeze", [this](auto user, auto data) {
-		m_DB.UseFreeze(user);
-	});
-
-	m_QueueDispatcher.On("commit", [this](auto user, auto data) {
-		m_DB.Commit(user);
-	});
 }
 
 void StreakBot::Tick() {
@@ -58,84 +92,58 @@ void StreakBot::Tick() {
 		m_LastDate = now;
 		OnNewDay();
 	}
-
-	m_QueueDispatcher.Dispatch(m_Queue);
 }
 
-#define ENSURE_PRIVATE_COMMAND(message, db) \
-	if(!IsPrivate(message)) \
-		return (void)ReplyMessage(message, "This command can only be executed in bot's private chat"); \
-	db.EnsureNotificationChat(message->from->id, message->chat->id);
-
 void StreakBot::Start(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
+	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
 
-
-	m_DB.ResetStreak(message->from->id);
-	SetupUserUiWith(message, "Started streak");
+	SetupUserUiWith(message);
 }
 
 void StreakBot::AddFreeze(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
+	auto body = HttpPostJson(m_WebAppUrl, Format("/user/%/add_freeze", message->from->id));
 
-	m_DB.AddFreeze(message->from->id, 4);
-	ReplyMessage(message, Format("Added streak freeze, % now", m_DB.AvailableFreezes(message->from->id).size()));
+	if(body.count(Fail))
+		return (void)ReplyMessage(message, body[Fail]);
+
+	if(body.count(Ok))
+		return (void)ReplyMessage(message, body[Ok]);
 }
 
 void StreakBot::UseFreeze(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
+	nlohmann::json body = HttpPostJson(m_WebAppUrl, Format("/user/%/use_freeze", message->from->id));
+	
+	if(body.count(Fail))
+		return (void)ReplyMessage(message, body[Fail]);
 
-	if(m_DB.IsProtectedToday(message->from->id))
-		return (void)ReplyMessage(message, "Can't use freeze today, already protected!");
-
-	if(m_DB.IsStreakBurnedOut(message->from->id))
-		return (void)ReplyMessage(message, "Streak is already burned out, nothing to freeze.");
-
-	auto freeze = m_DB.UseFreeze(message->from->id);
-
-	if (!freeze.has_value())
-		return (void)ReplyMessage(message, "You don't have freezes to use for today");
-
-	ReplyMessage(message, Format("Nice, you left with % freezes and protected your % days streak", m_DB.AvailableFreezes(message->from->id).size(), m_DB.Streak(message->from->id)));
+	if(body.count(Ok))
+		return (void)ReplyMessage(message, body[Ok]);
 }
 
 void StreakBot::Commit(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
+	nlohmann::json body = HttpPostJson(m_WebAppUrl, Format("/user/%/commit", message->from->id));
+	
+	if(body.count(Fail))
+		return (void)ReplyMessage(message, body[Fail]);
 
-	auto user = message->from->id;
-
-	if(m_DB.IsCommitedToday(user))
-		return (void)ReplyMessage(message, "Already commited today, don't overtime!");
-
-	if(m_DB.IsFreezedToday(user))
-		return (void)ReplyMessage(message, "Freeze is already used!");
-
-	if(m_DB.IsStreakBurnedOut(user)){
-		m_DB.ResetStreak(user);
-		return (void)ReplyMessage(message, "Streak is burned out, reset");
-	}
-
-	if(!m_DB.Commit(user))
-		return (void)ReplyMessage(message, "Something wrong, contact @bloodredtape for bug report");
-
-	ReplyMessage(message, Format("Whoa, extended streak to % days", m_DB.Streak(user)));
+	if(body.count(Ok))
+		return (void)ReplyMessage(message, body[Ok]);
 }
 
 void StreakBot::Freezes(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
+	nlohmann::json body = HttpGetJson(m_WebAppUrl, Format("/user/%/commit", message->from->id));
+	
+	auto freezes = body.size();
 
-	auto freezes = m_DB.AvailableFreezes(message->from->id);
-
-	if(!freezes.size())
+	if(!freezes)
 		return (void)ReplyMessage(message, "No freezes available");
 
 
-	ReplyMessage(message, Format("% freezes available", freezes.size()));
+	ReplyMessage(message, Format("% freezes available", freezes));
 }
 
 void StreakBot::Streak(TgBot::Message::Ptr message) {
-	ENSURE_PRIVATE_COMMAND(message, m_DB)
-	
+#if 0
 	auto history = m_DB.History(message->from->id);
 
 	std::string text;
@@ -160,6 +168,7 @@ void StreakBot::Streak(TgBot::Message::Ptr message) {
 		text += pending;
 
 	ReplyMessage(message, Format("Keep going to protect your % days streak\n\n%", m_DB.Streak(message->from->id), text));
+#endif
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
@@ -167,6 +176,7 @@ bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
 }
 
 void StreakBot::OnNewDay() {
+#if 0
 	for (const auto &[user, data] : m_DB.Users()) {
 		if(!m_DB.IsProtected(user, Yesterday())){
 			auto freeze = m_DB.UseFreeze(user, Yesterday());
@@ -189,15 +199,18 @@ void StreakBot::OnNewDay() {
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
+#endif
 }
 
 void StreakBot::OnDayAlmostOver() {
+#if 0
 	for (const auto &[user, data] : m_DB.Users()) {
 		if(!m_DB.IsProtectedToday(user)){
 			SendMessage(data.NotificationChat, 0, Format("The day is almost over! commit to your % days streak or use freeze", m_DB.Streak(user)));
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
+#endif
 }
 
 Date StreakBot::Yesterday() {
