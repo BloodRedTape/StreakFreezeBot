@@ -10,6 +10,7 @@ struct StreakFreeze {
 	Date EarnedAt;
 	Date ExpireAt;
 	std::optional<Date> UsedAt;
+    bool Removed = false;
 
 	bool CanBeUsed()const;
 
@@ -31,6 +32,7 @@ struct User {
 	std::vector<StreakFreeze> Freezes;
 	Date StreakStart = DateUtils::Now();
     std::vector<Protection> History;
+    std::int64_t MaxFreezes = 2;
     std::int64_t NotificationChat = 0;
 
     bool IsCommitedAt(Date date)const;
@@ -60,11 +62,17 @@ public:
 
 	void AddFreeze(std::int64_t user, std::int32_t expire_in_days);
 
-	std::vector<StreakFreeze> AvailableFreezes(std::int64_t user)const;
+	void RemoveFreeze(std::int64_t user, std::size_t freeze_id);
 
-	std::optional<StreakFreeze> UseFreeze(std::int64_t user, Date date);
+	std::vector<std::size_t> AvailableFreezes(std::int64_t user)const;
 
-	std::optional<StreakFreeze> UseFreeze(std::int64_t user);
+	std::optional<StreakFreeze> UseFreeze(std::int64_t user, Date date, std::size_t freeze_id);
+
+	std::optional<StreakFreeze> UseFreeze(std::int64_t user, std::size_t freeze_id);
+
+	std::optional<StreakFreeze> UseAnyFreeze(std::int64_t user, Date date);
+
+	std::optional<StreakFreeze> UseAnyFreeze(std::int64_t user);
 
 	std::int64_t Streak(std::int64_t user)const;
 
@@ -86,6 +94,8 @@ public:
 
     Date StreakStart(std::int64_t user)const;
 
+	bool CanAddFreeze(std::int64_t user)const;
+
     void EnsureNotificationChat(std::int64_t user, std::int64_t chat);
 
     const User &GetUser(std::int64_t user)const;
@@ -102,6 +112,8 @@ inline void to_json(nlohmann::json& j, const StreakFreeze& sf) {
 
     if(sf.UsedAt.has_value())
         to_json(j["UsedAt"], sf.UsedAt.value());
+
+    j["Removed"] = sf.Removed;
 }
 
 inline void from_json(const nlohmann::json& j, StreakFreeze& sf) {
@@ -114,6 +126,8 @@ inline void from_json(const nlohmann::json& j, StreakFreeze& sf) {
     } else {
         sf.UsedAt.reset();
     }
+    if(j.contains("Removed"))
+        j["Removed"].get_to(sf.Removed);
 }
 
 inline void to_json(nlohmann::json& j, const User& user) {
@@ -123,6 +137,7 @@ inline void to_json(nlohmann::json& j, const User& user) {
     to_json(j["StreakStart"], user.StreakStart);
     to_json(j["History"], user.History);
     to_json(j["NotificationChat"], user.NotificationChat);
+    j["MaxFreezes"] = user.MaxFreezes;
 }
 
 inline void from_json(const nlohmann::json& j, User& user) {
@@ -130,4 +145,7 @@ inline void from_json(const nlohmann::json& j, User& user) {
     from_json(j["StreakStart"], user.StreakStart);
     from_json(j["History"], user.History);
     from_json(j["NotificationChat"], user.NotificationChat);
+
+    if(j.contains("MaxFreezes"))
+        j.at("MaxFreezes").get_to(user.MaxFreezes);
 }

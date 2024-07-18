@@ -1,6 +1,8 @@
-import { Text, Image} from '@xelene/tgui';
+import { Text } from '@xelene/tgui';
 import { CSSProperties } from 'react';
+import { Img } from '../core/Img';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
+
 
 enum DayType{
     NotADay,
@@ -17,11 +19,11 @@ type CalendarDayProps = {
 const GetColorFor = (type: DayType) => {
     switch (type) {
         case DayType.None:
-            return ['white', 'white', ""]
+            return ['white', 'var(--tg-theme-subtitle-text-color)', ""]
         case DayType.Freeze:
-            return ['#4da9fa', 'white', 'https://duoplanet.com/wp-content/uploads/2023/02/Duolingo-streak-freeze-1.png']
+            return ['#4da9fa', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FreezeBackground.png']
         case DayType.Commit:
-            return ['#f59842', 'white', 'https://i.redd.it/streak-flame-updated-v0-3n46sx7a0e9b1.png?width=283&format=png&auto=webp&s=74253ccd745fc4cf470e99c589921ce4d83c4d10']
+            return ['#f59842', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FlameBackground.png']
         case DayType.NotADay:
         default:
             return ['white', 'white', ""]
@@ -41,14 +43,19 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
     const imageStyle: CSSProperties = {
         width: '40px',
         height: '40px',
-        borderRadius: '20%',
-	}
+        border: '0px',
+        outline: '0px',
+        background: '#FFFFFF00',
+    }
 
-    const textStyle: CSSProperties = {
+    const textDivStyle: CSSProperties = {
         position: 'absolute',
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
+	}
+
+    const textStyle: CSSProperties = {
         color: textColor, // Color of the text, ensure it contrasts with the image
         fontWeight: 'bold',
         textAlign: 'center', // Ensure text inside the Text component is centered
@@ -57,8 +64,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
 
     return (
         <div style={ containerStyle }>
-            <Image src={ imageLink } style={imageStyle}/>
-            <Text weight="3" style={textStyle}>{ day }</Text>
+            <Img src={imageLink} style={imageStyle} /> 
+            <div style={textDivStyle}>
+                <Text weight="3" style={textStyle}>{ day }</Text>
+            </div>
         </div>
     );
 };

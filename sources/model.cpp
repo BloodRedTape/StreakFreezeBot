@@ -1,7 +1,9 @@
 #include "model.hpp"
 #include <bsl/file.hpp>
-#include <bsl/format.hpp>
+#include <bsl/log.hpp>
 #include <cassert>
+
+DEFINE_LOG_CATEGORY(Model)
 
 bool StreakFreeze::CanBeUsed() const{
 	return CanBeUsedAt(DateUtils::Now());
@@ -9,6 +11,8 @@ bool StreakFreeze::CanBeUsed() const{
 
 bool StreakFreeze::CanBeUsedAt(Date date) const{
 	bool cannot = ExpireAt < date || UsedAt.has_value();
+
+	cannot = cannot || Removed;
 
 	return !cannot;
 }
@@ -78,22 +82,62 @@ void StreakDatabase::AddFreeze(std::int64_t user, std::int32_t expire_in_days){
 	SaveToFile();
 }
 
-std::vector<StreakFreeze> StreakDatabase::AvailableFreezes(std::int64_t user) const{
-	std::vector<StreakFreeze> result;
+void StreakDatabase::RemoveFreeze(std::int64_t user, std::size_t freeze_id) {
+	if(freeze_id >= m_Users[user].Freezes.size())
+		return;
+
+	m_Users[user].Freezes[freeze_id].Removed = true;
+
+	SaveToFile();
+}
+
+std::vector<std::size_t> StreakDatabase::AvailableFreezes(std::int64_t user) const{
+	std::vector<std::size_t> result;
 
 	Date now = DateUtils::Now();
 
-	for (const auto &freeze : m_Users[user].Freezes) {
+	const auto &freezes = m_Users[user].Freezes;
+
+	for (int i = 0; i<freezes.size(); i++) {
+		const auto &freeze = freezes[i];
+
 		if(!freeze.CanBeUsedAt(now))
 			continue;
 
-		result.push_back(freeze);
+		result.push_back(i);
 	}
 
 	return result;
 }
 
-std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, Date now){
+std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, Date now, std::size_t freeze_id){
+	if(IsProtected(user, now)){
+		LogModel(Error, "Streak is already protected");
+		return std::nullopt;
+	}
+
+	if (freeze_id >= m_Users[user].Freezes.size()) {
+		LogModel(Error, "Invalid FreezeId: %", freeze_id);
+		return std::nullopt;
+	}
+	
+	auto &freeze = m_Users[user].Freezes[freeze_id];
+	
+	if (!freeze.CanBeUsedAt(now)) {
+		LogModel(Error, "FreezeId % can't be used at %", freeze_id, now);
+		return std::nullopt;
+	}
+
+	freeze.UsedAt = std::make_optional(now);
+	m_Users[user].Protect(Protection::Freeze, now);
+	SaveToFile();
+}
+
+std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, std::size_t freeze_id){
+	return UseFreeze(user, DateUtils::Now(), freeze_id);
+}
+
+std::optional<StreakFreeze> StreakDatabase::UseAnyFreeze(std::int64_t user, Date now){
 	if(IsProtectedToday(user))
 		return std::nullopt;
 
@@ -112,8 +156,8 @@ std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, Date no
 	return std::nullopt;
 }
 
-std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user){
-	return UseFreeze(user, DateUtils::Now());
+std::optional<StreakFreeze> StreakDatabase::UseAnyFreeze(std::int64_t user){
+	return UseAnyFreeze(user, DateUtils::Now());
 }
 
 std::int64_t StreakDatabase::Streak(std::int64_t user)const {
@@ -138,7 +182,7 @@ void StreakDatabase::ResetStreak(std::int64_t user) {
 
 bool StreakDatabase::Commit(std::int64_t user) {
 	if(IsProtectedToday(user))
-		return true;
+		return false;
 
 	if(IsStreakBurnedOut(user))
 		return (ResetStreak(user), false); // Streak is burned out, Reset
@@ -179,6 +223,9 @@ const std::vector<Protection> &StreakDatabase::History(std::int64_t user)const {
 
 Date StreakDatabase::StreakStart(std::int64_t user)const {
 	return m_Users[user].StreakStart;
+}
+bool StreakDatabase::CanAddFreeze(std::int64_t user)const {
+	return AvailableFreezes(user).size() < m_Users[user].MaxFreezes;
 }
 
 void StreakDatabase::EnsureNotificationChat(std::int64_t user, std::int64_t chat) {

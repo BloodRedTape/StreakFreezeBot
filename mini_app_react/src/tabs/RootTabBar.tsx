@@ -1,10 +1,10 @@
 import { Tabbar } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
 import { useState } from 'react';
-import { CommitSection } from './components/CommitSection';
-import { StreakSection } from './components/StreakSection';
-import { Background } from './core/Background';
-import { FetchUserContext, UserContext, UserContextType } from './core/UserContext'
+import { Background } from '../core/Background';
+import { FetchUserContext, UserContext, UserContextType } from '../core/UserContext';
+import { CommitTab } from './CommitTab';
+import { StreakTab } from './StreakTab';
 
 class Tab {
     public Id: number = 0
@@ -14,8 +14,8 @@ class Tab {
 }
 
 const tabs: Array<Tab> = [
-    {Id: 0, Name: "Streak", Content: <StreakSection/>},
-    {Id: 1, Name: "Commit", Content: <CommitSection/>},
+    {Id: 0, Name: "Streak", Content: <StreakTab/>},
+    {Id: 1, Name: "Commit", Content: <CommitTab/>},
     //{Id: 2, Name: "Friends"},
 ];
 

@@ -1,36 +1,45 @@
-import { Button, List } from '@xelene/tgui'
+import { Button, List, Text } from '@xelene/tgui'
 import { CSSProperties } from 'react';
-import { Background } from '../core/Background';
 import { FetchUserContext, useSetUserContext } from '../core/UserContext';
-import { MakeUserRequestLocation } from '../helpers/Requests';
-
+import { JsonFromResp, PopupFromJson, PostCommit } from '../helpers/Requests';
 
 export const CommitSection = () => {
 
 	const buttonStyle: CSSProperties = {
-		margin: '10px'
+		margin: '10px',
+		display: 'inline-flex',
 	}
 
 	const setUserContext = useSetUserContext()
 
-	const Refresh = () => FetchUserContext().then(setUserContext)
+	const Refresh = () => {
+		FetchUserContext().then(setUserContext)
+	}
+
+	const CanCommit = true;
+
+	const OnCommit = () => {
+		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
+	}
+
+	const CommitButton = (
+		<Button
+			size="l"
+			disabled={!CanCommit}
+			style={buttonStyle}
+			mode="filled"
+			onClick={OnCommit}
+		>
+			Commit
+		</Button>
+	)
 
 	return (
-		<Background>
-		<List style={{ display: 'inline' }}>
-			<List>
-				<Button size="l" disabled={false} style={buttonStyle} mode="filled" onClick={() => {
-					fetch(MakeUserRequestLocation() + '/commit', { method: 'POST' }).then(Refresh);
-				}}>Commit</Button>
-				<Button size="l" disabled={false} style={buttonStyle} mode="bezeled" onClick={() => {
-					fetch(MakeUserRequestLocation() + '/use_freeze', { method: 'POST' }).then(Refresh);
-				}}>Freeze</Button>
-			</List>
+		<List style={{ display: 'inline', margin: '10px'}}>
+			<Text weight="2">Commit</Text>
 			<br/>
-			<Button size="l" mode="outline" style={buttonStyle} onClick={() => {
-				fetch(MakeUserRequestLocation() + '/add_freeze', { method: 'POST' }).then(Refresh);
-			}}>Add Freeze</Button>
+			{CommitButton}
+			<br/>
 		</List>
-		</Background>
 	)
 };

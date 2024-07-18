@@ -1,7 +1,7 @@
 import { differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { DebugLog } from '../helpers/Debug'
-import { MakeUserRequestLocation } from "../helpers/Requests"
+import { GetAvailableFreezes, MakeFullUserRequestLocation } from "../helpers/Requests"
 
 export class StreakFreezeType {
 	public EarnedAt: Date = new Date(0, 0, 0)
@@ -19,6 +19,8 @@ export class UserContextType {
 	public Freezes: Array<StreakFreezeType> = []
 	public StreakStart: Date = new Date(0, 0, 0)
 	public History: Array<ProtectionType> = []
+	public AvailableFreezes: Array<number> = []
+	public MaxFreezes: number = 0
 
 	public get Days() {
         return this.History.length;
@@ -40,6 +42,10 @@ export class UserContextType {
 		}
 
 		return count;
+	}
+
+	public CanAddFreeze(): boolean {
+		return this.AvailableFreezes.length < this.MaxFreezes
 	}
 }
 
@@ -98,6 +104,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.Freezes = (data.Freezes || []).map((freeze: any) => ParseStreakFreezeType(freeze));
 		context.StreakStart = FromApiDate(data.StreakStart);
 		context.History = (data.History || []).map((protection: any) => ParseProtectionType(protection));
+		context.MaxFreezes = data.MaxFreezes || 0
 	} catch (e: any) {
 		DebugLog(e);
 	}
@@ -130,7 +137,16 @@ export const useGetUserContext = () => {
 }
 
 export const FetchUserContext = async () => {
-	const resp = await fetch(MakeUserRequestLocation())
+	const full_resp = await fetch(MakeFullUserRequestLocation())
+	let freezes_resp = await GetAvailableFreezes()
 
-	return ParseUserContextType(await resp.json())
+	let user: UserContextType = ParseUserContextType(await full_resp.json())
+
+	user.AvailableFreezes = (await freezes_resp.json() || []).map((freeze: number) => freeze)
+
+	return user;
+}
+
+export const RefreshUserContext = (action: React.Dispatch<UserContextType | undefined>) => {
+	FetchUserContext().then(action)	
 }

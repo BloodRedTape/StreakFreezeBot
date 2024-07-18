@@ -30,6 +30,8 @@ public:
 
 	void AddFreeze(const httplib::Request &req, httplib::Response &resp);
 
+	void RemoveFreeze(const httplib::Request &req, httplib::Response &resp);
+
 	void GetAvailableFreezes(const httplib::Request &req, httplib::Response &resp);
 
 	void ResetStreak(const httplib::Request &req, httplib::Response &resp);

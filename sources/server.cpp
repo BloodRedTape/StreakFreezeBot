@@ -14,6 +14,16 @@ void Ok(httplib::Response &resp, const std::string &error) {
 	resp.status = httplib::StatusCode::OK_200;
 };
 
+template<typename T>
+std::optional<T> GetJsonProperty(const std::string &json_string, const std::string &property) {
+	auto json = nlohmann::json::parse(json_string, nullptr, false, false);
+
+	if(!json.count(property))
+		return std::nullopt;
+
+	return json[property].get<T>();
+}
+
 HttpApiServer::HttpApiServer(const INIReader& config):
 	m_Config(
 		config
@@ -36,6 +46,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/commit",	 &ThisClass::Commit);
 	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
+	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
 	Post("/user/:id/reset_streak", &ThisClass::ResetStreak);
 
@@ -105,8 +116,9 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
+	auto freeze_id = GetJsonProperty<std::int64_t>(req.body, "freeze_id");
 
-	if (!id) {
+	if (!id || !freeze_id.has_value()) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
@@ -117,7 +129,7 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	if(m_DB.IsStreakBurnedOut(id))
 		return Fail(resp, "Streak is already burned out, nothing to freeze.");
 
-	std::optional<StreakFreeze> freeze = m_DB.UseFreeze(id);
+	std::optional<StreakFreeze> freeze = m_DB.UseFreeze(id, freeze_id.value());
 	
 	if (!freeze.has_value())
 		return Fail(resp, "You don't have freezes to use for today");
@@ -133,10 +145,25 @@ void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& re
 
 	const std::string &user_id = req.path_params.at("id");
 	std::int64_t id = std::atoll(user_id.c_str());
+	
+	if (!m_DB.CanAddFreeze(id))
+		return Fail(resp, "Reached maximum amount of freezes");
 
 	m_DB.AddFreeze(id, 4);
 
 	Ok(resp, Format("Added streak freeze, % now", m_DB.AvailableFreezes(id).size()));
+}
+
+void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetUser(req).value_or(0);
+	auto freeze_id = GetJsonProperty<std::int64_t>(req.body, "freeze_id");
+
+	if (!id || !freeze_id.has_value()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+	
+	m_DB.RemoveFreeze(id, freeze_id.value());
 }
 
 void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Response& resp) {
