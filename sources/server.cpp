@@ -24,6 +24,11 @@ std::optional<T> GetJsonProperty(const std::string &json_string, const std::stri
 	return json[property].get<T>();
 }
 
+template<typename T>
+T GetJsonPropertyOr(const std::string &json_string, const std::string &property, T value) {
+	return GetJsonProperty<T>(json_string, property).value_or(value);
+}
+
 HttpApiServer::HttpApiServer(const INIReader& config):
 	m_Config(
 		config
@@ -138,18 +143,19 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 }
 
 void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& resp) {
-	if (!req.path_params.count("id")) {
+	std::int64_t id = GetUser(req).value_or(0);
+	std::string reason = GetJsonPropertyOr<std::string>(req.body, "reason", "For no good reason");
+	std::int64_t expire = GetJsonPropertyOr<std::int64_t>(req.body, "expire", 4);
+
+	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
 
-	const std::string &user_id = req.path_params.at("id");
-	std::int64_t id = std::atoll(user_id.c_str());
-	
 	if (!m_DB.CanAddFreeze(id))
 		return Fail(resp, "Reached maximum amount of freezes");
 
-	m_DB.AddFreeze(id, 4);
+	m_DB.AddFreeze(id, expire, std::move(reason));
 
 	Ok(resp, Format("Added streak freeze, % now", m_DB.AvailableFreezes(id).size()));
 }

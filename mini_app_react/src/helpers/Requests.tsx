@@ -26,8 +26,17 @@ export const PostCommit = () => {
 	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST'})
 }
 
-export const PostAddFreeze = () => {
-	return fetch(MakeUserRequestLocation() + '/add_freeze', {method: 'POST'})
+export const PostAddFreeze = (expire: number, reason: string) => {
+	const body = JSON.stringify({ expire: expire, reason: reason });
+	return fetch(MakeUserRequestLocation() + '/add_freeze',
+		{
+			method: 'POST',
+			body: body,
+			headers: {
+				'Content-Type': 'application/json'
+			},
+		}
+	)
 }
 
 export const PostUseFreeze = (id: number) => {

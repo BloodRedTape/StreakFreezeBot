@@ -23,7 +23,7 @@ export const FreezeSection = () => {
 	}
 
 	const OnAddFreeze = () => {
-		PostAddFreeze().then(JsonFromResp).then(PopupFromJson).then(Refresh);
+		PostAddFreeze(4, "Test").then(JsonFromResp).then(PopupFromJson).then(Refresh);
 	}
 
 	const AddFreezeButton = (

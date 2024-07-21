@@ -11,6 +11,7 @@ struct StreakFreeze {
 	Date ExpireAt;
 	std::optional<Date> UsedAt;
     bool Removed = false;
+    std::string Reason;
 
 	bool CanBeUsed()const;
 
@@ -60,7 +61,7 @@ private:
 public:
 	StreakDatabase(const INIReader &config);
 
-	void AddFreeze(std::int64_t user, std::int32_t expire_in_days);
+	void AddFreeze(std::int64_t user, std::int32_t expire_in_days, std::string &&reasona);
 
 	void RemoveFreeze(std::int64_t user, std::size_t freeze_id);
 
@@ -114,6 +115,7 @@ inline void to_json(nlohmann::json& j, const StreakFreeze& sf) {
         to_json(j["UsedAt"], sf.UsedAt.value());
 
     j["Removed"] = sf.Removed;
+    j["Reason"] = sf.Reason;
 }
 
 inline void from_json(const nlohmann::json& j, StreakFreeze& sf) {
@@ -128,6 +130,9 @@ inline void from_json(const nlohmann::json& j, StreakFreeze& sf) {
     }
     if(j.contains("Removed"))
         j["Removed"].get_to(sf.Removed);
+
+    if(j.contains("Reason"))
+        j["Reason"].get_to(sf.Reason);
 }
 
 inline void to_json(nlohmann::json& j, const User& user) {

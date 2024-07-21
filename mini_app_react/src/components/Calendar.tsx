@@ -3,7 +3,6 @@ import { CSSProperties } from 'react';
 import { Img } from '../core/Img';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
 
-
 enum DayType{
     NotADay,
     None,
@@ -17,17 +16,26 @@ type CalendarDayProps = {
 }
 
 const GetColorFor = (type: DayType) => {
-    switch (type) {
-        case DayType.None:
-            return ['white', 'var(--tg-theme-subtitle-text-color)', ""]
-        case DayType.Freeze:
-            return ['#4da9fa', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FreezeBackground.png']
-        case DayType.Commit:
-            return ['#f59842', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FlameBackground.png']
-        case DayType.NotADay:
-        default:
-            return ['white', 'white', ""]
-	}
+    const colors = new Map<DayType, Array<string>>([
+        [
+            DayType.NotADay,
+            ['white', 'white', ""]
+        ],
+        [
+            DayType.None,
+            ['white', 'var(--tg-theme-subtitle-text-color)', ""]
+        ],
+        [
+            DayType.Freeze,
+            ['#4da9fa', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FreezeBackground.png']
+        ],
+        [
+            DayType.Commit,
+            ['#f59842', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FlameBackground.png']
+        ]
+    ]);
+
+    return colors.get(type) ?? ["", "", ""];
 }
 
 const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
@@ -36,9 +44,6 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
     const containerStyle: CSSProperties = {
         position: 'relative',
     };
-
-    if (type == DayType.NotADay)
-        return (<div style={containerStyle}></div>);
 
     const imageStyle: CSSProperties = {
         width: '40px',
@@ -61,6 +66,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
         textAlign: 'center', // Ensure text inside the Text component is centered
     };
 
+    if (type == DayType.NotADay)
+        return (<div style={containerStyle}></div>);
 
     return (
         <div style={ containerStyle }>
@@ -79,15 +86,13 @@ export type CalendarProps = {
 
 
 const ProtectionToDayType = (protection: ProtectionType) => {
-    switch (protection) {
-        case ProtectionType.Commit:
-            return DayType.Commit
-        case ProtectionType.Freeze:
-            return DayType.Freeze
-        case ProtectionType.None:
-        default:
-            return DayType.None
-	}
+    const map = new Map<ProtectionType, DayType>([
+        [ProtectionType.Commit, DayType.Commit],
+        [ProtectionType.Freeze, DayType.Freeze],
+        [ProtectionType.None, DayType.None],
+    ])
+
+    return map.get(protection) ?? DayType.NotADay
 }
 
 const GetDayTypeFor = (date: Date) => {
@@ -100,7 +105,10 @@ const GetDayTypeFor = (date: Date) => {
 }
 
 export const Calendar = (props: CalendarProps) => {
-    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const daysOfWeek = [
+        'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+    ];
+
     const date = new Date(props.year, props.month, 0)
 
     const daysInMonth = date.getDate();
@@ -115,24 +123,30 @@ export const Calendar = (props: CalendarProps) => {
         weeks.push(daysArray.splice(0, 7));
     }
 
+    const MakeHeadings = (day: string, index: number) => (
+         <th key={index}><Text weight="3">{day}</Text></th>
+    )
+
+    const Headings = (
+        <tr> {daysOfWeek.map(MakeHeadings)} </tr>
+    )
+
+    const DetectDayType = (day: number) => {
+        return day === 0 ? DayType.NotADay : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day))
+    }
+
+    const MakeDay = (day: any) => (
+        <td><CalendarDay day={day} type={ DetectDayType(day) }/></td>
+    )
+
+    const MakeRow = (week: any[], index: number) => (
+        <tr key={index}> {week.map(MakeDay)} </tr>
+    )
+
     return (
         <table style={{ width: '100%', tableLayout: 'fixed' }}>
-            <thead>
-                <tr>
-                    {daysOfWeek.map((day, index) => (
-                        <th key={index}><Text weight="3">{day}</Text></th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {weeks.map((week, index) => (
-                    <tr key={index}>
-                        {week.map(day => (
-                            <td><CalendarDay day={day} type={ day == 0 ? DayType.NotADay : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day)) }/></td>
-                        ))}
-                    </tr>
-                ))}
-            </tbody>
+            <thead> { Headings } </thead>
+            <tbody> { weeks.map(MakeRow) } </tbody>
         </table>
     );
 };

@@ -74,10 +74,10 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 	}
 }
 
-void StreakDatabase::AddFreeze(std::int64_t user, std::int32_t expire_in_days){
+void StreakDatabase::AddFreeze(std::int64_t user, std::int32_t expire_in_days, std::string &&reason){
 	Date now = DateUtils::Now();
 	Date expire = (date::sys_days)now + date::days(expire_in_days);
-	m_Users[user].Freezes.push_back({now, expire, std::nullopt});
+	m_Users[user].Freezes.push_back({now, expire, std::nullopt, false, std::move(reason)});
 
 	SaveToFile();
 }
