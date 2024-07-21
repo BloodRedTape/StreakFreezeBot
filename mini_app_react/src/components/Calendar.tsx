@@ -46,6 +46,9 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
     };
 
     const imageStyle: CSSProperties = {
+        display: 'block',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         width: '40px',
         height: '40px',
         border: '0px',

@@ -1,6 +1,6 @@
 import { differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
-import { GetAvailableFreezes, MakeFullUserRequestLocation } from "../helpers/Requests"
+import { GetAvailableFreezes, GetFullUser } from "../helpers/Requests"
 import { ParseUserContextType } from "./UserContextSerialization"
 
 export class StreakFreezeType {
@@ -72,7 +72,7 @@ export const useGetUserContext = () => {
 }
 
 export const FetchUserContext = async () => {
-	const full_resp = await fetch(MakeFullUserRequestLocation())
+	const full_resp = await GetFullUser()
 	let freezes_resp = await GetAvailableFreezes()
 
 	let user: UserContextType = ParseUserContextType(await full_resp.json())

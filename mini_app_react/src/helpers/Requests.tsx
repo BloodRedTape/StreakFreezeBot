@@ -10,12 +10,16 @@ const GatherCurrentUserId = (): number => {
 	}
 }
 
-export const MakeUserRequestLocation = () => {
-    return window.location.origin + '/user/' + GatherCurrentUserId()
+const GatherServerUrl = () => {
+	return window.location.origin
 }
 
-export const MakeFullUserRequestLocation = () => {
-    return MakeUserRequestLocation() + '/full' 
+const MakeUserRequestLocation = () => {
+    return GatherServerUrl() + '/user/' + GatherCurrentUserId()
+}
+
+export const GetFullUser = () => {
+	return fetch(MakeUserRequestLocation() + '/full')
 }
 
 export const GetAvailableFreezes = () => {

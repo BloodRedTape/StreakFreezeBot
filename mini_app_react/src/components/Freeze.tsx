@@ -1,4 +1,4 @@
-import { Banner, Button, Image } from "@xelene/tgui";
+import { Banner, Button, Image, List } from "@xelene/tgui";
 import React from "react";
 import { FetchUserContext, StreakFreezeType, useSetUserContext } from "../core/UserContext";
 import { JsonFromResp, PopupFromJson, PostRemoveFreeze, PostUseFreeze } from "../helpers/Requests";
@@ -38,11 +38,13 @@ export const Freeze: React.FC<{ freeze: StreakFreezeType, id: number }> = ({ fre
 
 	return (
 		<Banner
-			header={'Freeze ' + id}
+			header={'Freeze ' + id + ' | ' + freeze.Reason}
 			subheader={'Due to ' + freeze.ExpireAt.toDateString()}
 			before={<Image size={40} src="https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FreezeBackground.png" />}
 		>
-			{ ActionPanel }
+			<List>
+				{ ActionPanel }
+			</List>
 		</Banner>
 	)
 }
