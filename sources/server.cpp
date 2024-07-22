@@ -203,6 +203,7 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 }
 
 void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& resp){
+	//XXX: Optimize requests count
 	const auto url = "https://api.api-ninjas.com";
 
 	nlohmann::json body = HttpGetJson(url, "/v1/quotes?category=success", {

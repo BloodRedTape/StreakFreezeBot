@@ -1,15 +1,8 @@
-import { Button, List, Text } from '@xelene/tgui'
-import { CSSProperties } from 'react';
+import { Button, Text } from '@xelene/tgui'
 import { FetchUserContext, useSetUserContext } from '../core/UserContext';
 import { JsonFromResp, PopupFromJson, PostCommit } from '../helpers/Requests';
 
 export const CommitSection = () => {
-
-	const buttonStyle: CSSProperties = {
-		margin: '5%',
-		width: '90%',
-		display: 'inline-flex',
-	}
 
 	const setUserContext = useSetUserContext()
 
@@ -27,7 +20,7 @@ export const CommitSection = () => {
 		<Button
 			size="l"
 			disabled={!CanCommit}
-			style={buttonStyle}
+			stretched
 			mode="filled"
 			onClick={OnCommit}
 		>
@@ -36,11 +29,11 @@ export const CommitSection = () => {
 	)
 
 	return (
-		<List style={{ display: 'inline', margin: '5%'}}>
+		<div>
 			<Text weight="2">Commit</Text>
 			<br/>
-			{CommitButton}
 			<br/>
-		</List>
+			{CommitButton}
+		</div>
 	)
 };

@@ -1,6 +1,5 @@
 import { Button, Input, List, Modal, Section, Slider, Text } from "@xelene/tgui"
 import { CSSProperties, useState } from "react"
-import { Background } from "../core/Background"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { JsonFromResp, PopupFromJson, PostAddFreeze } from "../helpers/Requests"
 
@@ -53,6 +52,9 @@ const FreezeInput = () => {
 					</Button>
 				</Modal.Close>
 			</Section>
+			<br/>
+			<br/>
+			<br/>
 		</List>
 	)
 }
@@ -70,6 +72,7 @@ export const AddFreezeModal = () => {
 	return (
 		<Modal
 			header={<Modal.Header />}
+			style={{background: 'var(--tg-theme-header-bg-color)'} }
 			trigger={
 				<Button
 					style={buttonStyle}
@@ -81,9 +84,7 @@ export const AddFreezeModal = () => {
 				</Button>
 			}
 		>
-			<Background>
-				<FreezeInput/>
-			</Background>
+			<FreezeInput/>
 		</Modal>
 	)
 }
