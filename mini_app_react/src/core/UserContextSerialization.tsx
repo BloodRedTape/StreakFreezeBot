@@ -3,7 +3,7 @@ import { ProtectionType, StreakFreezeType, UserContextType } from "./UserContext
 
 const FromApiDate = (data: any) => {
 	if (Array.isArray(data) && data.length >= 3) {
-	    return new Date(data[2], data[1] - 1, data[0]);
+	    return new Date(data[2], data[1] - 1, data[0] + 1);
     } else {
         return new Date(0, 0, 0);
     }
@@ -46,7 +46,9 @@ export const UserContextTypeToString = (context: UserContextType): string => {
 	const contextObject = {
 		Freezes: context.Freezes.map(streakFreezeToObject),
 		StreakStart: context.StreakStart.toISOString(),
-		History: context.History
+		History: context.History,
+		MaxFreezes: context.MaxFreezes,
+		Today: context.Today
 	};
 
 	// Convert the plain object to a JSON string
@@ -60,6 +62,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.StreakStart = FromApiDate(data.StreakStart);
 		context.History = (data.History || []).map((protection: any) => ParseProtectionType(protection));
 		context.MaxFreezes = data.MaxFreezes || 0
+		context.Today = FromApiDate(data.Today)
 	} catch (e: any) {
 		DebugLog(e);
 	}

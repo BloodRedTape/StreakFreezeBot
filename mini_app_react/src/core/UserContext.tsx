@@ -1,4 +1,4 @@
-import { differenceInDays, getDaysInMonth } from "date-fns"
+import { addDays, differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { GetAvailableFreezes, GetFullUser } from "../helpers/Requests"
 import { ParseUserContextType } from "./UserContextSerialization"
@@ -22,6 +22,7 @@ export class UserContextType{
 	public History: Array<ProtectionType> = []
 	public AvailableFreezes: Array<number> = []
 	public MaxFreezes: number = 0
+	public Today: Date = new Date(0, 0, 0)
 
 	public get Days() {
         return this.History.length;
@@ -31,6 +32,22 @@ export class UserContextType{
 		const index = differenceInDays(date, this.StreakStart)
 
 		return this.History[index] ?? ProtectionType.None
+	}
+
+	public IsProtectedAt(date: Date): boolean {
+		return this.ProtectionAt(date) !== ProtectionType.None
+	}
+
+	public IsProtected() {
+		return this.IsProtectedAt(this.Today)
+	}
+
+	public HasStreak(): boolean {
+		return this.IsProtectedAt(this.Yesterday());
+	}
+
+	public Yesterday(): Date {
+		return addDays(this.Today, -1)
 	}
 
 	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{

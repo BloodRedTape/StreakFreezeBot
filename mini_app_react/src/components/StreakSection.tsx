@@ -16,11 +16,15 @@ export const StreakSection = () => {
 	if (quote == undefined)
 		GetQuote().then(setQuote)
 
+
+
+	const streakDescription = userContext.HasStreak() ? `Your streak is ${ userContext?.Days ?? 0 } days now` : 'No streak?'
+
 	return (
 		<List>
 			<List style={{padding: '0 5% 0 5%'} }>
 				<Title weight="1" >Hey, { GatherUserCompleteName() }!</Title>
-				<Text weight="2">Your streak is { userContext?.Days ?? 0 } days now</Text>
+				<Text weight="2">{ streakDescription }</Text>
 				<br/>
 				<br/>
 				<Blockquote type="text"> { quote ?? 'There is the way....' } </Blockquote>

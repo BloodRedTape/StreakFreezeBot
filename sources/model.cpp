@@ -131,6 +131,8 @@ std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, Date no
 	freeze.UsedAt = std::make_optional(now);
 	m_Users[user].Protect(Protection::Freeze, now);
 	SaveToFile();
+
+	return freeze;
 }
 
 std::optional<StreakFreeze> StreakDatabase::UseFreeze(std::int64_t user, std::size_t freeze_id){

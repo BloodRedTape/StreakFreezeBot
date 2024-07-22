@@ -1,12 +1,13 @@
 import { Banner, Button, Image, List } from "@xelene/tgui";
 import React from "react";
-import { FetchUserContext, StreakFreezeType, useSetUserContext } from "../core/UserContext";
+import { FetchUserContext, StreakFreezeType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { JsonFromResp, PopupFromJson, PostRemoveFreeze, PostUseFreeze } from "../helpers/Requests";
 
 
 
 export const Freeze: React.FC<{ freeze: StreakFreezeType, id: number }> = ({ freeze, id }) => {
 
+	const userContext = useGetUserContext()
 	const setUserContext = useSetUserContext()
 
 	const Refresh = () => {
@@ -20,7 +21,9 @@ export const Freeze: React.FC<{ freeze: StreakFreezeType, id: number }> = ({ fre
 			.then(Refresh)
 	}
 
-	const UseButton = (<Button size="s" onClick={ OnUse }>Use</Button>)
+	const CanFreeze = !userContext?.IsProtected() || false;
+
+	const UseButton = (<Button size="s" onClick={OnUse} disabled={!CanFreeze}>Use</Button>)
 
 	const OnRemove = () => {
 		PostRemoveFreeze(id)

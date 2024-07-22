@@ -1,16 +1,17 @@
 import { Button, Text } from '@xelene/tgui'
-import { FetchUserContext, useSetUserContext } from '../core/UserContext';
+import { FetchUserContext, useGetUserContext, useSetUserContext } from '../core/UserContext';
 import { JsonFromResp, PopupFromJson, PostCommit } from '../helpers/Requests';
 
 export const CommitSection = () => {
 
+	const userContext = useGetUserContext()
 	const setUserContext = useSetUserContext()
 
 	const Refresh = () => {
 		FetchUserContext().then(setUserContext)
 	}
 
-	const CanCommit = true;
+	const CanCommit = !userContext?.IsProtected() || false;
 
 	const OnCommit = () => {
 		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);

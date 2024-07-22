@@ -2,6 +2,7 @@ import { Tabbar } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
 import { useState } from 'react';
 import { FetchUserContext, UserContext, UserContextType } from '../core/UserContext';
+import { OnEveryHour } from '../helpers/Time';
 import { CommitTab } from './CommitTab';
 import { StreakTab } from './StreakTab';
 
@@ -29,6 +30,10 @@ export const RootTabBar = () => {
 
     if (userContext == undefined)
         FetchUserContext().then(setUserContext);
+
+    OnEveryHour(() => {
+        FetchUserContext().then(setUserContext);
+	})
 
     return (
         <UserContext.Provider value = {[userContext, setUserContext]}>

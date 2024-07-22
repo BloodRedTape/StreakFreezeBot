@@ -79,7 +79,10 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 
 	const auto &user = m_DB.GetUser(id);
 
-	std::string content = nlohmann::json(user).dump();
+	auto user_json = nlohmann::json(user);
+	to_json(user_json["Today"], DateUtils::Now());
+
+	std::string content = user_json.dump();
 
 	resp.status = httplib::StatusCode::OK_200;
 	resp.set_content(content, "application/json");
