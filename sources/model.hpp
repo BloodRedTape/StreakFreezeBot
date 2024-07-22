@@ -89,8 +89,6 @@ public:
 
     bool IsProtected(std::int64_t user, Date date)const;
 
-    bool IsStreakBurnedOut(std::int64_t user)const;
-
     const std::vector<Protection> &History(std::int64_t user)const;
 
     Date StreakStart(std::int64_t user)const;

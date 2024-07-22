@@ -48,7 +48,8 @@ export const UserContextTypeToString = (context: UserContextType): string => {
 		StreakStart: context.StreakStart.toISOString(),
 		History: context.History,
 		MaxFreezes: context.MaxFreezes,
-		Today: context.Today
+		Today: context.Today,
+		Streak: context.Streak
 	};
 
 	// Convert the plain object to a JSON string
@@ -63,6 +64,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.History = (data.History || []).map((protection: any) => ParseProtectionType(protection));
 		context.MaxFreezes = data.MaxFreezes || 0
 		context.Today = FromApiDate(data.Today)
+		context.Streak = data.Streak || 0
 	} catch (e: any) {
 		DebugLog(e);
 	}

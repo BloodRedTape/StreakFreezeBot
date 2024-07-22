@@ -81,6 +81,7 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 
 	auto user_json = nlohmann::json(user);
 	to_json(user_json["Today"], DateUtils::Now());
+	to_json(user_json["Streak"], m_DB.Streak(id));
 
 	std::string content = user_json.dump();
 
@@ -103,11 +104,6 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	if(m_DB.IsFreezedToday(id))
 		return Fail(resp, "Freeze is already used!");
 
-	if(m_DB.IsStreakBurnedOut(id)){
-		m_DB.ResetStreak(id);
-		return Fail(resp, "Streak is burned out, reset");
-	}
-
 	if (!m_DB.Commit(id))
 		return Fail(resp, "Something wrong");
 
@@ -125,9 +121,6 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	
 	if(m_DB.IsProtectedToday(id))
 		return Fail(resp, "Can't use freeze today, already protected!");
-
-	if(m_DB.IsStreakBurnedOut(id))
-		return Fail(resp, "Streak is already burned out, nothing to freeze.");
 
 	std::optional<StreakFreeze> freeze = m_DB.UseFreeze(id, freeze_id.value());
 	

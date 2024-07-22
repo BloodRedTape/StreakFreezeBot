@@ -10,6 +10,14 @@ using Date = date::year_month_day;
 namespace DateUtils{
     extern Date Now();
 
+    inline Date Yesterday(Date of) {
+	    return date::sys_days(of) - date::days(1);
+    }
+
+    inline Date Yesterday() {
+        return Yesterday(Now());
+    }
+
     extern std::vector<Date> Range(Date from, Date to);
 
     namespace Debug{

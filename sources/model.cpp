@@ -44,8 +44,12 @@ std::size_t User::DateIndex(Date date)const {
 
 void User::Protect(Protection prot, Date date) {
 	auto idx = DateIndex(date);
+	
+	
+	while(idx > History.size())
+		History.push_back(Protection::None);
 
-	assert(idx == History.size());
+	assert(idx >= History.size() && "Override happening");
 
 	History.push_back(prot);
 }
@@ -163,15 +167,15 @@ std::optional<StreakFreeze> StreakDatabase::UseAnyFreeze(std::int64_t user){
 }
 
 std::int64_t StreakDatabase::Streak(std::int64_t user)const {
-	std::int64_t streak = 0;
-
-	for (auto day : History(user)) {
-		if(day == Protection::None)
-			break;
-
-		streak++;
-	}
+	std::int64_t streak = IsCommitedToday(user);
 	
+	date::year_month_day check_date = DateUtils::Yesterday();
+
+	while (IsProtected(user, check_date)) {
+		streak += m_Users[user].IsCommitedAt(check_date);
+		check_date = DateUtils::Yesterday(check_date);
+	}
+
 	return streak;
 }
 
@@ -186,9 +190,6 @@ bool StreakDatabase::Commit(std::int64_t user) {
 	if(IsProtectedToday(user))
 		return false;
 
-	if(IsStreakBurnedOut(user))
-		return (ResetStreak(user), false); // Streak is burned out, Reset
-	
 	m_Users[user].Protect(Protection::Commit, DateUtils::Now());
 
 	SaveToFile();
@@ -209,14 +210,6 @@ bool StreakDatabase::IsProtectedToday(std::int64_t user)const {
 }
 bool StreakDatabase::IsProtected(std::int64_t user, Date date)const {
 	return m_Users[user].IsProtected(date);
-}
-
-bool StreakDatabase::IsStreakBurnedOut(std::int64_t user)const {
-	for (auto day : History(user)) {
-		if(day == Protection::None)
-			return true;
-	}
-	return false;
 }
 
 const std::vector<Protection> &StreakDatabase::History(std::int64_t user)const {

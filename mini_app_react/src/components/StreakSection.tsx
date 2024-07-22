@@ -18,7 +18,7 @@ export const StreakSection = () => {
 
 
 
-	const streakDescription = userContext.HasStreak() ? `Your streak is ${ userContext?.Days ?? 0 } days now` : 'No streak?'
+	const streakDescription = userContext.HasStreak() ? `Your streak is ${ userContext?.StreakSize() ?? 0 } days now` : 'No streak?'
 
 	return (
 		<List>

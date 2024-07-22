@@ -23,10 +23,7 @@ export class UserContextType{
 	public AvailableFreezes: Array<number> = []
 	public MaxFreezes: number = 0
 	public Today: Date = new Date(0, 0, 0)
-
-	public get Days() {
-        return this.History.length;
-	}
+	public Streak: number = 0
 
 	public ProtectionAt(date: Date): ProtectionType{
 		const index = differenceInDays(date, this.StreakStart)
@@ -43,7 +40,11 @@ export class UserContextType{
 	}
 
 	public HasStreak(): boolean {
-		return this.IsProtectedAt(this.Yesterday());
+		return this.StreakSize() != 0;
+	}
+
+	public StreakSize(): number {
+		return this.Streak;
 	}
 
 	public Yesterday(): Date {
