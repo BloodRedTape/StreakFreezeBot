@@ -60,6 +60,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		res.set_content(Format("<h1>Error 500</h1><p>%</p>", content), "text/html");
 		res.status = httplib::StatusCode::InternalServerError_500;
 	});
+
+	m_LastUpdate = std::chrono::steady_clock::now() - std::chrono::minutes(m_QuoteUpdateMinutes);
 }
 
 void HttpApiServer::Run(){
@@ -203,19 +205,28 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 }
 
 void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& resp){
-	//XXX: Optimize requests count
-	const auto url = "https://api.api-ninjas.com";
+	
+	auto now = std::chrono::steady_clock::now();
 
-	nlohmann::json body = HttpGetJson(url, "/v1/quotes?category=success", {
-		{"X-Api-Key", m_QuoteApiKey}
-	});
+	auto duration = std::chrono::duration_cast<std::chrono::minutes>(now - m_LastUpdate);
+	
+	if(duration >= std::chrono::minutes(m_QuoteUpdateMinutes)){
+		const auto url = "https://api.api-ninjas.com";
 
-	std::string quote = body.is_array()
-		? body.front().dump() 
-		: R"({ "quote": "There is nothing better that extending your streak"})";
+		nlohmann::json body = HttpGetJson(url, "/v1/quotes?category=success", {
+			{"X-Api-Key", m_QuoteApiKey}
+		});
+
+		std::string quote = body.is_array()
+			? body.front().dump() 
+			: R"({ "quote": "There is nothing better that extending your streak"})";
+		
+		m_LastQuote = quote;
+		m_LastUpdate = now;
+	}
 
 	resp.status = 200;
-	resp.set_content(quote, "application/json");
+	resp.set_content(m_LastQuote, "application/json");
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

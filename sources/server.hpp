@@ -2,6 +2,7 @@
 
 #include <httplib.h>
 #include <INIReader.h>
+#include <chrono>
 #include "model.hpp"
 
 class HttpApiServer : public httplib::Server {
@@ -19,6 +20,9 @@ private:
 	StreakDatabase m_DB;
 
 	std::string m_QuoteApiKey;
+	int m_QuoteUpdateMinutes = 60;
+	std::chrono::steady_clock::time_point m_LastUpdate;
+	std::string m_LastQuote;
 public:	
 	HttpApiServer(const INIReader &config);
 
