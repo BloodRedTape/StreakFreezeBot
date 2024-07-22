@@ -3,7 +3,7 @@ import { ProtectionType, StreakFreezeType, UserContextType } from "./UserContext
 
 const FromApiDate = (data: any) => {
 	if (Array.isArray(data) && data.length >= 3) {
-	    return new Date(data[2], data[1] - 1, data[0] + 1);
+	    return new Date(data[2], data[1] - 1, data[0]);
     } else {
         return new Date(0, 0, 0);
     }

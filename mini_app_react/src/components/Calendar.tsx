@@ -1,4 +1,5 @@
 import { Cell, Section, Text } from '@xelene/tgui';
+import { differenceInDays } from 'date-fns';
 import { CSSProperties } from 'react';
 import { Img } from '../core/Img';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
@@ -13,6 +14,7 @@ enum DayType{
 type CalendarDayProps = {
     day: number
     type: DayType
+    today: boolean
 }
 
 const GetColorFor = (type: DayType) => {
@@ -38,7 +40,7 @@ const GetColorFor = (type: DayType) => {
     return colors.get(type) ?? ["", "", ""];
 }
 
-const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
+const CalendarDay: React.FC<CalendarDayProps> = ({ day, type, today }) => {
     const [textColor, imageLink] = GetColorFor(type).splice(1)
 
     const containerStyle: CSSProperties = {
@@ -61,10 +63,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type }) => {
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-	}
+    }
 
     const textStyle: CSSProperties = {
-        color: textColor, // Color of the text, ensure it contrasts with the image
+        color: today ? 'black' : textColor, // Color of the text, ensure it contrasts with the image
         fontWeight: 'bold',
         textAlign: 'center', // Ensure text inside the Text component is centered
     };
@@ -108,6 +110,8 @@ const GetDayTypeFor = (date: Date) => {
 }
 
 export const Calendar = (props: CalendarProps) => {
+    const userContext = useGetUserContext()
+
     const daysOfWeek = [
         'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
     ];
@@ -127,7 +131,7 @@ export const Calendar = (props: CalendarProps) => {
     }
 
     const MakeHeadings = (day: string, index: number) => (
-         <th key={index}><Text weight="3">{day}</Text></th>
+        <th key={index}><Text weight="2">{day}</Text></th>
     )
 
     const Headings = (
@@ -138,9 +142,13 @@ export const Calendar = (props: CalendarProps) => {
         return day === 0 ? DayType.NotADay : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day))
     }
 
-    const MakeDay = (day: any) => (
-        <td><CalendarDay day={day} type={ DetectDayType(day) }/></td>
-    )
+    const MakeDay = (day: any) => {
+        const isToday = differenceInDays(userContext?.Today ?? new Date(0, 0, 0), new Date(props.year, props.month - 1, day)) == 0
+
+        return (
+            <td><CalendarDay day={day} today={isToday} type={ DetectDayType(day) }/></td>
+        )
+	}
 
     const MakeRow = (week: any[], index: number) => (
         <tr key={index}> {week.map(MakeDay)} </tr>
