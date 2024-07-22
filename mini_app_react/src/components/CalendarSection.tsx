@@ -1,6 +1,6 @@
 import { List, Text, IconButton, Breadcrumbs } from "@xelene/tgui";
 import { addMonths } from "date-fns";
-import { useState } from "react";
+import { CSSProperties, useState } from "react";
 import { ProtectionType, useUserContext } from "../core/UserContext";
 import { Calendar } from "./Calendar";
 import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
@@ -32,18 +32,46 @@ export const CalendarSection = () => {
 		'Freezed': userContext?.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0
 	})
 
+	const SelectorTextStyle: CSSProperties = {
+		display: 'inline-block',
+		marginTop: 'auto',
+		marginBottom: 'auto',
+	}
+
+	const SelectorControlsStyle: CSSProperties = {
+		display: 'inline-block',
+		marginLeft: 'auto',
+		marginRight: '0'
+	}
+
+	const SelectorStyle: CSSProperties = {
+		display: 'flex',
+		alignItems: 'center'
+	}
+
 	const MonthSelector = (
-		<div style={{ display: 'inline' }}>
-			<Text weight="2">{monthName} {year}</Text>
-			<IconButton style={{float: 'right'}} size="s" onClick={ ()=>setAnchor(addMonths(anchor, 1)) }><Icon24ChevronRight/></IconButton>
-			<IconButton style={{marginRight: '10px', float: 'right'}} size="s" onClick={ ()=>setAnchor(addMonths(anchor,-1)) }><Icon24ChevronLeft/></IconButton>
+		<div style={SelectorStyle}>
+			<Text style={SelectorTextStyle} weight="2">{monthName} {year}</Text>
+			<div style={SelectorControlsStyle}>
+				<IconButton style={{marginRight: '10px'}} size="s" onClick={ ()=>setAnchor(addMonths(anchor,-1)) }><Icon24ChevronLeft/></IconButton>
+				<IconButton size="s" onClick={ ()=>setAnchor(addMonths(anchor, 1)) }><Icon24ChevronRight/></IconButton>
+			</div>
 		</div>
 	)
 
+	const MonthStatsStyle: CSSProperties = {
+		display: 'inline-block',
+		paddingLeft: 'auto',
+		paddingRight: 'auto',
+		marginLeft: 'auto',
+		marginRight: 'auto',
+	}
+
 	const MonthStats = (
-		<Breadcrumbs>
+		<div style={MonthStatsStyle}>
+			<Breadcrumbs >
 			{stats.map((pair) => 
-				(<BreadCrumbsItem>
+				(<BreadCrumbsItem >
 					<List>
 						<Text weight="2">{pair[0]}</Text>
 						<br/>
@@ -51,16 +79,17 @@ export const CalendarSection = () => {
 					</List>
 				</BreadCrumbsItem>)
 			)}
-		</Breadcrumbs>
+			</Breadcrumbs>
+		</div>
 	)
 
 	return (
-		<List>
+		<div>
+			<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
 				{ MonthSelector }
-				<br/>
-				<br/>
 				{ MonthStats }
-				<Calendar year={year} month={month}/>
-		</List>
+			</div>
+			<Calendar year={year} month={month}/>
+		</div>
 	)
 }

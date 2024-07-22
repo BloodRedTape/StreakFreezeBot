@@ -1,5 +1,6 @@
 #include "server.hpp"
 #include "model.hpp"
+#include "http.hpp"
 #include <bsl/log.hpp>
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
@@ -14,21 +15,6 @@ void Ok(httplib::Response &resp, const std::string &error) {
 	resp.status = httplib::StatusCode::OK_200;
 };
 
-template<typename T>
-std::optional<T> GetJsonProperty(const std::string &json_string, const std::string &property) {
-	auto json = nlohmann::json::parse(json_string, nullptr, false, false);
-
-	if(!json.count(property))
-		return std::nullopt;
-
-	return json[property].get<T>();
-}
-
-template<typename T>
-T GetJsonPropertyOr(const std::string &json_string, const std::string &property, T value) {
-	return GetJsonProperty<T>(json_string, property).value_or(value);
-}
-
 HttpApiServer::HttpApiServer(const INIReader& config):
 	m_Config(
 		config
@@ -42,7 +28,10 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	m_WebAppPath(
 		config.Get(SectionName, "WebAppPath", ".")
 	),
-	m_DB(config)
+	m_DB(config),
+	m_QuoteApiKey(
+		config.Get("QuoteApi", "Key", "")
+	)
 {
 	Super::set_mount_point("/", m_WebAppPath);
 	
@@ -54,6 +43,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
 	Post("/user/:id/reset_streak", &ThisClass::ResetStreak);
+	Get ("/quote", &ThisClass::GetQuote);
 
 	set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
@@ -210,6 +200,21 @@ std::optional<std::int64_t> HttpApiServer::GetUser(const httplib::Request& req)c
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){
 	LogHttpApiDebug(Display, "%", req.body);
 	resp.status = 200;
+}
+
+void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& resp){
+	const auto url = "https://api.api-ninjas.com";
+
+	nlohmann::json body = HttpGetJson(url, "/v1/quotes?category=success", {
+		{"X-Api-Key", m_QuoteApiKey}
+	});
+
+	std::string quote = body.is_array()
+		? body.front().dump() 
+		: R"({ "quote": "There is nothing better that extending your streak"})";
+
+	resp.status = 200;
+	resp.set_content(quote, "application/json");
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

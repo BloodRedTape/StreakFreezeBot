@@ -10,6 +10,14 @@ const GatherCurrentUserId = (): number => {
 	}
 }
 
+export const GatherUserCompleteName = (): string => {
+	const launchParams = retrieveLaunchParams();
+
+	const user = launchParams.initData?.user
+
+	return user?.firstName ?? 'Unknown User' + user?.lastName ?? ' ';
+}
+
 const GatherServerUrl = () => {
 	return window.location.origin
 }
@@ -102,4 +110,11 @@ export const PopupFromJson = (json: any) => {
 		]
 	};
 	postEvent('web_app_open_popup', params)
+}
+
+
+export const GetQuote = () => {
+	return fetch(GatherServerUrl() + '/quote')
+		.then(JsonFromResp)
+		.then((body) => body.quote ?? 'There is nothing better that extending your streak!')
 }

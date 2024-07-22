@@ -6,7 +6,8 @@ import { JsonFromResp, PopupFromJson, PostCommit } from '../helpers/Requests';
 export const CommitSection = () => {
 
 	const buttonStyle: CSSProperties = {
-		margin: '10px',
+		margin: '5%',
+		width: '90%',
 		display: 'inline-flex',
 	}
 
@@ -35,7 +36,7 @@ export const CommitSection = () => {
 	)
 
 	return (
-		<List style={{ display: 'inline', margin: '10px'}}>
+		<List style={{ display: 'inline', margin: '5%'}}>
 			<Text weight="2">Commit</Text>
 			<br/>
 			{CommitButton}

@@ -1,8 +1,7 @@
 ﻿#include "bot.hpp"
 #include <bsl/format.hpp>
 #include <thread>
-#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include <httplib.h>
+#include "http.hpp"
 #include <boost/algorithm/string.hpp>
 
 #undef SendMessage
@@ -16,46 +15,6 @@
 const char *Ok = "Ok";
 const char *Fail = "Fail";
 
-std::optional<std::string> HttpGet(const std::string& endpoint, const std::string &path) {
-    httplib::Client client(endpoint);
-
-	auto resp = client.Get(path);
-
-	if (!resp || resp->status != 200)
-		return std::nullopt;
-
-	return resp->body;
-}
-
-nlohmann::json HttpGetJson(const std::string& endpoint, const std::string &path) {
-	auto res = HttpGet(endpoint, path);
-
-	if(!res.has_value())
-		return {};
-
-	return nlohmann::json::parse(res.value(), nullptr, false, false);
-}
-
-std::optional<std::string> HttpPost(const std::string& endpoint, const std::string &path) {
-    httplib::Client client(endpoint);
-
-	auto resp = client.Post(path);
-
-	if (!resp || resp->status != 200)
-		return std::nullopt;
-
-	return resp->body;
-}
-
-nlohmann::json HttpPostJson(const std::string& endpoint, const std::string &path) {
-	auto res = HttpPost(endpoint, path);
-
-	if(!res.has_value())
-		return {};
-
-	return nlohmann::json::parse(res.value(), nullptr, false, false);
-}
-
 StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
 		config.Get(SectionName, "Token", ""),
@@ -67,7 +26,8 @@ StreakBot::StreakBot(const INIReader& config):
 		config.Get(SectionName, "WebAppUrl", "")
 	)
 {
-	OnCommand("start", this, &ThisClass::Start, "Reset streak");
+	OnCommand("start", this, &ThisClass::Start, "start");
+	OnCommand("reset", this, &ThisClass::Reset, "Reset streak");
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
 	OnCommand("use_freeze", this, &ThisClass::UseFreeze, "Use one freeze from storage");
 	OnCommand("freezes", this, &ThisClass::Freezes, "List available freezes");
@@ -95,6 +55,10 @@ void StreakBot::Tick() {
 }
 
 void StreakBot::Start(TgBot::Message::Ptr message) {
+	SetupUserUiWith(message, "Hi there!");
+}
+
+void StreakBot::Reset(TgBot::Message::Ptr message) {
 	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
 
 	SetupUserUiWith(message);

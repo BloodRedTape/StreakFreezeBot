@@ -1,7 +1,6 @@
 import { Tabbar } from '@xelene/tgui';
 import { Icon } from '@xelene/tgui/dist/types/Icon';
 import { useState } from 'react';
-import { Background } from '../core/Background';
 import { FetchUserContext, UserContext, UserContextType } from '../core/UserContext';
 import { CommitTab } from './CommitTab';
 import { StreakTab } from './StreakTab';
@@ -30,16 +29,16 @@ export const RootTabBar = () => {
 
     if (userContext == undefined)
         FetchUserContext().then(setUserContext);
-    
+
     return (
         <UserContext.Provider value = {[userContext, setUserContext]}>
             <div>
-                {CurrentTab(currentTab)}
-                <Background>
+                <div style={{ overflowY: 'scroll', height: '85vh' }}>
+                    {CurrentTab(currentTab)}
+                </div>
                 <Tabbar>
                         {tabs.map(({ Id, Name }) => <Tabbar.Item style={{height: '15vh'}} key={Id} text={Name} selected={Id === currentTab} onClick={() => setCurrentTab(Id)}></Tabbar.Item>)}
                 </Tabbar>
-                </Background>
             </div>
         </UserContext.Provider>
     );

@@ -17,6 +17,8 @@ private:
 	std::string m_Hostname;
 	int m_Port;
 	StreakDatabase m_DB;
+
+	std::string m_QuoteApiKey;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -37,6 +39,8 @@ public:
 	void ResetStreak(const httplib::Request &req, httplib::Response &resp);
 
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
+
+	void GetQuote(const httplib::Request &req, httplib::Response &resp);
 
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 

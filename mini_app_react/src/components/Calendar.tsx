@@ -1,4 +1,4 @@
-import { Text } from '@xelene/tgui';
+import { Cell, Section, Text } from '@xelene/tgui';
 import { CSSProperties } from 'react';
 import { Img } from '../core/Img';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
@@ -147,9 +147,13 @@ export const Calendar = (props: CalendarProps) => {
     )
 
     return (
-        <table style={{ width: '100%', tableLayout: 'fixed' }}>
-            <thead> { Headings } </thead>
-            <tbody> { weeks.map(MakeRow) } </tbody>
-        </table>
+        <Section>
+            <Cell style={{background: 'var(--tg-theme-header-bg-color)'}}>
+                <table style={{ width: '100%', tableLayout: 'fixed' }}>
+                    <thead> { Headings } </thead>
+                    <tbody> { weeks.map(MakeRow) } </tbody>
+                </table>
+            </Cell>
+        </Section>
     );
 };

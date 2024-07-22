@@ -19,6 +19,8 @@ public:
 
 	void Start(TgBot::Message::Ptr message);
 
+	void Reset(TgBot::Message::Ptr message);
+
 	void AddFreeze(TgBot::Message::Ptr message);
 
 	void UseFreeze(TgBot::Message::Ptr message);
