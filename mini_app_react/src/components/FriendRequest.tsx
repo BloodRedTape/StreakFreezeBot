@@ -46,7 +46,7 @@ const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, 
 }
 
 const ShouldOpenInviteFrom = (from: number | undefined)=> {
-	const noSelfRequest = false
+	const noSelfRequest = true
 	const userContext = useGetUserContext()
 		
 	if (from === undefined || userContext === undefined)
