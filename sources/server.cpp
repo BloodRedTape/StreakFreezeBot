@@ -44,6 +44,9 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
 	Post("/user/:id/reset_streak", &ThisClass::ResetStreak);
 	Get ("/quote", &ThisClass::GetQuote);
+	Get ("/user/:id/friends", &ThisClass::GetFriends);
+	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
+	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
 
 	set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
@@ -183,10 +186,14 @@ void HttpApiServer::ResetStreak(const httplib::Request& req, httplib::Response& 
 }
 
 std::optional<std::int64_t> HttpApiServer::GetUser(const httplib::Request& req)const {
-	if (!req.path_params.count("id"))
+	return GetIdParam(req, "id");
+}
+
+std::optional<std::int64_t> HttpApiServer::GetIdParam(const httplib::Request& req, const std::string &name)const {
+	if (!req.path_params.count(name))
 		return std::nullopt;
 
-	const std::string &user_id = req.path_params.at("id");
+	const std::string &user_id = req.path_params.at(name);
 	errno = 0;
 	std::int64_t id = std::atoll(user_id.c_str());
 	if(errno)
@@ -223,6 +230,49 @@ void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& res
 
 	resp.status = 200;
 	resp.set_content(m_LastQuote, "application/json");
+}
+
+void HttpApiServer::AcceptFriendInvite(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t from = GetIdParam(req, "from").value_or(0);
+
+	if (!id || !from) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	m_DB.AddFriends(id, from);
+
+	Ok(resp, "Added friends");
+}
+
+void HttpApiServer::RemoveFriend(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t from = GetIdParam(req, "from").value_or(0);
+
+	if (!id || !from) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	m_DB.RemoveFriends(id, from);
+
+	Ok(resp, "Removed friend");
+}
+
+
+void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto friends = m_DB.GetFriendsInfo(id);
+
+	resp.status = 200;
+	resp.set_content(nlohmann::json(friends).dump(), "application/json");
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

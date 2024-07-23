@@ -1,9 +1,9 @@
 import { List, Text, Blockquote, Title } from '@xelene/tgui';
 import { useUserContext } from '../core/UserContext';
-import { Background } from '../core/Background';
 import { CalendarSection } from './CalendarSection';
 import { GatherUserCompleteName, GetQuote } from '../helpers/Requests';
 import { useState } from 'react';
+import { Loading } from './Loading';
 
 export const StreakSection = () => {
 	const [userContext] = useUserContext()
@@ -11,7 +11,7 @@ export const StreakSection = () => {
 	const [quote, setQuote] = useState<string>()
 
 	if (userContext == undefined)
-		return (<Background><Text style={{margin: '20%'}} weight="1">Ops, can't fetch a user!</Text></Background>)
+		return (<Loading/>)
 
 	if (quote == undefined)
 		GetQuote().then(setQuote)

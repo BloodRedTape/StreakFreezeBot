@@ -21,7 +21,7 @@ const ParseStreakFreezeType = (data: any): StreakFreezeType =>{
     return freeze;
 }
 
-const ParseProtectionType = (data: any): ProtectionType => {
+export const ParseProtectionType = (data: any): ProtectionType => {
 	if (data == 0)
 		return ProtectionType.None
 	if (data == 1)
@@ -49,7 +49,8 @@ export const UserContextTypeToString = (context: UserContextType): string => {
 		History: context.History,
 		MaxFreezes: context.MaxFreezes,
 		Today: context.Today,
-		Streak: context.Streak
+		Streak: context.Streak,
+		Friends: context.Friends
 	};
 
 	// Convert the plain object to a JSON string
@@ -65,6 +66,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.MaxFreezes = data.MaxFreezes || 0
 		context.Today = FromApiDate(data.Today)
 		context.Streak = data.Streak || 0
+		context.Friends = (data.Friends || []).map((friend: any): number => friend)
 	} catch (e: any) {
 		DebugLog(e);
 	}

@@ -66,6 +66,14 @@ const std::vector<Protection>& User::HistoryAsOf(Date today) {
 	return History;
 }
 
+Protection User::ProtectionAt(Date date){
+	const auto &history = HistoryAsOf(date);
+	
+	auto idx = DateIndex(date);
+
+	return idx < History.size() ? History[idx] : Protection::None;
+}
+
 StreakDatabase::StreakDatabase(const INIReader& config):
 	m_Filepath(
 		config.Get(SectionName, "Filepath", "")
@@ -221,6 +229,32 @@ Date StreakDatabase::StreakStart(std::int64_t user)const {
 }
 bool StreakDatabase::CanAddFreeze(std::int64_t user)const {
 	return AvailableFreezes(user).size() < m_Users[user].MaxFreezes;
+}
+
+void StreakDatabase::AddFriends(std::int64_t first, std::int64_t second){
+	m_Users[first].Friends.emplace(second);
+	m_Users[second].Friends.emplace(first);
+
+	SaveToFile();
+}
+
+void StreakDatabase::RemoveFriends(std::int64_t first, std::int64_t second){
+	m_Users[first].Friends.erase(second);
+	m_Users[second].Friends.erase(first);
+
+	SaveToFile();
+}
+
+std::vector<FriendInfo> StreakDatabase::GetFriendsInfo(std::int64_t user)const {
+	std::vector<FriendInfo> result;
+	 
+	for (std::int64_t id: m_Users[user].Friends) {
+		auto &f = m_Users[id];
+
+		result.push_back({id, Streak(id), f.ProtectionAt(DateUtils::Now())});
+	}
+
+	return result;
 }
 
 void StreakDatabase::EnsureNotificationChat(std::int64_t user, std::int64_t chat) {

@@ -1,6 +1,6 @@
 import { PopupParams, postEvent, retrieveLaunchParams } from "@telegram-apps/sdk-react";
 
-const GatherCurrentUserId = (): number => {
+export const GatherCurrentUserId = (): number => {
 	const debugId = 399828804
 	try {
 		const launchParams = retrieveLaunchParams();
@@ -112,9 +112,31 @@ export const PopupFromJson = (json: any) => {
 	postEvent('web_app_open_popup', params)
 }
 
+export const SimplePopup = (title: string, message: string) => {
+	const params: PopupParams = {
+		title: title,
+		message: message,
+		buttons: [
+			{id: "none", type: 'ok'}
+		]
+	};
+	postEvent('web_app_open_popup', params)
+}
+
 
 export const GetQuote = () => {
 	return fetch(GatherServerUrl() + '/quote')
 		.then(JsonFromResp)
 		.then((body) => body.quote ?? 'There is nothing better that extending your streak!')
+}
+
+export const PostAcceptInvite = (from: number) => {
+	return fetch(MakeUserRequestLocation() + '/friends/accept/' + from, {method: 'POST'})
+}
+export const PostRemoveFriend = (friend: number) => {
+	return fetch(MakeUserRequestLocation() + '/friends/remove/' + friend, {method: 'POST'})
+}
+
+export const GetFriends = () => {
+	return fetch(MakeUserRequestLocation() + '/friends')
 }

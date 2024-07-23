@@ -4,6 +4,7 @@
 #include <vector>
 #include <INIReader.h>
 #include <optional>
+#include <set>
 #include "time.hpp"
 
 struct StreakFreeze {
@@ -28,6 +29,12 @@ enum class Protection{
     Freeze
 };
 
+struct FriendInfo {
+    std::int64_t Id = 0;
+    std::int64_t Streak = 0;
+    Protection TodayProtection = Protection::None;
+};
+
 struct User {
     static constexpr size_t InvalidIndex = -1;
 	std::vector<StreakFreeze> Freezes;
@@ -35,6 +42,7 @@ struct User {
     std::vector<Protection> History;
     std::int64_t MaxFreezes = 2;
     std::int64_t NotificationChat = 0;
+    std::set<std::int64_t> Friends;
 
     bool IsCommitedAt(Date date)const;
 
@@ -51,6 +59,8 @@ struct User {
     std::size_t DateIndex(Date date)const;
 
     const std::vector<Protection> &HistoryAsOf(Date today);
+
+    Protection ProtectionAt(Date date);
 };
 
 class StreakDatabase{
@@ -94,6 +104,12 @@ public:
     Date StreakStart(std::int64_t user)const;
 
 	bool CanAddFreeze(std::int64_t user)const;
+
+    void AddFriends(std::int64_t first, std::int64_t second);
+
+    void RemoveFriends(std::int64_t first, std::int64_t second);
+
+    std::vector<FriendInfo> GetFriendsInfo(std::int64_t user)const;
 
     void EnsureNotificationChat(std::int64_t user, std::int64_t chat);
 
@@ -141,6 +157,7 @@ inline void to_json(nlohmann::json& j, const User& user) {
     to_json(j["History"], user.History);
     to_json(j["NotificationChat"], user.NotificationChat);
     j["MaxFreezes"] = user.MaxFreezes;
+    j["Friends"] = user.Friends;
 }
 
 inline void from_json(const nlohmann::json& j, User& user) {
@@ -151,4 +168,15 @@ inline void from_json(const nlohmann::json& j, User& user) {
 
     if(j.contains("MaxFreezes"))
         j.at("MaxFreezes").get_to(user.MaxFreezes);
+
+    if(j.contains("Friends"))
+        j.at("Friends").get_to(user.Friends);
+}
+
+inline void to_json(nlohmann::json& j, const FriendInfo& info) {
+    j = nlohmann::json{
+        {"Id", info.Id},
+        {"Streak", info.Streak},
+        {"TodayProtection", (int)info.TodayProtection}
+    };
 }

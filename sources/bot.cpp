@@ -218,7 +218,7 @@ void StreakBot::SetupUserUiWith(TgBot::Message::Ptr source, const std::string& t
 
 		getApi().setChatMenuButton(source->chat->id, menu_button);
 	}
-
+#if 0
 	{
 		auto streak_button = std::make_shared<TgBot::KeyboardButton>();
 		streak_button->text = "Streak";
@@ -239,4 +239,5 @@ void StreakBot::SetupUserUiWith(TgBot::Message::Ptr source, const std::string& t
 		else
 			SendMessage(source->chat->id, source->isTopicMessage ? source->messageThreadId : 0, text, markup, source->messageId);
 	}
+#endif
 }

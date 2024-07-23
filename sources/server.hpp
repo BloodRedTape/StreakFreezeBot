@@ -46,7 +46,15 @@ public:
 
 	void GetQuote(const httplib::Request &req, httplib::Response &resp);
 
+	void AcceptFriendInvite(const httplib::Request &req, httplib::Response &resp);
+
+	void RemoveFriend(const httplib::Request &req, httplib::Response &resp);
+
+	void GetFriends(const httplib::Request &req, httplib::Response &resp);
+
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
+
+	std::optional<std::int64_t> GetIdParam(const httplib::Request &req, const std::string &name)const;
 
 	HttpApiServer &Get(const std::string &pattern, HttpApiHandler handler);
 
