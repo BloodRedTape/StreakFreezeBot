@@ -1,7 +1,7 @@
 import { Modal, Text, Button, Avatar} from "@xelene/tgui"
-import { CSSProperties } from "react"
+import { CSSProperties, useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
-import { GatherCurrentUserId, PostAcceptInvite, SimplePopup } from "../helpers/Requests"
+import { GatherCurrentUserId, GetTgFullUser, JsonFromResp, PostAcceptInvite, ProfilePhotoUrl, SimplePopup } from "../helpers/Requests"
 
 const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, onAccepted }) => {
 	const OnAccept = () => {
@@ -15,15 +15,21 @@ const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, 
 		marginRight: 'auto'
 	}
 
+	const [user, setUser] = useState<string>()
+
+	if (user === undefined)
+		GetTgFullUser().then(JsonFromResp).then((json)=>setUser(json.FullName ?? "Unknown Name")).catch(()=>SimplePopup('error', 'error'))
+
 	return (
 		<div style={{ padding: '5%'}}>
 			<Avatar
 				size={96}
 				style={CenteredStyle}
-				src="https://avatars.githubusercontent.com/u/84640980?v=4"
+				fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
+				src={ProfilePhotoUrl()}
 			/>
 			<br/>
-			<Text weight="1">{ from }</Text>
+			<Text weight="1">{ user ?? "Loading Name..."}</Text>
 			<br/>
 			<Text weight="2">Wants to be your friend!</Text>
 
@@ -40,7 +46,7 @@ const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, 
 }
 
 const ShouldOpenInviteFrom = (from: number | undefined)=> {
-	const noSelfRequest = true
+	const noSelfRequest = false
 	const userContext = useGetUserContext()
 		
 	if (from === undefined || userContext === undefined)

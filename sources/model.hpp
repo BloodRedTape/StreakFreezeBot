@@ -33,6 +33,9 @@ struct FriendInfo {
     std::int64_t Id = 0;
     std::int64_t Streak = 0;
     Protection TodayProtection = Protection::None;
+
+    std::string Username;
+    std::string FullName;
 };
 
 struct User {
@@ -177,6 +180,8 @@ inline void to_json(nlohmann::json& j, const FriendInfo& info) {
     j = nlohmann::json{
         {"Id", info.Id},
         {"Streak", info.Streak},
-        {"TodayProtection", (int)info.TodayProtection}
+        {"TodayProtection", (int)info.TodayProtection},
+        {"Username", info.Username},
+        {"FullName", info.FullName}
     };
 }

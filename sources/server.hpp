@@ -4,6 +4,7 @@
 #include <INIReader.h>
 #include <chrono>
 #include "model.hpp"
+#include <tgbot/Bot.h>
 
 class HttpApiServer : public httplib::Server {
 	using Super = httplib::Server;
@@ -23,6 +24,8 @@ private:
 	int m_QuoteUpdateMinutes = 60;
 	std::chrono::steady_clock::time_point m_LastUpdate;
 	std::string m_LastQuote;
+
+	TgBot::Bot m_Bot;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -52,9 +55,13 @@ public:
 
 	void GetFriends(const httplib::Request &req, httplib::Response &resp);
 
+	void GetTg(const httplib::Request &req, httplib::Response &resp);
+
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 
 	std::optional<std::int64_t> GetIdParam(const httplib::Request &req, const std::string &name)const;
+
+	std::optional<std::string> GetParam(const httplib::Request &req, const std::string &name)const;
 
 	HttpApiServer &Get(const std::string &pattern, HttpApiHandler handler);
 

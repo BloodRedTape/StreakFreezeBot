@@ -2,15 +2,16 @@ import { Button, Placeholder, Banner, Avatar } from "@xelene/tgui"
 import React, { useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
 import { MakeInviteLink } from "../helpers/Friends"
-import { PostRemoveFriend } from "../helpers/Requests"
+import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
 import { Loading } from "./Loading"
 
 
 const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ friend, onRemoved }) => {
 	const FriendAvatar = (
 		<Avatar
-			size={24}
-			src="https://avatars.githubusercontent.com/u/84640980?v=4"
+			size={48}
+			src={ProfilePhotoUrlFor(friend.Id) }
+			fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
 		/>
 	)
 
@@ -33,7 +34,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 	return (
 		<Banner
 			before={FriendAvatar}
-			header={friend.Id}
+			header={friend.FullName}
 			subheader={friend.Streak + " Days streak"}
 			type="section"
 			style={{background: 'var(--tg-theme-header-bg-color)', marginBottom: '5px'}}

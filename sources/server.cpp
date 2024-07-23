@@ -31,6 +31,9 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	m_DB(config),
 	m_QuoteApiKey(
 		config.Get("QuoteApi", "Key", "")
+	),
+	m_Bot(
+		config.Get("Bot", "Token", "")
 	)
 {
 	Super::set_mount_point("/", m_WebAppPath);
@@ -47,6 +50,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Get ("/user/:id/friends", &ThisClass::GetFriends);
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
+
+	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
 	set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
@@ -202,6 +207,13 @@ std::optional<std::int64_t> HttpApiServer::GetIdParam(const httplib::Request& re
 	return id;
 }
 
+std::optional<std::string> HttpApiServer::GetParam(const httplib::Request& req, const std::string& name)const {
+	if (!req.path_params.count(name))
+		return std::nullopt;
+
+	return req.path_params.at(name);
+}
+
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){
 	LogHttpApiDebug(Display, "%", req.body);
 	resp.status = 200;
@@ -271,8 +283,81 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 
 	auto friends = m_DB.GetFriendsInfo(id);
 
+	for (auto& f: friends) {
+		auto chat = m_Bot.getApi().getChat(f.Id);
+		f.FullName = chat->firstName + ' ' + chat->lastName;
+		f.Username = chat->username;
+	}
+
 	resp.status = 200;
 	resp.set_content(nlohmann::json(friends).dump(), "application/json");
+}
+
+void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::string item = GetParam(req, "item").value_or("");
+
+	if (!id || !item.size()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+	
+	const auto &users = m_DB.Users();
+
+	if (!users.count(id)) {
+		resp.status = httplib::StatusCode::NotFound_404;
+		return;
+	}
+
+	const auto &user = users.at(id);
+	
+	if (item == "full") {
+		auto chat = m_Bot.getApi().getChat(id);
+		
+		nlohmann::json json = { 
+			{"Username", chat->username},
+			{"FullName", chat->firstName + ' ' + chat->lastName},
+		};
+		
+		resp.status = httplib::StatusCode::OK_200;
+		resp.set_content(json.dump(), "application/json");
+		return;
+	}
+
+    if (item == "photo") {
+        try {
+            TgBot::UserProfilePhotos::Ptr photos = m_Bot.getApi().getUserProfilePhotos(id);
+
+            if (photos->totalCount == 0) {
+                resp.status = httplib::StatusCode::NotFound_404;
+                resp.set_content("No profile photos found", "text/plain");
+                return;
+            }
+
+            std::string fileId = photos->photos[0][0]->fileId;
+
+            TgBot::File::Ptr file = m_Bot.getApi().getFile(fileId);
+
+            std::string fileUrl = "https://api.telegram.org/file/bot" + m_Bot.getToken() + "/" + file->filePath;
+            httplib::Client cli("https://api.telegram.org");
+            auto res = cli.Get(fileUrl.c_str());
+
+            if (res && res->status == 200) {
+                resp.status = httplib::StatusCode::OK_200;
+                resp.set_content(res->body, "image/jpeg");
+            } else {
+                resp.status = httplib::StatusCode::InternalServerError_500;
+                resp.set_content("Failed to download photo", "text/plain");
+            }
+        } catch (const std::exception& e) {
+            resp.status = httplib::StatusCode::InternalServerError_500;
+            resp.set_content(e.what(), "text/plain");
+        }
+
+        return;
+    }
+
+	resp.status = httplib::StatusCode::BadRequest_400;
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

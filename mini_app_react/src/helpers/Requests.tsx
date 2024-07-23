@@ -140,3 +140,15 @@ export const PostRemoveFriend = (friend: number) => {
 export const GetFriends = () => {
 	return fetch(MakeUserRequestLocation() + '/friends')
 }
+
+export const GetTgFullUser = () => {
+	return fetch(GatherServerUrl() + '/tg/user/' + GatherCurrentUserId() + '/full')
+}
+
+export const ProfilePhotoUrlFor = (id: number) => {
+	return GatherServerUrl() + '/tg/user/' + id + '/photo'
+}
+
+export const ProfilePhotoUrl = () => {
+	return ProfilePhotoUrlFor(GatherCurrentUserId())
+}

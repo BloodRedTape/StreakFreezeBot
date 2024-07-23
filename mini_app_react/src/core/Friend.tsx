@@ -7,6 +7,8 @@ export class FriendType{
 	public Id: number = 0	
 	public Streak: number = 0	
 	public TodayProtection: ProtectionType = 0	
+	public Username: string = ""
+	public FullName: string = ""
 
 	public IsValid(): boolean{
 		return this.Id !== 0
@@ -19,6 +21,8 @@ export const ParseFriendType = (data: any): FriendType => {
 	friend.Id = data.Id ?? 0
 	friend.Streak = data.Streak ?? 0
 	friend.TodayProtection = ParseProtectionType(data.TodayProtection)
+	friend.Username = data.Username ?? ""
+	friend.FullName = data.FullName ?? ""
 
     return friend;
 }
