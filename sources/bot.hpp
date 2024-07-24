@@ -9,7 +9,9 @@ class StreakBot: public SimplePollBot{
 	static constexpr const char *SectionName = "Bot";
 	using ThisClass = StreakBot;
 private:
-	TelegramLogger m_Logger;
+	TelegramLogger m_TgLog;
+	ConsoleLogger m_Console;
+	RedirectingLogger m_Logger;
 	Date m_LastDate = DateUtils::Now();
 	std::string m_WebAppUrl;
 public:

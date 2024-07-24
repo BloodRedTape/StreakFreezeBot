@@ -19,7 +19,9 @@ StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
 		config.Get(SectionName, "Token", "")
 	),
-	m_Logger(config),
+	m_TgLog(config),
+	m_Console(),
+	m_Logger({&m_TgLog, &m_Console}),
 	m_WebAppUrl(
 		config.Get(SectionName, "WebAppUrl", "")
 	)
