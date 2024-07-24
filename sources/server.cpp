@@ -37,7 +37,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	),
 	m_Bot(
 		config.Get("Bot", "Token", "")
-	)
+	),
+	m_Logger(config)
 {
 	Super::set_mount_point("/config/", m_WebAppConfigPath);
 	Super::set_mount_point("/", m_WebAppPath);
@@ -57,7 +58,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
-	set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
+	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
 		try {
 			std::rethrow_exception(ep);
@@ -66,8 +67,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		} catch (...) {
 			content = "Unknown exception";
 		}
-
-		LogHttpApiServer(Fatal, "%", content);
+		
+		m_Logger.Log("Request exception: " + content);
 
 		res.set_content(Format("<h1>Error 500</h1><p>%</p>", content), "text/html");
 		res.status = httplib::StatusCode::InternalServerError_500;
@@ -354,6 +355,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
                 resp.set_content("Failed to download photo", "text/plain");
             }
         } catch (const std::exception& e) {
+			m_Logger.Log(Format("Crashed on bridge with: %", e.what()));
             resp.status = httplib::StatusCode::InternalServerError_500;
             resp.set_content(e.what(), "text/plain");
         }

@@ -5,6 +5,7 @@
 #include <chrono>
 #include "model.hpp"
 #include <tgbot/Bot.h>
+#include "logger.hpp"
 
 class HttpApiServer : public httplib::Server {
 	using Super = httplib::Server;
@@ -25,7 +26,8 @@ private:
 	int m_QuoteUpdateMinutes = 60;
 	std::chrono::steady_clock::time_point m_LastUpdate;
 	std::string m_LastQuote;
-
+	
+	HybridLogger m_Logger;
 	TgBot::Bot m_Bot;
 public:	
 	HttpApiServer(const INIReader &config);

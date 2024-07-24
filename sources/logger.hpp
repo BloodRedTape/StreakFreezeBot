@@ -62,3 +62,10 @@ public:
 
 	void Log(const std::string &message)override;
 };
+
+class HybridLogger : public RedirectingLogger {
+	TelegramLogger m_Telegram;
+	ConsoleLogger m_Console;
+public:	
+	HybridLogger(const INIReader &config);
+};

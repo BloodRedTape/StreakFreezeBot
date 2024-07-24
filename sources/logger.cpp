@@ -76,4 +76,8 @@ void TelegramLogger::Log(const std::string& message) {
 	}
 }
 
+HybridLogger::HybridLogger(const INIReader &config):
+	RedirectingLogger({&m_Telegram, &m_Console}),
+	m_Telegram(config)
+{}
 
