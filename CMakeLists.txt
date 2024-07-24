@@ -37,6 +37,7 @@ if(CMAKE_WITH_CONAN)
 	find_package(OpenSSL)
 
 	target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
+    target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
 else()
 	target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
 endif()
