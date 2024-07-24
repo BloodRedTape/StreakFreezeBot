@@ -28,6 +28,9 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	m_WebAppPath(
 		config.Get(SectionName, "WebAppPath", ".")
 	),
+	m_WebAppConfigPath(
+		config.Get(SectionName, "WebAppConfigPath", ".")
+	),
 	m_DB(config),
 	m_QuoteApiKey(
 		config.Get("QuoteApi", "Key", "")
@@ -36,6 +39,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		config.Get("Bot", "Token", "")
 	)
 {
+	Super::set_mount_point("/config/", m_WebAppConfigPath);
 	Super::set_mount_point("/", m_WebAppPath);
 	
 	Get ("/user/:id/full", &ThisClass::GetFullUser);

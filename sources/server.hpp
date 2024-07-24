@@ -16,6 +16,7 @@ public:
 private:
 	INIReader m_Config;
 	std::string m_WebAppPath;
+	std::string m_WebAppConfigPath;
 	std::string m_Hostname;
 	int m_Port;
 	StreakDatabase m_DB;

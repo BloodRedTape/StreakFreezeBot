@@ -1,5 +1,13 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
 
+declare global {
+  interface Window {
+    env: {
+      BOT_NAME: string
+      WEB_APP_NAME: string
+    }
+  }
+}
 
 export const MakeInviteLink = () => {
     const params = retrieveLaunchParams();
@@ -8,8 +16,8 @@ export const MakeInviteLink = () => {
         return undefined
 
     const userId = params.initData.user.id
-    const botName = 'test_shit_bot_228_bot'
-    const webAppName = 'streak'
+    const botName = window.env.BOT_NAME
+    const webAppName = window.env.WEB_APP_NAME
     const command = `invite_${userId}`
     const link = `https://t.me/${botName}/${webAppName}?startapp=${command}`
 
