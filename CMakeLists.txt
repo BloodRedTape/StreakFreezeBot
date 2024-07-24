@@ -38,6 +38,7 @@ if(CMAKE_WITH_CONAN)
 
 	target_link_libraries(StreakFreezeBot openssl::openssl)
 else()
+    target_link_directories(StreakFreezeBot PUBLIC /usr/local/lib64/)
 	target_link_libraries(StreakFreezeBot ssl)
 endif()
 
