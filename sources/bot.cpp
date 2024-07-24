@@ -17,9 +17,7 @@ const char *Fail = "Fail";
 
 StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
-		config.Get(SectionName, "Token", ""),
-		100,
-		config.GetInteger(SectionName, "TickPeriodSeconds", 10)
+		config.Get(SectionName, "Token", "")
 	),
 	m_Logger(config),
 	m_WebAppUrl(
@@ -61,7 +59,7 @@ void StreakBot::Start(TgBot::Message::Ptr message) {
 void StreakBot::Reset(TgBot::Message::Ptr message) {
 	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
 
-	SetupUserUiWith(message);
+	SetupUserUiWith(message, "Streak history is reset now");
 }
 
 void StreakBot::AddFreeze(TgBot::Message::Ptr message) {
