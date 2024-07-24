@@ -13,7 +13,7 @@ add_subdirectory(libs/cpp-httplib)
 add_subdirectory(libs/json)
 add_subdirectory(libs/tgbot-cpp)
 add_subdirectory(libs/date)
-
+find_package(OpenSSL)
 
 add_executable(StreakFreezeBot
 	"./sources/main.cpp"
@@ -25,22 +25,14 @@ add_executable(StreakFreezeBot
  "sources/server.cpp")
 
 target_link_libraries(StreakFreezeBot
-	bsl
-	inih
-	nlohmann_json
-	httplib
-	TgBot
-	date
+	PUBLIC bsl
+	PUBLIC inih
+	PUBLIC nlohmann_json
+	PUBLIC httplib
+	PUBLIC TgBot
+	PUBLIC date
+	PUBLIC openssl::openssl
 )
-
-if(CMAKE_WITH_CONAN)
-	find_package(openssl)
-
-	target_link_libraries(StreakFreezeBot openssl::openssl)
-else()
-    target_link_directories(StreakFreezeBot PUBLIC /usr/local/lib64/)
-	target_link_libraries(StreakFreezeBot ssl)
-endif()
 
 target_compile_features(StreakFreezeBot PUBLIC cxx_std_17)
 
