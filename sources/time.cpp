@@ -16,7 +16,7 @@ namespace DateUtils{
 #if WITH_ADVANCE_DATE
         return s_Now; 
 #else
-        return Date_NowImpl();
+        return DateUtils::NowImpl();
 #endif
     }
 
