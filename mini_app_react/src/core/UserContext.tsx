@@ -81,7 +81,7 @@ export const useUserContext = () => {
 	const ctx = useContext(UserContext)
 
 	if (ctx === undefined)
-		throw "very sad"
+		throw new Error("provide UserContext via UserContext.Provider")
 
 	return ctx
 }
