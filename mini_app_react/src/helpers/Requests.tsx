@@ -141,8 +141,12 @@ export const GetFriends = () => {
 	return fetch(MakeUserRequestLocation() + '/friends')
 }
 
+export const GetTgFullUserById = (id: number) => {
+	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full')
+}
+
 export const GetTgFullUser = () => {
-	return fetch(GatherServerUrl() + '/tg/user/' + GatherCurrentUserId() + '/full')
+	return GetTgFullUserById(GatherCurrentUserId())
 }
 
 export const ProfilePhotoUrlFor = (id: number) => {

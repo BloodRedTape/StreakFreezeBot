@@ -31,11 +31,13 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 		</React.Fragment>
 	)
 
+	const streakMessage = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} Days streak`
+
 	return (
 		<Banner
 			before={FriendAvatar}
 			header={friend.FullName}
-			subheader={friend.Streak + " Days streak"}
+			subheader={streakMessage}
 			type="section"
 			style={{background: 'var(--tg-theme-header-bg-color)', marginBottom: '5px'}}
 		>

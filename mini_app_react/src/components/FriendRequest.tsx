@@ -1,7 +1,7 @@
 import { Modal, Text, Button, Avatar} from "@xelene/tgui"
 import { CSSProperties, useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
-import { GatherCurrentUserId, GetTgFullUser, JsonFromResp, PostAcceptInvite, ProfilePhotoUrl, SimplePopup } from "../helpers/Requests"
+import { GatherCurrentUserId, GetTgFullUserById, JsonFromResp, PostAcceptInvite, ProfilePhotoUrlFor, SimplePopup } from "../helpers/Requests"
 
 const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, onAccepted }) => {
 	const OnAccept = () => {
@@ -18,7 +18,7 @@ const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, 
 	const [user, setUser] = useState<string>()
 
 	if (user === undefined)
-		GetTgFullUser().then(JsonFromResp).then((json)=>setUser(json.FullName ?? "Unknown Name")).catch(()=>SimplePopup('error', 'error'))
+		GetTgFullUserById(from).then(JsonFromResp).then((json)=>setUser(json.FullName ?? "Unknown Name")).catch(()=>SimplePopup('error', 'error'))
 
 	return (
 		<div style={{ padding: '5%'}}>
@@ -26,7 +26,7 @@ const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, 
 				size={96}
 				style={CenteredStyle}
 				fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
-				src={ProfilePhotoUrl()}
+				src={ProfilePhotoUrlFor(from)}
 			/>
 			<br/>
 			<Text weight="1">{ user ?? "Loading Name..."}</Text>
