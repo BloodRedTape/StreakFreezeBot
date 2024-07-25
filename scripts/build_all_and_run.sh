@@ -1,17 +1,11 @@
 #!/bin/bash
 
+set -e
 # now we in scripts
-pushd ..
+chmod +x build_all.sh
+chmod +x run.sh
 
-pushd scripts
-chmod +x build_react.sh
-./build_react.sh
-chmod +x build_cpp.sh
-./build_cpp.sh
-popd
+./build_all.sh 
+./run.sh
 
-pushd run_tree
-./../build/StreakFreezeBot Config.ini
-popd
-
-pop
+exit 0

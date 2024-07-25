@@ -1,5 +1,7 @@
 #!/bin/bash
-  
+ 
+set -e
+
 pushd ..
 
 mkdir -p build
@@ -13,3 +15,5 @@ make -j12
 
 popd
 popd
+
+exit 0

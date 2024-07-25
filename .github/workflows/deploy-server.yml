@@ -13,10 +13,15 @@ jobs:
     - name: Actual deploy
       run: |
           sshpass -p '${{ secrets.SERVER_PASS }}' ssh -v -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'ENDSSH'
-          echo "Building"
-          cd '${{ secrets.SERVER_DEPLOY_PATH }}'
-          bash streak_build.sh
-          echo "Running"
-          pm2 restart streak
+          set -e
+          echo "go to run_tree"
+          cd '${{ secrets.SERVER_RUN_PATH }}'
+          echo "Pull"
+          bash ./github_pull.sh
+          echo "Build"
+          bash ./github_build.sh
+          echo "Run"
+          bash ./github_run.sh
+          exit 0
           ENDSSH
           
