@@ -22,7 +22,10 @@ add_executable(StreakFreezeBot
 	"./sources/bot.cpp" 
 	"./sources/model.cpp"
 	"./sources/logger.cpp"
- "sources/server.cpp")
+	"sources/server.cpp" 
+	"sources/user.cpp" 
+	"sources/freeze.cpp"
+)
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl
@@ -35,9 +38,12 @@ target_link_libraries(StreakFreezeBot
 
 if(CMAKE_WITH_CONAN)
 	find_package(OpenSSL)
-
-	target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
-    target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
+	if(WIN32)
+		target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
+	else()
+		target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
+		target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
+	endif()
 else()
 	target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
 endif()

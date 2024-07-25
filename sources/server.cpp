@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include "http.hpp"
 #include <bsl/log.hpp>
+#include <bsl/defer.hpp>
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
@@ -82,19 +83,22 @@ void HttpApiServer::Run(){
 }
 
 void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& resp){
-	if (!req.path_params.count("id")) {
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
 
-	const std::string &user_id = req.path_params.at("id");
-	std::int64_t id = std::atoll(user_id.c_str());
+	auto today = DateUtils::Now();
+	const auto &user = m_DB.GetUser(id, today);
 
-	const auto &user = m_DB.GetUser(id);
-
+	//NOTE: History is first because it corrects all the other info
 	auto user_json = nlohmann::json(user);
-	to_json(user_json["Today"], DateUtils::Now());
-	to_json(user_json["Streak"], m_DB.Streak(id));
+	user_json["History"] = user.HistoryForToday(today);
+	user_json["Today"] = DateUtils::Now();
+	user_json["Streak"] = user.Streak(today);
+	user_json["StreakStart"] = user.FirstCommitDate().value_or(today);
 
 	std::string content = user_json.dump();
 
@@ -103,24 +107,27 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 }
 
 void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
-	if (!req.path_params.count("id")) {
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
 
-	const std::string &user_id = req.path_params.at("id");
-	std::int64_t id = std::atoll(user_id.c_str());
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
 	
-	if(m_DB.IsCommitedToday(id))
+	if(user.IsCommitedAt(today))
 		return Fail(resp, "Already commited today, don't overtime!");
 
-	if(m_DB.IsFreezedToday(id))
+	if(user.IsFreezedAt(today))
 		return Fail(resp, "Freeze is already used!");
 
-	if (!m_DB.Commit(id))
+	if (!user.Commit(today))
 		return Fail(resp, "Something wrong");
 
-	Ok(resp, Format("Whoa, extended streak to % days", m_DB.Streak(id)));
+	Ok(resp, Format("Whoa, extended streak to % days", m_DB.Streak(id, today)));
 }
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -131,16 +138,20 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
 	
-	if(m_DB.IsProtectedToday(id))
+	if(user.IsProtected(today))
 		return Fail(resp, "Can't use freeze today, already protected!");
 
-	std::optional<StreakFreeze> freeze = m_DB.UseFreeze(id, freeze_id.value());
+	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value());
 	
 	if (!freeze.has_value())
 		return Fail(resp, "You don't have freezes to use for today");
 
-	Ok(resp, Format("Nice, you left with % freezes and protected your % days streak", m_DB.AvailableFreezes(id).size(), m_DB.Streak(id)));
+	Ok(resp, Format("Nice, you left with % freezes and protected your % days streak", user.AvailableFreezes(today).size(), user.Streak(today)));
 }
 
 void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -153,12 +164,16 @@ void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& re
 		return;
 	}
 
-	if (!m_DB.CanAddFreeze(id))
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
+
+	if (!user.CanAddFreeze(today))
 		return Fail(resp, "Reached maximum amount of freezes");
 
-	m_DB.AddFreeze(id, expire, std::move(reason));
+	user.AddFreeze(expire, std::move(reason), today);
 
-	Ok(resp, Format("Added streak freeze, % now", m_DB.AvailableFreezes(id).size()));
+	Ok(resp, Format("Added streak freeze, % now", user.AvailableFreezes(today).size()));
 }
 
 void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -169,8 +184,12 @@ void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response&
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
 	
-	m_DB.RemoveFreeze(id, freeze_id.value());
+	user.RemoveFreeze(freeze_id.value());
 }
 
 void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Response& resp) {
@@ -180,8 +199,11 @@ void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Re
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
 	
-	resp.set_content(nlohmann::json(m_DB.AvailableFreezes(id)).dump(), "application/json");
+	resp.set_content(nlohmann::json(user.AvailableFreezes(today)).dump(), "application/json");
 }
 
 void HttpApiServer::ResetStreak(const httplib::Request& req, httplib::Response& resp) {
@@ -286,7 +308,8 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 		return;
 	}
 
-	auto friends = m_DB.GetFriendsInfo(id);
+	auto today = DateUtils::Now();
+	auto friends = m_DB.GetFriendsInfo(id, today);
 
 	for (auto& f: friends) {
 		auto chat = m_Bot.getApi().getChat(f.Id);
@@ -307,15 +330,9 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 		return;
 	}
 	
-	const auto &users = m_DB.Users();
+	auto today = DateUtils::Now();
+	const auto &user = m_DB.GetUser(id, today);
 
-	if (!users.count(id)) {
-		resp.status = httplib::StatusCode::NotFound_404;
-		return;
-	}
-
-	const auto &user = users.at(id);
-	
 	if (item == "full") {
 		auto chat = m_Bot.getApi().getChat(id);
 		

@@ -60,6 +60,10 @@ public:
 
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
 
+	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
+
+	void OnDayOver(const httplib::Request &req, httplib::Response &resp);
+
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 
 	std::optional<std::int64_t> GetIdParam(const httplib::Request &req, const std::string &name)const;

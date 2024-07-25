@@ -18,13 +18,15 @@ export enum ProtectionType {
 
 export class UserContextType{
 	public Freezes: Array<StreakFreezeType> = []
-	public StreakStart: Date = new Date(0, 0, 0)
-	public History: Array<ProtectionType> = []
-	public AvailableFreezes: Array<number> = []
 	public MaxFreezes: number = 0
+	public Friends : Array<number> = []
+
+	public History: Array<ProtectionType> = []
 	public Today: Date = new Date(0, 0, 0)
 	public Streak: number = 0
-	public Friends : Array<number> = []
+	public StreakStart: Date = new Date(0, 0, 0)
+
+	public AvailableFreezes: Array<number> = []
 
 	public ProtectionAt(date: Date): ProtectionType{
 		const index = differenceInDays(date, this.StreakStart)
