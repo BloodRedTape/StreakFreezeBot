@@ -359,6 +359,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
             TgBot::UserProfilePhotos::Ptr photos = m_Bot.getApi().getUserProfilePhotos(id);
 
             if (photos->totalCount == 0) {
+				LogTelegramBridge(Error, "No profile photos found for: %", id);
                 resp.status = httplib::StatusCode::NotFound_404;
                 resp.set_content("No profile photos found", "text/plain");
                 return;
@@ -389,6 +390,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
         return;
     }
 
+	LogTelegramBridge(Error, "Bad request: item %, id %", item, id);
 	resp.status = httplib::StatusCode::BadRequest_400;
 }
 
