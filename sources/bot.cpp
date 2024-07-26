@@ -1,6 +1,7 @@
 ﻿#include "bot.hpp"
 #include <bsl/format.hpp>
 #include <thread>
+#include <atomic>
 #include "http.hpp"
 #include <boost/algorithm/string.hpp>
 
@@ -12,7 +13,7 @@
 // Better way to show available freezes, also add to botfather
 // TeamCity
 
-StreakBot *s_Bot = nullptr;
+static std::atomic<StreakBot*> s_Bot = nullptr;
 
 void LogFunctionExternal(const std::string& category, Verbosity verbosity, const std::string& message) {
 	if(!s_Bot)
@@ -20,7 +21,7 @@ void LogFunctionExternal(const std::string& category, Verbosity verbosity, const
 
 	static std::mutex s_LogLock;
 	std::scoped_lock lock(s_LogLock);
-	s_Bot->Log("[%][%] %", category, verbosity, message);
+	s_Bot.load()->Log("[%][%] %", category, verbosity, message);
 }
 
 const char *Ok = "Ok";

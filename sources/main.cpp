@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
 	StreakBot bot(config);
 
-	bot.Log("Started");
+	bot.Log("Started: %", BSL_WITH_EXTERNAL_LOG_FUNCTION);
 
 	try{
 		while (true) {
