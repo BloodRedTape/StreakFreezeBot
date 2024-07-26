@@ -71,6 +71,5 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		DebugLog(e);
 	}
 
-	DebugLog(UserContextTypeToString(context))
     return context;
 }

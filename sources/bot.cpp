@@ -12,6 +12,17 @@
 // Better way to show available freezes, also add to botfather
 // TeamCity
 
+StreakBot *s_Bot = nullptr;
+
+void LogFunctionExternal(const std::string& category, Verbosity verbosity, const std::string& message) {
+	if(!s_Bot)
+		return;
+
+	static std::mutex s_LogLock;
+	std::scoped_lock lock(s_LogLock);
+	s_Bot->Log("[%][%] %", category, verbosity, message);
+}
+
 const char *Ok = "Ok";
 const char *Fail = "Fail";
 
@@ -24,6 +35,8 @@ StreakBot::StreakBot(const INIReader& config):
 		config.Get(SectionName, "WebAppUrl", "")
 	)
 {
+	s_Bot = this;
+
 	OnCommand("start", this, &ThisClass::Start, "start");
 	OnCommand("reset", this, &ThisClass::Reset, "Reset streak");
 	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
@@ -216,26 +229,4 @@ void StreakBot::SetupUserUiWith(TgBot::Message::Ptr source, const std::string& t
 
 		getApi().setChatMenuButton(source->chat->id, menu_button);
 	}
-#if 0
-	{
-		auto streak_button = std::make_shared<TgBot::KeyboardButton>();
-		streak_button->text = "Streak";
-		streak_button->webApp = web_app;
-
-		auto commit_button = std::make_shared<TgBot::KeyboardButton>();
-		commit_button->text = "/commit";
-
-		auto markup = std::make_shared<TgBot::ReplyKeyboardMarkup>();
-		markup->isPersistent = true;
-		markup->keyboard = {
-			{streak_button}, 
-			{commit_button}
-		};
-
-		if(!text.size())
-			SendMessage(source->chat->id, source->isTopicMessage ? source->messageThreadId : 0, text, markup);
-		else
-			SendMessage(source->chat->id, source->isTopicMessage ? source->messageThreadId : 0, text, markup, source->messageId);
-	}
-#endif
 }

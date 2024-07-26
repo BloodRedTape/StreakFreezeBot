@@ -7,6 +7,7 @@ project(StreakFreezeBot)
 add_library(inih STATIC "libs/inih/ini.c" "libs/inih/cpp/INIReader.cpp")
 target_include_directories(inih PUBLIC "libs/inih" PUBLIC "libs/inih/cpp")
 
+set(BSL_WITH_EXTERNAL_LOG_FUNCTION ON)
 add_subdirectory(libs/bsl)
 set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF)
 add_subdirectory(libs/cpp-httplib)

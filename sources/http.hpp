@@ -7,14 +7,24 @@
 #include <optional>
 #include <string>
 #include <nlohmann/json.hpp>
+#include <bsl/log.hpp>
+
+DEFINE_LOG_CATEGORY(Http)
 
 inline std::optional<std::string> HttpGet(const std::string& endpoint, const std::string &path, httplib::Headers headers = {}) {
     httplib::Client client(endpoint);
 
 	auto resp = client.Get(path, headers);
 
-	if (!resp || resp->status != 200)
+	if (!resp){
+		LogHttp(Error, "GET Request to % failed", endpoint + path);
 		return std::nullopt;
+	}
+
+	if (resp->status != httplib::StatusCode::OK_200){
+		LogHttp(Error, "GET Request to % failed with status %", endpoint + path, resp->status);
+		return std::nullopt;
+	}
 
 	return resp->body;
 }
@@ -33,8 +43,15 @@ inline std::optional<std::string> HttpPost(const std::string& endpoint, const st
 
 	auto resp = client.Post(path);
 
-	if (!resp || resp->status != 200)
+	if (!resp){
+		LogHttp(Error, "POST Request to % failed", endpoint + path);
 		return std::nullopt;
+	}
+
+	if (resp->status != httplib::StatusCode::OK_200){
+		LogHttp(Error, "POST Request to % failed with status %", endpoint + path, resp->status);
+		return std::nullopt;
+	}
 
 	return resp->body;
 }
