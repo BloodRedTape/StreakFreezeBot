@@ -377,7 +377,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
                 resp.status = httplib::StatusCode::OK_200;
                 resp.set_content(res->body, "image/jpeg");
             } else {
-				LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : "");
+				LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
                 resp.status = httplib::StatusCode::InternalServerError_500;
                 resp.set_content("Failed to download photo", "text/plain");
             }
