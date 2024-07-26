@@ -15,12 +15,12 @@ inline std::optional<std::string> HttpGet(const std::string& endpoint, const std
 	auto resp = client.Get(path, headers);
 
 	if (!resp){
-		LogHttp(Error, "GET Request to % failed", endpoint + path);
+		LogHttp(Error, "GET Request to % failed with internal error %", endpoint + path, httplib::to_string(resp.error()));
 		return std::nullopt;
 	}
 
 	if (resp->status != httplib::StatusCode::OK_200){
-		LogHttp(Error, "GET Request to % failed with status %", endpoint + path, resp->status);
+		LogHttp(Error, "GET Request to % failed with http status %", endpoint + path, resp->status);
 		return std::nullopt;
 	}
 
@@ -42,12 +42,12 @@ inline std::optional<std::string> HttpPost(const std::string& endpoint, const st
 	auto resp = client.Post(path);
 
 	if (!resp){
-		LogHttp(Error, "POST Request to % failed", endpoint + path);
+		LogHttp(Error, "POST Request to % failed with internal error %", endpoint + path, httplib::to_string(resp.error()));
 		return std::nullopt;
 	}
 
 	if (resp->status != httplib::StatusCode::OK_200){
-		LogHttp(Error, "POST Request to % failed with status %", endpoint + path, resp->status);
+		LogHttp(Error, "POST Request to % failed with http status %", endpoint + path, resp->status);
 		return std::nullopt;
 	}
 
