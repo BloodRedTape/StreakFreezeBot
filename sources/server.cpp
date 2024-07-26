@@ -6,6 +6,7 @@
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
+DEFINE_LOG_CATEGORY(TelegramBridge)
 
 void Fail(httplib::Response &resp, const std::string &error) {
 	resp.set_content(nlohmann::json::object({{"Fail", error}}).dump(), "application/json");
@@ -375,11 +376,12 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
                 resp.status = httplib::StatusCode::OK_200;
                 resp.set_content(res->body, "image/jpeg");
             } else {
+				LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : "");
                 resp.status = httplib::StatusCode::InternalServerError_500;
                 resp.set_content("Failed to download photo", "text/plain");
             }
         } catch (const std::exception& e) {
-			m_Logger.Log(Format("Crashed on bridge with: %", e.what()));
+			LogTelegramBridge(Error, "Crashed on photo fetch: %", e.what());
             resp.status = httplib::StatusCode::InternalServerError_500;
             resp.set_content(e.what(), "text/plain");
         }
