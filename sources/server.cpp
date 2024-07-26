@@ -255,13 +255,20 @@ void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& res
 	if(duration >= std::chrono::minutes(m_QuoteUpdateMinutes)){
 		const auto url = "https://api.api-ninjas.com";
 
-		nlohmann::json body = HttpGetJson(url, "/v1/quotes?category=success", {
+		auto body = HttpGetJson(url, "/v1/quotes?category=success", {
 			{"X-Api-Key", m_QuoteApiKey}
 		});
 
-		std::string quote = body.is_array()
-			? body.front().dump() 
-			: R"({ "quote": "There is nothing better that extending your streak"})";
+		const std::string backing_quote = R"({ "quote": "There is nothing better that extending your streak"})";
+
+		std::string quote;
+
+		if (body.is_array()) {
+			quote = body.front().dump();
+		} else {
+			LogHttpApiServer(Error, "Quote got unparsable response: %\nusing fallback quote", body.dump());
+			quote = backing_quote;
+		}
 		
 		m_LastQuote = quote;
 		m_LastUpdate = now;
