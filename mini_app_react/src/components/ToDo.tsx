@@ -3,7 +3,7 @@ import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
-import { useState } from "react"
+import { CSSProperties, useState } from "react"
 import { ToDoDescription } from "../core/ToDo"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { JsonFromResp, PopupFromJson, PostCommit } from "../helpers/Requests"
@@ -140,9 +140,15 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 		</Button>
 	)
 
+	const CheckboxStyle: CSSProperties = {
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'center'
+	}
+
 	const Checkboxes = value.List.map((name) => (
 		<Entry
-			before={<Checkbox name="checkbox" value="2" />}
+			before={<div style={CheckboxStyle}><Checkbox name="checkbox" value="2"/></div>}
 			after={<IconButton style={{ opacity: '0' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
 			style={{padding: '5px'}}
 		>
