@@ -13,6 +13,12 @@ import { Entry } from "../core/Entry"
 type OnChanged = (value: ToDoDescription) => void
 type OnChangeMode = () => void
 
+const AlignCenterStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'center'
+}
+
 const EntryText: React.FC<{ text: string }> = ({text}) => (
 	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
 )
@@ -24,14 +30,17 @@ const ToDoEdit: React.FC<{ value: ToDoDescription, onChanged: OnChanged, onChang
 	}
 
 	const SaveButton = (
-		<IconButton
+		<Button
 			size="s"
-			mode="plain"
+			mode="bezeled"
 			onClick={OnSave}
 			style={{ marginLeft: 'auto', marginRight: '5px' }}
 		>
-			<Icon28Archive/>
-		</IconButton>
+			<div style={AlignCenterStyle}>
+				<Icon28Archive/>
+				<EntryText text=" Save"/>
+			</div>
+		</Button>
 	)
 
 	const Header = (
@@ -94,7 +103,7 @@ const ToDoEdit: React.FC<{ value: ToDoDescription, onChanged: OnChanged, onChang
 			style={{padding: '5px'}}
 		>
 			<Input
-				placeholder="Grow a really big plant!"
+				placeholder="Clean your house!"
 				value={entry}
 				onChange={e => setEntry(e.target.value)}
 				style={{marginLeft: '0px', marginRight: 'auto'}}
@@ -140,15 +149,11 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 		</Button>
 	)
 
-	const CheckboxStyle: CSSProperties = {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center'
-	}
+
 
 	const Checkboxes = value.List.map((name) => (
 		<Entry
-			before={<div style={CheckboxStyle}><Checkbox name="checkbox" value="2"/></div>}
+			before={<div style={AlignCenterStyle}><Checkbox name="checkbox" value="2"/></div>}
 			after={<IconButton style={{ opacity: '0' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
 			style={{padding: '5px'}}
 		>
@@ -163,14 +168,17 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 	const Header = (
 		<div style={{display: 'flex', alignItems: 'center', justifyItems: 'space-between'}}>
 			<Text weight="2">{title ?? 'To Do'}</Text>
-			<IconButton
+			<Button
 				size='s'
-				mode='plain'
+				mode='bezeled'
 				onClick={OnEdit}
 				style={{ marginLeft: 'auto', marginRight: '5px' }}
 			>
-				<Icon28Edit/>
-			</IconButton>
+				<div style={AlignCenterStyle}>
+					<Icon28Edit/>
+					<EntryText text=" Edit"/>
+				</div>
+			</Button>
 		</div>
 	)
 
