@@ -9,6 +9,14 @@ const FromApiDate = (data: any) => {
     }
 }
 
+export const FromApiDateNullable = (data: any): Date | null => {
+	if (Array.isArray(data) && data.length >= 3) {
+	    return new Date(data[2], data[1] - 1, data[0]);
+	} else {
+		return null;
+    }
+}
+
 const ParseStreakFreezeType = (data: any): StreakFreezeType =>{
     const freeze = new StreakFreezeType();
     freeze.EarnedAt = FromApiDate(data.EarnedAt);

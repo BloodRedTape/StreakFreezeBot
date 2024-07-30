@@ -1,40 +1,21 @@
-import { Button, Text } from '@xelene/tgui'
-import { FetchUserContext, useGetUserContext, useSetUserContext } from '../core/UserContext';
-import { JsonFromResp, PopupFromJson, PostCommit } from '../helpers/Requests';
+import { useState } from "react";
+import { ToDoDescription } from "../core/ToDo";
+import { ToDoSection } from "./ToDo";
 
 export const CommitSection = () => {
 
-	const userContext = useGetUserContext()
-	const setUserContext = useSetUserContext()
-
-	const Refresh = () => {
-		FetchUserContext().then(setUserContext)
-	}
-
-	const CanCommit = !userContext?.IsProtected() || false;
-
-	const OnCommit = () => {
-		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
-	}
-
-	const CommitButton = (
-		<Button
-			size="l"
-			disabled={!CanCommit}
-			stretched
-			mode="filled"
-			onClick={OnCommit}
-		>
-			Commit
-		</Button>
-	)
+	const [description, setDescription] = useState<ToDoDescription>({
+		Started: null,
+		List: [
+			"Wash dishes",
+			"Love woman",
+			"Do your job"
+		]
+	})
 
 	return (
 		<div>
-			<Text weight="2">Commit</Text>
-			<br/>
-			<br/>
-			{CommitButton}
+			<ToDoSection title="Persistent" value={description} onChanged={setDescription}/>
 		</div>
 	)
 };

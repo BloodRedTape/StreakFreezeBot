@@ -20,7 +20,10 @@ export const App = () => {
 
     OnEveryHour(() => {
         FetchUserContext().then(setUserContext);
-	})
+    })
+
+    window.Telegram?.WebApp.ready()
+    window.Telegram?.WebApp.expand()
 
     return (
         <AppRoot>
