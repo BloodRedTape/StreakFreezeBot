@@ -60,6 +60,10 @@ public:
 
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
 
+	void GetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
+
+	void SetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
+
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 
 	void OnDayOver(const httplib::Request &req, httplib::Response &resp);

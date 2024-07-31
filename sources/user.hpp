@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "freeze.hpp"
+#include "todo.hpp"
 
 enum class Protection{
     None,
@@ -28,6 +29,11 @@ private:
     std::vector<Date> Commits;
     std::int64_t MaxFreezes = 2;
     std::vector<std::int64_t> Friends;
+
+    std::vector<ToDoDescription> Persistent;
+    ToDoCompletion Completion;
+public:
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, Commits, MaxFreezes, Friends, Persistent, Completion)
 public:
     bool IsCommitedAt(Date date)const;
 
@@ -35,9 +41,19 @@ public:
 
     bool IsProtected(Date date)const{ return IsCommitedAt(date) || IsFreezedAt(date); }
 
+    bool IsProtected(Date start, Date end)const;
+
     std::optional<Date> FirstCommitDate()const;
 
     bool Commit(Date date);
+    
+    ToDoCompletion &TodayCompletion(Date today);
+
+    bool IsPersistentRunning(Date today, const ToDoDescription &descr)const;
+
+    ToDoDescription &GetPersistentTodo(Date today);
+
+    bool SetPersistentTodo(Date today, const ToDoDescription &descr);
 
     std::vector<Protection> History(Date start, Date end)const;
 
@@ -55,6 +71,8 @@ public:
 
     std::int64_t Streak(Date today)const;
 
+    bool NoStreak(Date today)const{ return Streak(today) == 0; }
+
     std::optional<std::int64_t> UseAnyFreeze(Date date);
 
     std::optional<std::int64_t> UseFreeze(Date date, std::int64_t freeze_id);
@@ -69,5 +87,5 @@ public:
 
     const std::vector<std::int64_t> &GetFriends()const{ return Friends; }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, Commits, MaxFreezes, Friends)
+    static ToDoDescription &InstanceForEdit(std::vector<ToDoDescription> &descriptions);
 };

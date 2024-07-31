@@ -1,21 +1,24 @@
-import { useState } from "react";
 import { ToDoDescription } from "../core/ToDo";
+import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext";
+import { JsonFromResp, PopupFromJson, PostPersistentTodo } from "../helpers/Requests";
 import { ToDoSection } from "./ToDo";
 
 export const CommitSection = () => {
 
-	const [description, setDescription] = useState<ToDoDescription>({
-		Started: null,
-		List: [
-			"Wash dishes",
-			"Love woman",
-			"Do your job"
-		]
-	})
+	const userContext = useGetUserContext()
+	const setUserContext = useSetUserContext()
+
+	const Refresh = () => {
+		FetchUserContext().then(setUserContext)
+	}
+
+	const OnEdited = (todo: ToDoDescription) => {
+		PostPersistentTodo(todo).then(JsonFromResp).then(PopupFromJson).then(Refresh)
+	}
 
 	return (
 		<div>
-			<ToDoSection title="Persistent" value={description} onChanged={setDescription}/>
+			<ToDoSection title="Persistent" value={userContext?.PersistentTodo ?? new ToDoDescription()} onEdited={OnEdited}/>
 		</div>
 	)
 };

@@ -74,6 +74,17 @@ std::optional<T> GetJsonProperty(const std::string &json_string, const std::stri
 }
 
 template<typename T>
+std::optional<T> GetJsonObject(const std::string& json_string) {
+	try {
+		T object = nlohmann::json::parse(json_string);
+
+		return object;
+	} catch (...) {
+		return std::nullopt;
+	}
+}
+
+template<typename T>
 T GetJsonPropertyOr(const std::string &json_string, const std::string &property, T value) {
 	return GetJsonProperty<T>(json_string, property).value_or(value);
 }

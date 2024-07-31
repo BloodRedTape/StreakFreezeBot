@@ -58,6 +58,9 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
 
+	Get ("/user/:id/todo/persistent", &ThisClass::GetPersistentTodo);
+	Post("/user/:id/todo/persistent", &ThisClass::SetPersistentTodo);
+
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
 	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
@@ -392,6 +395,50 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 
 	LogTelegramBridge(Error, "Bad request: item %, id %", item, id);
 	resp.status = httplib::StatusCode::BadRequest_400;
+}
+
+void HttpApiServer::GetPersistentTodo(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+
+	auto todo = user.GetPersistentTodo(today);
+
+	resp.status = httplib::StatusCode::OK_200;
+	resp.set_content(nlohmann::json(todo).dump(), "application/json");
+}
+
+void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+	
+	std::optional<ToDoDescription> description = GetJsonObject<ToDoDescription>(req.body);
+
+	if (!description.has_value()) {
+		resp.status = httplib::StatusCode::Conflict_409;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+
+	if(user.GetPersistentTodo(today).IsRunning())
+		return Fail(resp, "Trying to override already running ToDo");
+
+	if(!user.SetPersistentTodo(today, description.value()))
+		return Fail(resp, "Internal error during ToDo setup");
+
+	Ok(resp, "ToDo is now set!");
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

@@ -23,10 +23,11 @@ const EntryText: React.FC<{ text: string }> = ({text}) => (
 	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
 )
 
-const ToDoEdit: React.FC<{ value: ToDoDescription, onChanged: OnChanged, onChangeMode: OnChangeMode, title: string }> = ({ value, onChanged, onChangeMode, title }) => {
+const ToDoEdit: React.FC<{ value: ToDoDescription, onFinishEdit: OnChanged, title: string }> = ({ value, onFinishEdit, title }) => {
+	const [description, setDescription] = useState<ToDoDescription>(value)
+
 	const OnSave = () => {
-		onChanged(value)
-		onChangeMode()
+		onFinishEdit(description)
 	}
 
 	const SaveButton = (
@@ -56,28 +57,28 @@ const ToDoEdit: React.FC<{ value: ToDoDescription, onChanged: OnChanged, onChang
 		if (entry.length === 0)
 			return
 
-		if (value.List.find(e => e === entry) !== undefined)
+		if (description.List.find(e => e === entry) !== undefined)
 			return
 
-		const newValue: ToDoDescription = {
-			List: value.List.concat([entry]),
-			Started: value.Started
-		}
+		const newValue = new ToDoDescription(
+			description.Started,
+			description.List.concat([entry])
+		)
 		setEntry("")
-		onChanged(newValue)
+		setDescription(newValue)
 	}
 
 	const OnRemove = (idx: number) => {
 
-		const newValue: ToDoDescription = {
-			List: value.List.filter((_value, index)=>idx !== index),
-			Started: value.Started
-		}
+		const newValue = new ToDoDescription(
+			description.Started,
+			description.List.filter((_value, index)=>idx !== index)
+		)
 
-		onChanged(newValue)
+		setDescription(newValue)
 	}
 
-	const Entries = value.List.map((name, index) => (
+	const Entries = description.List.map((name, index) => (
 		<Entry
 			after={<IconButton size='s' mode='plain' onClick={() => OnRemove(index)}><Icon28Close /></IconButton>}
 			style={{padding: '5px'}}
@@ -171,6 +172,7 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 			<Button
 				size='s'
 				mode='bezeled'
+				disabled={ value.IsRunning() }
 				onClick={OnEdit}
 				style={{ marginLeft: 'auto', marginRight: '5px' }}
 			>
@@ -195,12 +197,20 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 	)
 }
 
-export const ToDoSection: React.FC<{ value: ToDoDescription, onChanged: OnChanged, title: string }> = ({ value, onChanged, title }) => {
+export const ToDoSection: React.FC<{ value: ToDoDescription, onEdited: OnChanged, title: string }> = ({ value, onEdited, title }) => {
 
 	const [edit, setEdit] = useState<boolean>(false)
 
+	const OnStartEdit = () => {
+		setEdit(true)
+	}
+
+	const OnFinishEdit = (todo: ToDoDescription) => {
+		setEdit(false)
+		onEdited(todo)
+	}
+
 	return edit
-		? (<ToDoEdit onChanged={onChanged} value={value} title={title} onChangeMode={ ()=>setEdit(false) }/>)
-		: (<ToDoUsage value={value} title={title} onChangeMode={ ()=>setEdit(true) }/>)
-		
+		? (<ToDoEdit value={value} title={title} onFinishEdit={ OnFinishEdit } />)
+		: (<ToDoUsage value={value} title={title} onChangeMode={ OnStartEdit }/>)
 }

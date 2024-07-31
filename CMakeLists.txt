@@ -26,7 +26,7 @@ add_executable(StreakFreezeBot
 	"sources/server.cpp" 
 	"sources/user.cpp" 
 	"sources/freeze.cpp"
-)
+ "sources/todo.cpp")
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "time.hpp"
-#include <optional>
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 
 struct StreakFreeze {
 	Date EarnedAt;

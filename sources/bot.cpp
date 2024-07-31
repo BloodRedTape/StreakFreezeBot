@@ -16,7 +16,7 @@
 static std::atomic<StreakBot*> s_Bot = nullptr;
 
 void LogFunctionExternal(const std::string& category, Verbosity verbosity, const std::string& message) {
-	if(!s_Bot)
+	if(!s_Bot || verbosity < Error)
 		return;
 
 	static std::mutex s_LogLock;

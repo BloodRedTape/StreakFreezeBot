@@ -1,5 +1,6 @@
 #include "user.hpp"
 #include <boost/range/algorithm.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <bsl/log.hpp>
 
 DEFINE_LOG_CATEGORY(User)
@@ -16,6 +17,14 @@ bool User::IsFreezedAt(Date date)const {
 
 	return false;
 }
+bool User::IsProtected(Date start, Date end)const {
+	for (auto date : DateUtils::Range(start, end)) {
+		if(!IsProtected(date))
+			return false;
+	}
+
+	return true;
+}
 
 std::optional<Date> User::FirstCommitDate()const {
 	return Commits.size() ? std::make_optional(Commits.front()) : std::nullopt;
@@ -25,8 +34,62 @@ bool User::Commit(Date date) {
 	if(IsProtected(date))
 		return (LogUser(Error, "Can't commit on protected %", date), false);
 
+	auto &todo = GetPersistentTodo(date);
+	if(todo.IsPending())
+		todo.Start(date);
+
+#if 0	
+	if(!CurrentDescription.has_value())
+		return (LogUser(Error, "Can't commit without todo list "), false);
+	if(!Completion(date).IsComplete(CurrentDescription.value()))
+		return (LogUser(Error, "Can't commit on incomplete todo list"), false);
+#endif
+
+
 	Commits.push_back(date);
 	std::sort(Commits.begin(), Commits.end());
+	return true;
+}
+
+ToDoCompletion& User::TodayCompletion(Date today){
+	if(Completion.Date != today)
+		Completion = ToDoCompletion(today);
+
+	return Completion;
+}
+
+bool User::IsPersistentRunning(Date today, const ToDoDescription& descr) const{
+	return !descr.IsPending() && Streak(today);
+}
+
+ToDoDescription &User::GetPersistentTodo(Date today){
+	//GetRunningTodo
+	for (auto &persistent : boost::adaptors::reverse(Persistent)) {
+		if(IsPersistentRunning(today, persistent))
+			return persistent;
+	}
+	
+	//GetPendingTodo
+	assert(boost::count_if(Persistent, [](const auto &d){ return d.IsPending(); }) <= 1);
+
+	for (auto& persistent : boost::adaptors::reverse(Persistent)){
+		if(persistent.IsPending())
+			return persistent;
+	}
+	
+	//Create new pending
+	Persistent.push_back({});
+	return Persistent.back();
+}
+
+bool User::SetPersistentTodo(Date today, const ToDoDescription& descr){
+	auto &todo = GetPersistentTodo(today);
+
+	if (IsPersistentRunning(today, todo))
+		return (LogUser(Error, "Can't override already running todo"), false);
+
+	todo = descr;
+
 	return true;
 }
 
@@ -188,4 +251,19 @@ void User::RemoveFriend(std::int64_t id) {
 
 bool User::HasFriend(std::int64_t id)const {
 	return boost::count(Friends, id);
+}
+
+ToDoDescription& User::InstanceForEdit(std::vector<ToDoDescription>& descriptions){
+	auto HasNotStarted = [](const ToDoDescription &descr) {
+		return !descr.Started.has_value();
+	};
+
+	assert(boost::count_if(descriptions, HasNotStarted) <= 1);
+	
+	auto it = boost::find_if(descriptions, HasNotStarted);
+
+	if (it == descriptions.end())
+		it = descriptions.emplace({});
+
+	return *it;
 }
