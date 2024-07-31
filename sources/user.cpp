@@ -78,7 +78,10 @@ ToDoDescription &User::GetPersistentTodo(Date today){
 	}
 	
 	//Create new pending
-	Persistent.push_back({});
+	if(Persistent.size())
+		Persistent.push_back({std::nullopt, Persistent.back().List});
+	else
+		Persistent.push_back({});
 	return Persistent.back();
 }
 

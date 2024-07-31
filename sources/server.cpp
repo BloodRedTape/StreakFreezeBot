@@ -431,6 +431,7 @@ void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Resp
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
 
 	if(user.GetPersistentTodo(today).IsRunning())
 		return Fail(resp, "Trying to override already running ToDo");
