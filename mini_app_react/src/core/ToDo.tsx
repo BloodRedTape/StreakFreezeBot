@@ -1,6 +1,6 @@
 import { GetPersistentTodo } from "../helpers/Requests";
 import { FromApiDateNullable } from "./UserContextSerialization";
-
+import isEqual from 'lodash/isEqual';
 
 export class ToDoDescription {
 	public Started: Date | null = null
@@ -17,6 +17,10 @@ export class ToDoDescription {
 
 	public IsRunning(): boolean {
 		return !this.IsPending()
+	}
+
+	public Equal(other: ToDoDescription) {
+		return isEqual(this.List, other.List)
 	}
 };
 

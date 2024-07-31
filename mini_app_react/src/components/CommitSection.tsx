@@ -13,6 +13,8 @@ export const CommitSection = () => {
 	}
 
 	const OnEdited = (todo: ToDoDescription) => {
+		if (userContext?.PersistentTodo !== undefined && todo.Equal(userContext?.PersistentTodo))
+			return
 		PostPersistentTodo(todo).then(JsonFromResp).then(PopupFromJson).then(Refresh)
 	}
 
