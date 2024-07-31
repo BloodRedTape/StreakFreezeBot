@@ -1,7 +1,7 @@
 import { addDays, differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { GetAvailableFreezes, GetFullUser } from "../helpers/Requests"
-import { FetchPersistentTodo, ToDoDescription } from "./ToDo"
+import { FetchPersistentCompletion, FetchPersistentTodo, ToDoCompletion, ToDoDescription } from "./ToDo"
 import { ParseUserContextType } from "./UserContextSerialization"
 
 export class StreakFreezeType {
@@ -28,7 +28,8 @@ export class UserContextType{
 	public StreakStart: Date = new Date(0, 0, 0)
 
 	public AvailableFreezes: Array<number> = []
-	public PersistentTodo : ToDoDescription = new ToDoDescription()
+	public PersistentTodo: ToDoDescription = new ToDoDescription()
+	public PersistentCompletion: ToDoCompletion = new ToDoCompletion()
 
 	public ProtectionAt(date: Date): ProtectionType{
 		const index = differenceInDays(date, this.StreakStart)
@@ -106,6 +107,7 @@ export const FetchUserContext = async () => {
 
 	user.AvailableFreezes = (await freezes_resp.json() || []).map((freeze: number) => freeze)
 	user.PersistentTodo = await FetchPersistentTodo()
+	user.PersistentCompletion = await FetchPersistentCompletion()
 
 	return user;
 }

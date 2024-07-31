@@ -1,4 +1,4 @@
-import { GetPersistentTodo } from "../helpers/Requests";
+import { GetPersistentCompletion, GetPersistentTodo } from "../helpers/Requests";
 import { FromApiDateNullable } from "./UserContextSerialization";
 import isEqual from 'lodash/isEqual';
 
@@ -38,4 +38,34 @@ export const FetchPersistentTodo = async () => {
 	const full_resp = await GetPersistentTodo()
 
 	return ParseToDoDescriptionType(await full_resp.json())
+}
+
+export class ToDoCompletion {
+	public Checks: Array<number> = []
+
+	public IsComplete(todo: ToDoDescription): boolean {
+		for (let i = 0; i < todo.List.length; i++) {
+			if (!this.Checked(i))
+				return false
+		}
+		return true
+	}
+
+	public Checked(index: number) {
+		return this.Checks.find(e => e === index) !== undefined
+	}
+}
+
+export const ParseToDoCompletionType = (data: any): ToDoCompletion => {
+	const compl = new ToDoCompletion();
+
+	compl.Checks = (data.Checks || []).map((value: any): number => value);
+
+    return compl;
+}
+
+export const FetchPersistentCompletion = async () => {
+	const full_resp = await GetPersistentCompletion()
+
+	return ParseToDoCompletionType(await full_resp.json())
 }

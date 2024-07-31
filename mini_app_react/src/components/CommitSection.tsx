@@ -1,6 +1,7 @@
-import { ToDoDescription } from "../core/ToDo";
+import { useState } from "react";
+import { ToDoCompletion, ToDoDescription } from "../core/ToDo";
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext";
-import { JsonFromResp, PopupFromJson, PostPersistentTodo } from "../helpers/Requests";
+import { JsonFromResp, PopupFromJson, PostPersistentCompletion, PostPersistentTodo } from "../helpers/Requests";
 import { ToDoSection } from "./ToDo";
 
 export const CommitSection = () => {
@@ -18,9 +19,22 @@ export const CommitSection = () => {
 		PostPersistentTodo(todo).then(JsonFromResp).then(PopupFromJson).then(Refresh)
 	}
 
+	const [completion, setCompletion] = useState<ToDoCompletion>(userContext?.PersistentCompletion ?? new ToDoCompletion())
+
+	const OnChangedComplection = (completion: ToDoCompletion) => {
+		PostPersistentCompletion(completion).then(Refresh)
+		setCompletion(completion)
+	}
+
 	return (
 		<div>
-			<ToDoSection title="Persistent" value={userContext?.PersistentTodo ?? new ToDoDescription()} onEdited={OnEdited}/>
+			<ToDoSection
+				title="Persistent"
+				value={userContext?.PersistentTodo ?? new ToDoDescription()}
+				onEdited={OnEdited}
+				completion={completion}
+				onChangedCompletion={OnChangedComplection}
+			/>
 		</div>
 	)
 };

@@ -38,24 +38,24 @@ bool User::Commit(Date date) {
 	if(todo.IsPending())
 		todo.Start(date);
 
-#if 0	
-	if(!CurrentDescription.has_value())
-		return (LogUser(Error, "Can't commit without todo list "), false);
-	if(!Completion(date).IsComplete(CurrentDescription.value()))
+	if(!TodayPersistentCompletion(date).IsComplete(GetPersistentTodo(date)))
 		return (LogUser(Error, "Can't commit on incomplete todo list"), false);
-#endif
-
 
 	Commits.push_back(date);
 	std::sort(Commits.begin(), Commits.end());
 	return true;
 }
 
-ToDoCompletion& User::TodayCompletion(Date today){
-	if(Completion.Date != today)
-		Completion = ToDoCompletion(today);
+ToDoCompletion& User::TodayPersistentCompletion(Date today){
+	if(PersistentCompletion.Date != today)
+		PersistentCompletion = ToDoCompletion(today);
 
-	return Completion;
+	return PersistentCompletion;
+}
+
+bool User::SetPersistentCompletion(Date today, const std::vector<std::int8_t> &completion){
+	TodayPersistentCompletion(today).Checks = completion;
+	return true;
 }
 
 bool User::IsPersistentRunning(Date today, const ToDoDescription& descr) const{

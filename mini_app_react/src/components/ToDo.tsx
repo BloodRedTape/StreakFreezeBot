@@ -4,7 +4,7 @@ import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 import { CSSProperties, useState } from "react"
-import { ToDoDescription } from "../core/ToDo"
+import { ToDoCompletion, ToDoDescription } from "../core/ToDo"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { JsonFromResp, PopupFromJson, PostCommit } from "../helpers/Requests"
 import { Entry } from "../core/Entry"
@@ -124,7 +124,17 @@ const ToDoEdit: React.FC<{ value: ToDoDescription, onFinishEdit: OnChanged, titl
 	)
 }
 
-const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, title: string }> = ({ value, onChangeMode, title }) => {
+type OnChangeCompletion = (completion: ToDoCompletion)=>void
+
+type ToDoUsageProperties = {
+	value: ToDoDescription,
+	completion: ToDoCompletion,
+	onChangeCompletion: OnChangeCompletion,
+	onChangeMode: OnChangeMode,
+	title: string 
+}
+
+const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeCompletion, onChangeMode, title }) => {
 	const userContext = useGetUserContext()
 	const setUserContext = useSetUserContext()
 
@@ -132,7 +142,8 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 		FetchUserContext().then(setUserContext)
 	}
 
-	const CanCommit = !userContext?.IsProtected() || false;
+	const CanCommit = !userContext?.IsProtected() && userContext?.PersistentCompletion.IsComplete(userContext.PersistentTodo) || false;
+	const CanCheck = !userContext?.IsProtected() || false
 
 	const OnCommit = () => {
 		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
@@ -152,15 +163,36 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 
 
 
-	const Checkboxes = value.List.map((name) => (
-		<Entry
-			before={<div style={AlignCenterStyle}><Checkbox name="checkbox" value="2"/></div>}
-			after={<IconButton style={{ opacity: '0' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
-			style={{padding: '5px'}}
-		>
-			<EntryText text={name}/>
-		</Entry>
-	))
+	const Checkboxes = value.List.map((name, index) => {
+		const IsChecked = () => {
+			return completion.Checks.find(e => e === index) !== undefined
+		}
+
+		const SetCheck = (check: boolean) => {
+			const newComplection = new ToDoCompletion()
+
+			if (check)
+				newComplection.Checks = completion.Checks.concat([index])
+			else
+				newComplection.Checks = completion.Checks.filter(e => e !== index)
+
+			onChangeCompletion(newComplection)
+		}
+
+		const Box = IsChecked()
+			? (<Checkbox checked disabled={!CanCheck} onChange={e => SetCheck(e.target.checked)} />)
+			: (<Checkbox disabled={!CanCheck} onChange={e => SetCheck(e.target.checked)} />)
+		
+		return (
+			<Entry
+				before={<div style={AlignCenterStyle}>{ Box }</div>}
+				after={<IconButton style={{ opacity: '0' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
+				style={{ padding: '5px' }}
+			>
+				<EntryText text={name} />
+			</Entry>
+		)
+	})
 
 	const OnEdit = () => {
 		onChangeMode()
@@ -197,7 +229,15 @@ const ToDoUsage: React.FC<{ value: ToDoDescription, onChangeMode: OnChangeMode, 
 	)
 }
 
-export const ToDoSection: React.FC<{ value: ToDoDescription, onEdited: OnChanged, title: string }> = ({ value, onEdited, title }) => {
+type ToDoSectionProps = {
+	completion: ToDoCompletion,
+	onChangedCompletion: OnChangeCompletion,
+	value: ToDoDescription,
+	onEdited: OnChanged,
+	title: string
+}
+
+export const ToDoSection: React.FC<ToDoSectionProps> = ({ value, completion, onChangedCompletion, onEdited, title }) => {
 
 	const [edit, setEdit] = useState<boolean>(false)
 
@@ -212,5 +252,5 @@ export const ToDoSection: React.FC<{ value: ToDoDescription, onEdited: OnChanged
 
 	return edit
 		? (<ToDoEdit value={value} title={title} onFinishEdit={ OnFinishEdit } />)
-		: (<ToDoUsage value={value} title={title} onChangeMode={ OnStartEdit }/>)
+		: (<ToDoUsage value={value} title={title} onChangeMode={OnStartEdit} completion={completion} onChangeCompletion={onChangedCompletion}/>)
 }

@@ -64,6 +64,10 @@ public:
 
 	void SetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
 
+	void GetPersistentCompletion(const httplib::Request &req, httplib::Response &resp);
+
+	void SetPersistentCompletion(const httplib::Request &req, httplib::Response &resp);
+
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 
 	void OnDayOver(const httplib::Request &req, httplib::Response &resp);

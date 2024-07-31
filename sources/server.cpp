@@ -60,6 +60,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Get ("/user/:id/todo/persistent", &ThisClass::GetPersistentTodo);
 	Post("/user/:id/todo/persistent", &ThisClass::SetPersistentTodo);
+	Get ("/user/:id/todo/persistent/completion", &ThisClass::GetPersistentCompletion);
+	Post("/user/:id/todo/persistent/completion", &ThisClass::SetPersistentCompletion);
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
@@ -437,6 +439,48 @@ void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Resp
 		return Fail(resp, "Trying to override already running ToDo");
 
 	if(!user.SetPersistentTodo(today, description.value()))
+		return Fail(resp, "Internal error during ToDo setup");
+
+	Ok(resp, "ToDo is now set!");
+}
+
+void HttpApiServer::GetPersistentCompletion(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+
+	auto completion = user.TodayPersistentCompletion(today);
+
+	resp.status = httplib::StatusCode::OK_200;
+	resp.set_content(nlohmann::json(completion).dump(), "application/json");
+}
+
+void HttpApiServer::SetPersistentCompletion(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+	
+	auto completion = GetJsonProperty<std::vector<std::int8_t>>(req.body, "Checks");
+
+	if (!completion.has_value()) {
+		resp.status = httplib::StatusCode::Conflict_409;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveToFile(); };
+
+	if(!user.SetPersistentCompletion(today, completion.value()))
 		return Fail(resp, "Internal error during ToDo setup");
 
 	Ok(resp, "ToDo is now set!");

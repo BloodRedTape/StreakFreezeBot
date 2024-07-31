@@ -1,5 +1,5 @@
 import { PopupParams, postEvent, retrieveLaunchParams } from "@telegram-apps/sdk-react";
-import { ToDoDescription } from "../core/ToDo";
+import { ToDoCompletion, ToDoDescription } from "../core/ToDo";
 
 export const GatherCurrentUserId = (): number => {
 	const debugId = 399828804
@@ -164,4 +164,12 @@ export const GetPersistentTodo = () => {
 
 export const PostPersistentTodo = (todo: ToDoDescription) => {
 	return fetch(MakeUserRequestLocation() + '/todo/persistent', {method: 'POST', body: JSON.stringify(todo)})
+}
+
+export const GetPersistentCompletion = () => {
+	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion')
+}
+
+export const PostPersistentCompletion = (todo: ToDoCompletion) => {
+	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion', {method: 'POST', body: JSON.stringify(todo)})
 }

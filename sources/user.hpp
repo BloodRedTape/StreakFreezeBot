@@ -31,9 +31,9 @@ private:
     std::vector<std::int64_t> Friends;
 
     std::vector<ToDoDescription> Persistent;
-    ToDoCompletion Completion;
+    ToDoCompletion PersistentCompletion;
 public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, Commits, MaxFreezes, Friends, Persistent, Completion)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, Commits, MaxFreezes, Friends, Persistent, PersistentCompletion)
 public:
     bool IsCommitedAt(Date date)const;
 
@@ -47,7 +47,9 @@ public:
 
     bool Commit(Date date);
     
-    ToDoCompletion &TodayCompletion(Date today);
+    ToDoCompletion &TodayPersistentCompletion(Date today);
+
+    bool SetPersistentCompletion(Date today, const std::vector<std::int8_t> &checks);
 
     bool IsPersistentRunning(Date today, const ToDoDescription &descr)const;
 
