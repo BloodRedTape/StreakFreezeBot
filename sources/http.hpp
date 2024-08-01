@@ -13,7 +13,9 @@ inline httplib::Client MakeSecureClient(const std::string& endpoint) {
 #ifdef WIN32
 	return httplib::Client(endpoint);
 #else
-	return httplib::Client(endpoint, "/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ssl-cert-snakeoil.pem");
+	httplib::Client client(endpoint, "/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ssl-cert-snakeoil.pem");
+	client.enable_server_certificate_verification(false);
+	return client;
 #endif
 }
 
