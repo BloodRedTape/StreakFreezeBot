@@ -380,7 +380,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
             TgBot::File::Ptr file = m_Bot.getApi().getFile(fileId);
 
             std::string fileUrl = "https://api.telegram.org/file/bot" + m_Bot.getToken() + "/" + file->filePath;
-            httplib::Client cli("https://api.telegram.org");
+            httplib::Client cli = MakeSecureClient("https://api.telegram.org");
             auto res = cli.Get(fileUrl.c_str());
 
             if (res && res->status == 200) {

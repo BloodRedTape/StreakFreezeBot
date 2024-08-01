@@ -9,8 +9,16 @@
 
 DEFINE_LOG_CATEGORY(Http)
 
+httplib::Client MakeSecureClient(const std::string& endpoint) {
+#ifdef WIN32
+	return httplib::Client(endpoint);
+#else
+	return httplib::Client(endpoint, "/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ssl-cert-snakeoil.pem");
+#endif
+}
+
 inline std::optional<std::string> HttpGet(const std::string& endpoint, const std::string &path, httplib::Headers headers = {}) {
-    httplib::Client client(endpoint);
+    httplib::Client client = MakeSecureClient(endpoint);
 
 	auto resp = client.Get(path, headers);
 
@@ -37,7 +45,7 @@ inline nlohmann::json HttpGetJson(const std::string& endpoint, const std::string
 }
 
 inline std::optional<std::string> HttpPost(const std::string& endpoint, const std::string &path) {
-    httplib::Client client(endpoint);
+    httplib::Client client = MakeSecureClient(endpoint);
 
 	auto resp = client.Post(path);
 
