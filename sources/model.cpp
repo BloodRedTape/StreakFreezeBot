@@ -2,21 +2,10 @@
 #include <bsl/file.hpp>
 #include <bsl/log.hpp>
 #include <bsl/defer.hpp>
+#include <bsl/stdlib.hpp>
 #include <cassert>
 
 DEFINE_LOG_CATEGORY(Model)
-
-template<typename RetType, typename ...ArgsType>
-std::optional<RetType> ErrnoSafeCall(RetType (*function)(ArgsType...), ArgsType...args) {
-	errno = 0;
-
-	RetType result = (*function)(args...);
-
-	if(errno)
-		return std::nullopt;
-
-	return std::make_optional(result);
-}
 
 StreakDatabase::StreakDatabase(const INIReader& config):
 	m_DatabaseFolder(
