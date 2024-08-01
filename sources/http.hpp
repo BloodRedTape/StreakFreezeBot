@@ -22,7 +22,7 @@ inline std::optional<std::string> HttpGet(const std::string& endpoint, const std
 
 	auto resp = client.Get(path, headers);
 
-	if (!resp){
+	if (resp.error() != httplib::Error::Success){
 		LogHttp(Error, "GET Request to % failed with internal error %", endpoint + path, httplib::to_string(resp.error()));
 		return std::nullopt;
 	}
@@ -49,7 +49,7 @@ inline std::optional<std::string> HttpPost(const std::string& endpoint, const st
 
 	auto resp = client.Post(path);
 
-	if (!resp){
+	if (resp.error() != httplib::Error::Success){
 		LogHttp(Error, "POST Request to % failed with internal error %", endpoint + path, httplib::to_string(resp.error()));
 		return std::nullopt;
 	}
