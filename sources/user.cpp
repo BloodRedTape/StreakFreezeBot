@@ -226,6 +226,9 @@ std::vector<std::int64_t> User::AutoFreezeExcept(Date today) {
 		if(date == today)
 			break;
 
+		if(IsProtected(date))
+			continue;
+
 		std::optional<std::int64_t> index = UseAnyFreeze(date);
 		
 		if(index.has_value())
