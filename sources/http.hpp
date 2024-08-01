@@ -9,7 +9,7 @@
 
 DEFINE_LOG_CATEGORY(Http)
 
-httplib::Client MakeSecureClient(const std::string& endpoint) {
+inline httplib::Client MakeSecureClient(const std::string& endpoint) {
 #ifdef WIN32
 	return httplib::Client(endpoint);
 #else
