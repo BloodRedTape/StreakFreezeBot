@@ -6,29 +6,62 @@
 
 DEFINE_LOG_CATEGORY(Model)
 
+template<typename RetType, typename ...ArgsType>
+std::optional<RetType> ErrnoSafeCall(RetType (*function)(ArgsType...), ArgsType...args) {
+	errno = 0;
+
+	RetType result = (*function)(args...);
+
+	if(errno)
+		return std::nullopt;
+
+	return std::make_optional(result);
+}
+
 StreakDatabase::StreakDatabase(const INIReader& config):
-	m_Filepath(
-		config.Get(SectionName, "Filepath", "")
+	m_DatabaseFolder(
+		config.Get(SectionName, "DatabaseFolder", "./db")
+	),
+	m_UsersFolder(
+		m_DatabaseFolder + "/user"
 	)
 {
-	try{
-		m_Users = nlohmann::json::parse(ReadEntireFile(m_Filepath), nullptr, false, true);
-	}catch(const std::exception &e){
-		Println("Can't parse json at %, because: %", m_Filepath, e.what());
+	std::filesystem::create_directories(m_UsersFolder);
+
+	for (auto entry : std::filesystem::directory_iterator(m_UsersFolder)) {
+		if(!entry.is_regular_file())
+			continue;
+
+		std::string user = entry.path().stem().string();
+		
+		auto id = ErrnoSafeCall(&std::atoll, user.c_str());
+
+		if(!id.has_value())
+			continue;
+		
+		auto path = entry.path();
+
+		try{
+			auto user_json = nlohmann::json::parse(ReadEntireFile(path.string()), nullptr, false, true);
+
+			m_Users[id.value()] = user_json;
+		}catch(const std::exception &e){
+			Println("Can't parse json at %, because: %", path, e.what());
+		}
 	}
 }
 
 void StreakDatabase::AddFreeze(std::int64_t user, std::int32_t expire_in_days, std::string &&reason, Date today){
 	m_Users[user].AddFreeze(expire_in_days, std::move(reason), today);
 
-	SaveToFile();
+	SaveUserToFile(user);
 }
 
 void StreakDatabase::RemoveFreeze(std::int64_t user, std::size_t freeze_id) {
 	//Possible bug of removing autoused freeze????
 	m_Users[user].RemoveFreeze(freeze_id);
 
-	SaveToFile();
+	SaveUserToFile(user);
 }
 
 std::vector<std::size_t> StreakDatabase::AvailableFreezes(std::int64_t user, Date today) const{
@@ -40,7 +73,7 @@ std::vector<std::size_t> StreakDatabase::AvailableFreezes(std::int64_t user, Dat
 std::optional<std::int64_t> StreakDatabase::UseFreeze(std::int64_t user, Date today, std::size_t freeze_id){
 	EnsureAutoFreeze(user, today);
 
-	defer{ SaveToFile(); };
+	defer{ SaveUserToFile(user); };
 
 	return m_Users[user].UseFreeze(today, freeze_id);
 }
@@ -48,7 +81,7 @@ std::optional<std::int64_t> StreakDatabase::UseFreeze(std::int64_t user, Date to
 std::optional<std::int64_t> StreakDatabase::UseAnyFreeze(std::int64_t user, Date today){
 	EnsureAutoFreeze(user, today);
 
-	defer{ SaveToFile(); };
+	defer{ SaveUserToFile(user); };
 
 	return m_Users[user].UseAnyFreeze(today);
 }
@@ -62,13 +95,13 @@ std::int64_t StreakDatabase::Streak(std::int64_t user, Date today)const {
 void StreakDatabase::ResetStreak(std::int64_t user) {
 	m_Users[user] = {};
 
-	SaveToFile();
+	SaveUserToFile(user);
 }
 
 bool StreakDatabase::Commit(std::int64_t user, Date today) {
 	EnsureAutoFreeze(user, today);
 	
-	defer{ SaveToFile(); };
+	defer{ SaveUserToFile(user); };
 
 	return m_Users[user].Commit(today);
 }
@@ -87,14 +120,16 @@ void StreakDatabase::AddFriends(std::int64_t first, std::int64_t second){
 	m_Users[first].AddFriend(second);
 	m_Users[second].AddFriend(first);
 
-	SaveToFile();
+	SaveUserToFile(first);
+	SaveUserToFile(second);
 }
 
 void StreakDatabase::RemoveFriends(std::int64_t first, std::int64_t second){
 	m_Users[first].RemoveFriend(second);
 	m_Users[second].RemoveFriend(first);
 
-	SaveToFile();
+	SaveUserToFile(first);
+	SaveUserToFile(second);
 }
 
 std::vector<FriendInfo> StreakDatabase::GetFriendsInfo(std::int64_t user, Date today)const {
@@ -111,7 +146,7 @@ std::vector<FriendInfo> StreakDatabase::GetFriendsInfo(std::int64_t user, Date t
 
 void StreakDatabase::EnsureAutoFreeze(std::int64_t user, Date today)const {
 	if(m_Users[user].AutoFreezeExcept(today).size())
-		SaveToFile();
+		SaveUserToFile(user);
 }
 
 User& StreakDatabase::GetUser(std::int64_t user, Date today)const {
@@ -120,7 +155,9 @@ User& StreakDatabase::GetUser(std::int64_t user, Date today)const {
 	return m_Users[user];
 }
 
-void StreakDatabase::SaveToFile()const{
-	WriteEntireFile(m_Filepath, nlohmann::json(m_Users).dump());
+void StreakDatabase::SaveUserToFile(std::int64_t user)const{
+	auto path = std::filesystem::path(m_UsersFolder) / Format("%.json", user);
+
+	WriteEntireFile(path.string(), nlohmann::json(m_Users[user]).dump());
 }
 

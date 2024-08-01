@@ -8,7 +8,8 @@ class StreakDatabase{
     static constexpr const char *SectionName = "StreakDatabase";
 private:
 	mutable std::unordered_map<std::int64_t, User> m_Users;
-	std::string m_Filepath;
+	std::string m_DatabaseFolder;
+	std::string m_UsersFolder;
 public:
 	StreakDatabase(const INIReader &config);
 
@@ -42,5 +43,5 @@ public:
 
     User &GetUser(std::int64_t user, Date today)const;
 
-	void SaveToFile()const;
+	void SaveUserToFile(std::int64_t user)const;
 };

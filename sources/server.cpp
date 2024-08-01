@@ -122,7 +122,7 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 	
 	if(user.IsCommitedAt(today))
 		return Fail(resp, "Already commited today, don't overtime!");
@@ -147,7 +147,7 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 	
 	if(user.IsProtected(today))
 		return Fail(resp, "Can't use freeze today, already protected!");
@@ -172,7 +172,7 @@ void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& re
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 
 	if (!user.CanAddFreeze(today))
 		return Fail(resp, "Reached maximum amount of freezes");
@@ -193,7 +193,7 @@ void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response&
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 	
 	user.RemoveFreeze(freeze_id.value());
 }
@@ -433,7 +433,7 @@ void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Resp
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 
 	if(user.GetPersistentTodo(today).IsRunning())
 		return Fail(resp, "Trying to override already running ToDo");
@@ -478,7 +478,7 @@ void HttpApiServer::SetPersistentCompletion(const httplib::Request& req, httplib
 
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveToFile(); };
+	defer{ m_DB.SaveUserToFile(id); };
 
 	if(!user.SetPersistentCompletion(today, completion.value()))
 		return Fail(resp, "Internal error during ToDo setup");
