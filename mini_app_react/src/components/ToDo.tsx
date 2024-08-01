@@ -247,6 +247,7 @@ export const ToDoSection: React.FC<ToDoSectionProps> = ({ value, completion, onC
 
 	const OnFinishEdit = (todo: ToDoDescription) => {
 		setEdit(false)
+		onChangedCompletion(new ToDoCompletion())
 		onEdited(todo)
 	}
 
