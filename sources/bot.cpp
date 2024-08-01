@@ -7,12 +7,6 @@
 
 #undef SendMessage
 
-// Streak Freeze limits
-// OnDayAlmostOver
-// Better UI for streak visualization
-// Better way to show available freezes, also add to botfather
-// TeamCity
-
 static std::atomic<StreakBot*> s_Bot = nullptr;
 
 void LogFunctionExternal(const std::string& category, Verbosity verbosity, const std::string& message) {
@@ -23,9 +17,6 @@ void LogFunctionExternal(const std::string& category, Verbosity verbosity, const
 	std::scoped_lock lock(s_LogLock);
 	s_Bot.load()->Log("[%][%] %", category, verbosity, message);
 }
-
-const char *Ok = "Ok";
-const char *Fail = "Fail";
 
 StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
@@ -39,12 +30,7 @@ StreakBot::StreakBot(const INIReader& config):
 	s_Bot = this;
 
 	OnCommand("start", this, &ThisClass::Start, "start");
-	OnCommand("reset", this, &ThisClass::Reset, "Reset streak");
-	OnCommand("add_freeze", this, &ThisClass::AddFreeze, "Add freeze to freezes storage");
-	OnCommand("use_freeze", this, &ThisClass::UseFreeze, "Use one freeze from storage");
-	OnCommand("freezes", this, &ThisClass::Freezes, "List available freezes");
-	OnCommand("commit", this, &ThisClass::Commit, "Commit to protect streak");
-	OnCommand("streak", this, &ThisClass::Streak, "Show streak progress");
+	OnCommand("reset", this, &ThisClass::Reset, "Reset user data");
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
@@ -74,77 +60,6 @@ void StreakBot::Reset(TgBot::Message::Ptr message) {
 	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
 
 	SetupUserUiWith(message, "Streak history is reset now");
-}
-
-void StreakBot::AddFreeze(TgBot::Message::Ptr message) {
-	auto body = HttpPostJson(m_WebAppUrl, Format("/user/%/add_freeze", message->from->id));
-
-	if(body.count(Fail))
-		return (void)ReplyMessage(message, body[Fail]);
-
-	if(body.count(Ok))
-		return (void)ReplyMessage(message, body[Ok]);
-}
-
-void StreakBot::UseFreeze(TgBot::Message::Ptr message) {
-	nlohmann::json body = HttpPostJson(m_WebAppUrl, Format("/user/%/use_freeze", message->from->id));
-	
-	if(body.count(Fail))
-		return (void)ReplyMessage(message, body[Fail]);
-
-	if(body.count(Ok))
-		return (void)ReplyMessage(message, body[Ok]);
-}
-
-void StreakBot::Commit(TgBot::Message::Ptr message) {
-	nlohmann::json body = HttpPostJson(m_WebAppUrl, Format("/user/%/commit", message->from->id));
-	
-	if(body.count(Fail))
-		return (void)ReplyMessage(message, body[Fail]);
-
-	if(body.count(Ok))
-		return (void)ReplyMessage(message, body[Ok]);
-}
-
-void StreakBot::Freezes(TgBot::Message::Ptr message) {
-	nlohmann::json body = HttpGetJson(m_WebAppUrl, Format("/user/%/commit", message->from->id));
-	
-	auto freezes = body.size();
-
-	if(!freezes)
-		return (void)ReplyMessage(message, "No freezes available");
-
-
-	ReplyMessage(message, Format("% freezes available", freezes));
-}
-
-void StreakBot::Streak(TgBot::Message::Ptr message) {
-#if 0
-	auto history = m_DB.History(message->from->id);
-
-	std::string text;
-	std::string freeze = (const char *)u8"🥶";
-	std::string commit = (const char *)u8"🔥";
-	std::string nothing = (const char *)u8"❌";
-	std::string pending = (const char *)u8"⭕️";
-
-	for (auto day : history) {
-		if(day == Protection::Commit)
-			text += commit;
-		if(day == Protection::Freeze)
-			text += freeze;
-		if(day == Protection::None)
-			text += nothing;
-	}
-
-	if (m_DB.IsStreakBurnedOut(message->from->id))
-		return (void)ReplyMessage(message, Format("You've lost your % days streak, use /start to reset\n\n%", m_DB.Streak(message->from->id), text));
-
-	if(!m_DB.IsProtectedToday(message->from->id))
-		text += pending;
-
-	ReplyMessage(message, Format("Keep going to protect your % days streak\n\n%", m_DB.Streak(message->from->id), text));
-#endif
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
@@ -187,22 +102,6 @@ void StreakBot::OnDayAlmostOver() {
 		}
 	}
 #endif
-}
-
-Date StreakBot::Yesterday() {
-	return date::sys_days(DateUtils::Now()) - date::days(1);
-}
-
-Date StreakBot::Tomorrow() {
-	return date::sys_days(DateUtils::Now()) + date::days(1);
-}
-
-Date StreakBot::AfterTomorrow() {
-	return date::sys_days(DateUtils::Now()) + date::days(2);
-}
-
-Date StreakBot::Today() {
-	return DateUtils::Now();
 }
 
 #if WITH_ADVANCE_DATE

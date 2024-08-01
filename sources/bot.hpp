@@ -21,29 +21,11 @@ public:
 
 	void Reset(TgBot::Message::Ptr message);
 
-	void AddFreeze(TgBot::Message::Ptr message);
-
-	void UseFreeze(TgBot::Message::Ptr message);
-
-	void Commit(TgBot::Message::Ptr message);
-
-	void Freezes(TgBot::Message::Ptr message);
-
-	void Streak(TgBot::Message::Ptr message);
-
 	static bool IsPrivate(TgBot::Message::Ptr message);
 
 	void OnNewDay();
 
 	void OnDayAlmostOver();
-
-	Date Yesterday();
-
-	Date Tomorrow();
-
-	Date AfterTomorrow();
-
-	Date Today();
 
 #if WITH_ADVANCE_DATE	
 	void AdvanceDate(TgBot::Message::Ptr message);
