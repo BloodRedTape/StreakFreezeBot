@@ -19,9 +19,9 @@ public:
 
 	std::vector<std::size_t> AvailableFreezes(std::int64_t user, Date today)const;
 
-	std::optional<std::int64_t> UseFreeze(std::int64_t user, Date today, std::size_t freeze_id);
+	std::optional<std::int64_t> UseFreeze(std::int64_t user, Date today, std::size_t freeze_id, FreezeUsedBy by);
 
-	std::optional<std::int64_t> UseAnyFreeze(std::int64_t user, Date today);
+	std::optional<std::int64_t> UseAnyFreeze(std::int64_t user, Date today, FreezeUsedBy by);
 
 	std::int64_t Streak(std::int64_t user, Date today)const;
 
@@ -42,6 +42,8 @@ public:
     void EnsureAutoFreeze(std::int64_t user, Date today)const;
 
     User &GetUser(std::int64_t user, Date today)const;
+
+	std::vector<std::int64_t> GetUsers()const;
 
 	void SaveUserToFile(std::int64_t user)const;
 };

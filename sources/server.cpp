@@ -65,6 +65,11 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
+	Post("/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
+	Post("/timer/new_day", &ThisClass::OnNewDay);
+
+	Get ("/notifications", &ThisClass::GetNotifications);
+
 	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
 		try {
@@ -152,7 +157,7 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	if(user.IsProtected(today))
 		return Fail(resp, "Can't use freeze today, already protected!");
 
-	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value());
+	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value(), FreezeUsedBy::User);
 	
 	if (!freeze.has_value())
 		return Fail(resp, "You don't have freezes to use for today");
@@ -484,6 +489,70 @@ void HttpApiServer::SetPersistentCompletion(const httplib::Request& req, httplib
 		return Fail(resp, "Internal error during ToDo setup");
 
 	Ok(resp, "ToDo is now set!");
+}
+
+void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Response& resp){
+	auto today = DateUtils::Now();
+
+	for (auto id: m_DB.GetUsers()) {
+		const auto &user = m_DB.GetUser(id, today);
+
+		if (!user.IsProtected(today) && user.IsProtected(DateUtils::Yesterday(today))) {
+			bool can_be_freezed = user.AvailableFreezes(today).size();
+
+			std::string message = 
+				can_be_freezed
+					? Format("The day is almost over! Don't waste your streak freeze, commit instead!")
+					: Format("The day is almost over, don't lose your % days streak!", user.Streak(today));
+
+			m_Notifications.push_back({id, message, today});
+		}
+	}
+}
+
+void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& resp){
+	auto today = DateUtils::Now();
+	auto yesterday = DateUtils::Yesterday(today);
+
+
+	for (auto id: m_DB.GetUsers()) {
+		const auto &user = m_DB.GetUser(id, today);
+		
+		auto freezes = user.AvailableFreezes(today);
+
+		for (auto freeze : freezes) {
+			if (!user.CanUseFreezeAt(freeze, DateUtils::Tomorrow(today))) {
+				m_Notifications.push_back({
+					id,
+					"Today is the last day for one of your streak freezes, use it right now!",
+					today
+				});
+				break;
+			}
+		}
+
+		if (user.IsFreezedByAt(yesterday, FreezeUsedBy::Auto)) {
+			m_Notifications.push_back({
+				id,
+				Format("Whoa, saved your % days streak with a freeze, be careful next time!", user.Streak(today)),
+				today
+			});
+		}
+
+		if (user.Streak(yesterday) && !user.IsProtected(yesterday)) {
+			m_Notifications.push_back({
+				id,
+				Format("You've lost your % days streak... At least now you can setup a new ToDo list", user.Streak(yesterday)),
+				today
+			});
+		}
+	}
+}
+
+void HttpApiServer::GetNotifications(const httplib::Request& req, httplib::Response& resp){
+	resp.status = 200;
+	resp.set_content(nlohmann::json(m_Notifications).dump(), "application/json");
+	m_Notifications.clear();
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){

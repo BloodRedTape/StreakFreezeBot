@@ -59,20 +59,20 @@ std::vector<std::size_t> StreakDatabase::AvailableFreezes(std::int64_t user, Dat
 	return m_Users[user].AvailableFreezes(today);
 }
 
-std::optional<std::int64_t> StreakDatabase::UseFreeze(std::int64_t user, Date today, std::size_t freeze_id){
+std::optional<std::int64_t> StreakDatabase::UseFreeze(std::int64_t user, Date today, std::size_t freeze_id, FreezeUsedBy by){
 	EnsureAutoFreeze(user, today);
 
 	defer{ SaveUserToFile(user); };
 
-	return m_Users[user].UseFreeze(today, freeze_id);
+	return m_Users[user].UseFreeze(today, freeze_id, by);
 }
 
-std::optional<std::int64_t> StreakDatabase::UseAnyFreeze(std::int64_t user, Date today){
+std::optional<std::int64_t> StreakDatabase::UseAnyFreeze(std::int64_t user, Date today, FreezeUsedBy by){
 	EnsureAutoFreeze(user, today);
 
 	defer{ SaveUserToFile(user); };
 
-	return m_Users[user].UseAnyFreeze(today);
+	return m_Users[user].UseAnyFreeze(today, by);
 }
 
 std::int64_t StreakDatabase::Streak(std::int64_t user, Date today)const {
@@ -142,6 +142,15 @@ User& StreakDatabase::GetUser(std::int64_t user, Date today)const {
 	m_Users[user].AutoFreezeExcept(today);
 
 	return m_Users[user];
+}
+
+std::vector<std::int64_t> StreakDatabase::GetUsers() const{
+	std::vector<std::int64_t> users;
+
+	for (const auto& [user, _]: m_Users)
+		users.push_back(user);
+
+	return users;
 }
 
 void StreakDatabase::SaveUserToFile(std::int64_t user)const{

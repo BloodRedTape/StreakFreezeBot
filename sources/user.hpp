@@ -43,6 +43,8 @@ public:
 
     bool IsProtected(Date start, Date end)const;
 
+    bool IsFreezedByAt(Date date, FreezeUsedBy by)const;
+
     std::optional<Date> FirstCommitDate()const;
 
     bool Commit(Date date);
@@ -75,11 +77,13 @@ public:
 
     bool NoStreak(Date today)const{ return Streak(today) == 0; }
 
-    std::optional<std::int64_t> UseAnyFreeze(Date date);
+    std::optional<std::int64_t> UseAnyFreeze(Date date, FreezeUsedBy by);
 
-    std::optional<std::int64_t> UseFreeze(Date date, std::int64_t freeze_id);
+    std::optional<std::int64_t> UseFreeze(Date date, std::int64_t freeze_id, FreezeUsedBy by);
 
     std::vector<std::int64_t> AutoFreezeExcept(Date today);
+
+    bool CanUseFreezeAt(std::int64_t freeze_id, Date date)const;
 
     void AddFriend(std::int64_t id);
 

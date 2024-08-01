@@ -7,8 +7,9 @@ bool StreakFreeze::CanBeUsedAt(Date date) const{
 	return can && !Removed && !UsedAt.has_value();
 }
 
-void StreakFreeze::UseAt(Date date) {
+void StreakFreeze::UseAt(Date date, FreezeUsedBy by) {
 	assert(CanBeUsedAt(date));
 
 	UsedAt = std::make_optional(date);
+	UsedBy = std::make_optional(by);
 }

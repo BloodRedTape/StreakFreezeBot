@@ -4,6 +4,7 @@
 #include "simple_bot.hpp"
 #include "model.hpp"
 #include "logger.hpp"
+#include "notification.hpp"
 
 class StreakBot: public SimplePollBot{
 	static constexpr const char *SectionName = "Bot";
@@ -12,6 +13,8 @@ private:
 	HybridLogger m_Logger;
 	Date m_LastDate = DateUtils::Now();
 	std::string m_WebAppUrl;
+
+	std::string m_WebApiUrl;
 public:
 	StreakBot(const INIReader &config);
 
@@ -21,18 +24,13 @@ public:
 
 	void Reset(TgBot::Message::Ptr message);
 
+	void HandleNotifications(const std::vector<Notification> &notification);
+
 	static bool IsPrivate(TgBot::Message::Ptr message);
-
-	void OnNewDay();
-
-	void OnDayAlmostOver();
 
 #if WITH_ADVANCE_DATE	
 	void AdvanceDate(TgBot::Message::Ptr message);
 #endif
 
-#if WITH_DAY_ALMOST_OVER
-	void DayAlmostOver(TgBot::Message::Ptr message);
-#endif
 	void SetupUserUiWith(TgBot::Message::Ptr source, const std::string &text = "");
 };

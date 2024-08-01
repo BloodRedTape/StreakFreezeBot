@@ -6,6 +6,7 @@
 #include "model.hpp"
 #include <tgbot/Bot.h>
 #include "logger.hpp"
+#include "notification.hpp"
 
 class HttpApiServer : public httplib::Server {
 	using Super = httplib::Server;
@@ -29,6 +30,8 @@ private:
 	
 	HybridLogger m_Logger;
 	TgBot::Bot m_Bot;
+
+	std::vector<Notification> m_Notifications;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -70,7 +73,9 @@ public:
 
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 
-	void OnDayOver(const httplib::Request &req, httplib::Response &resp);
+	void OnNewDay(const httplib::Request &req, httplib::Response &resp);
+
+	void GetNotifications(const httplib::Request &req, httplib::Response &resp);
 
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 

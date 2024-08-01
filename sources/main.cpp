@@ -3,10 +3,15 @@
 #include <INIReader.h>
 #include <mutex>
 #include "server.hpp"
+#include "timer_client.hpp"
 #include "bot.hpp"
 
 void ServerMain(const INIReader &config) {
 	HttpApiServer(config).Run();
+}
+
+void TimerMain(const INIReader &config) {
+	TimerClient(config).Run();
 }
 
 int main(int argc, char *argv[]) {
@@ -22,6 +27,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::thread server_thread(ServerMain, std::ref(config));
+	std::thread timer_thread(TimerMain, std::ref(config));
 
 	StreakBot bot(config);
 

@@ -17,6 +17,19 @@ bool User::IsFreezedAt(Date date)const {
 
 	return false;
 }
+
+bool User::IsFreezedByAt(Date date, FreezeUsedBy by)const {
+	for (auto& freeze : Freezes) {
+		if(freeze.UsedAt.has_value() 
+		&& freeze.UsedAt.value() == date
+		&& freeze.UsedBy.has_value()
+		&& freeze.UsedBy.value() == by)
+			return true;
+	}
+
+	return false;
+}
+
 bool User::IsProtected(Date start, Date end)const {
 	for (auto date : DateUtils::Range(start, end)) {
 		if(!IsProtected(date))
@@ -127,7 +140,7 @@ Protection User::ProtectionAt(Date date)const{
 void User::AddFreeze(std::int32_t expire_in_days, std::string &&reason, Date today){
 	Date expire = (date::sys_days)today + date::days(expire_in_days);
 
-	Freezes.push_back({today, expire, std::nullopt, false, std::move(reason)});
+	Freezes.push_back({today, expire, std::nullopt, std::nullopt, false, std::move(reason)});
 }
 
 void User::RemoveFreeze(std::size_t freeze_id) {
@@ -171,7 +184,7 @@ std::int64_t User::Streak(Date today)const {
 	return streak;
 }
 
-std::optional<std::int64_t> User::UseAnyFreeze(Date date) {
+std::optional<std::int64_t> User::UseAnyFreeze(Date date, FreezeUsedBy by) {
 	if (IsProtected(date)) {
 		LogUser(Error, "Using freeze on a protected day");
 		return std::nullopt;
@@ -182,7 +195,7 @@ std::optional<std::int64_t> User::UseAnyFreeze(Date date) {
 		
 		//TODO: use best freeze possible
 		if (freeze.CanBeUsedAt(date)) {
-			freeze.UseAt(date);
+			freeze.UseAt(date, by);
 			return i;
 		}
 	}
@@ -190,7 +203,7 @@ std::optional<std::int64_t> User::UseAnyFreeze(Date date) {
 	return std::nullopt;
 }
 
-std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id) {
+std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id, FreezeUsedBy by) {
 	if(IsProtected(date)){
 		LogUser(Error, "using freeze on an already protected day");
 		return std::nullopt;
@@ -208,7 +221,7 @@ std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id) {
 		return std::nullopt;
 	}
 
-	freeze.UseAt(date);
+	freeze.UseAt(date, by);
 
 	return freeze_id;
 }
@@ -229,13 +242,20 @@ std::vector<std::int64_t> User::AutoFreezeExcept(Date today) {
 		if(IsProtected(date))
 			continue;
 
-		std::optional<std::int64_t> index = UseAnyFreeze(date);
+		std::optional<std::int64_t> index = UseAnyFreeze(date, FreezeUsedBy::Auto);
 		
 		if(index.has_value())
 			freezes.push_back(index.value());
 	}
 
 	return freezes;
+}
+
+bool User::CanUseFreezeAt(std::int64_t freeze_id, Date date)const{
+	if(freeze_id >= Freezes.size())
+		return (LogUser(Error, "Invalid freeze id"), freeze_id);
+
+	return Freezes[freeze_id].CanBeUsedAt(date);
 }
 
 void User::AddFriend(std::int64_t id) {

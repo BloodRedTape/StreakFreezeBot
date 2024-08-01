@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <vector>
+#include <functional>
 #include <nlohmann/json.hpp>
 #include <date/date.h>
 
@@ -30,6 +31,8 @@ namespace DateUtils{
 
     namespace Debug{
         extern void AdvanceCurrentDate();
+        extern std::function<void()> PreDateAdvanced;
+        extern std::function<void()> PostDateAdvanced;
     }
 }
 

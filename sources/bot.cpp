@@ -3,9 +3,12 @@
 #include <thread>
 #include <atomic>
 #include "http.hpp"
+#include "notification.hpp"
 #include <boost/algorithm/string.hpp>
 
 #undef SendMessage
+
+DEFINE_LOG_CATEGORY(Bot)
 
 static std::atomic<StreakBot*> s_Bot = nullptr;
 
@@ -20,11 +23,19 @@ void LogFunctionExternal(const std::string& category, Verbosity verbosity, const
 
 StreakBot::StreakBot(const INIReader& config):
 	SimplePollBot(
-		config.Get(SectionName, "Token", "")
+		config.Get(SectionName, "Token", ""),
+		100,
+		1
 	),
 	m_Logger(config),
 	m_WebAppUrl(
 		config.Get(SectionName, "WebAppUrl", "")
+	),
+	m_WebApiUrl(
+		Format(
+			"http://localhost:%",
+			config.GetInteger("MiniAppHttpServer", "Port", 2024)
+		)
 	)
 {
 	s_Bot = this;
@@ -34,9 +45,6 @@ StreakBot::StreakBot(const INIReader& config):
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
-#if WITH_DAY_ALMOST_OVER
-	OnCommand("day_almost_over", this, &ThisClass::DayAlmostOver, "Debug - Trigger DayAlmostOver");
-#endif
 
 	UpdateCommandDescriptions();
 	
@@ -44,11 +52,17 @@ StreakBot::StreakBot(const INIReader& config):
 }
 
 void StreakBot::Tick() {
-	auto now = DateUtils::Now();
+	httplib::Client client(m_WebApiUrl);
 
-	if (m_LastDate != now) {
-		m_LastDate = now;
-		OnNewDay();
+	auto resp = client.Get("/notifications");
+
+	if(!resp)
+		return LogBot(Error, "Can't get notifications from %, because of internal error %", client.host(), httplib::to_string(resp.error()));
+	
+	try {
+		HandleNotifications(nlohmann::json::parse(resp->body));
+	} catch (const std::exception& e) {
+		LogBot(Error, "Can't parse notifications %", e.what());
 	}
 }
 
@@ -62,46 +76,15 @@ void StreakBot::Reset(TgBot::Message::Ptr message) {
 	SetupUserUiWith(message, "Streak history is reset now");
 }
 
+void StreakBot::HandleNotifications(const std::vector<Notification>& notifications){
+	for (const auto& notification : notifications) {
+		SendMessage(notification.UserId, 0, notification.Message);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
+
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
 	return message->chat->type == TgBot::Chat::Type::Private;
-}
-
-void StreakBot::OnNewDay() {
-#if 0
-	for (const auto &[user, data] : m_DB.Users()) {
-		if(!m_DB.IsProtected(user, Yesterday())){
-			auto freeze = m_DB.UseFreeze(user, Yesterday());
-
-			if (freeze.has_value()) {
-				SendMessage(data.NotificationChat, 0, Format("Got it! Saved % days streak with a Freeze!", m_DB.Streak(user)));
-			} else {
-				SendMessage(data.NotificationChat, 0, Format("You've lost your % days streak, we could not protect it as there were no freezes", m_DB.Streak(user)));
-			}
-		} else {
-			for (const auto& freeze : m_DB.AvailableFreezes(user)) {
-				if(!freeze.CanBeUsedAt(Tomorrow())){
-					SendMessage(data.NotificationChat, 0, Format("Your streak freeze is going to expire tomorrow, better use it today!"));
-					break;
-				}else if(!freeze.CanBeUsedAt(AfterTomorrow())){
-					SendMessage(data.NotificationChat, 0, Format("Tomorrow is the last day to use your streak freeze, don't miss your chance!"));
-					break;
-				}
-			}
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-	}
-#endif
-}
-
-void StreakBot::OnDayAlmostOver() {
-#if 0
-	for (const auto &[user, data] : m_DB.Users()) {
-		if(!m_DB.IsProtectedToday(user)){
-			SendMessage(data.NotificationChat, 0, Format("The day is almost over! commit to your % days streak or use freeze", m_DB.Streak(user)));
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		}
-	}
-#endif
 }
 
 #if WITH_ADVANCE_DATE
@@ -109,12 +92,6 @@ void StreakBot::AdvanceDate(TgBot::Message::Ptr message) {
 	DateUtils::Debug::AdvanceCurrentDate();
 
 	ReplyMessage(message, Format("Advanced date by 1 day: %", DateUtils::Now()));
-}
-#endif
-
-#if WITH_DAY_ALMOST_OVER
-void StreakBot::DayAlmostOver(TgBot::Message::Ptr message) {
-	OnDayAlmostOver();
 }
 #endif
 

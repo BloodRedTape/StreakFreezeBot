@@ -21,9 +21,18 @@ namespace DateUtils{
     }
 
     namespace Debug{
+        std::function<void()> PreDateAdvanced;
+        std::function<void()> PostDateAdvanced;
+
         void AdvanceCurrentDate(){
 #if WITH_ADVANCE_DATE
+            if(PreDateAdvanced)
+                PreDateAdvanced();
+
 	        DateUtils::s_Now = (date::sys_days)DateUtils::s_Now + date::days(1);
+
+            if(PostDateAdvanced)
+                PostDateAdvanced();
 #endif
         }
     }
