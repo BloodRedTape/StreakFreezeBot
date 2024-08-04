@@ -13,6 +13,7 @@ set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF)
 add_subdirectory(libs/cpp-httplib)
 add_subdirectory(libs/json)
 add_subdirectory(libs/tgbot-cpp)
+set(COMPILE_WITH_C_LOCALE ON)
 add_subdirectory(libs/date)
 
 

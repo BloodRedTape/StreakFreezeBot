@@ -1,11 +1,16 @@
 #include "time.hpp"
 #include <iostream>
 #include <ctime>
+#include <date/tz.h>
 
 namespace DateUtils{
 
     static Date NowImpl() {
-        return std::chrono::floor<date::days>(std::chrono::system_clock::now());
+        auto now = std::chrono::system_clock::now();
+        auto tz = std::chrono::current_zone();
+        auto zoned_now = date::make_zoned(tz, now);
+    
+        return std::chrono::floor<date::days>(zoned_now.get_sys_time());
     }
 
 #if WITH_ADVANCE_DATE
