@@ -1,6 +1,7 @@
 #include "time.hpp"
 #include <iostream>
 #include <ctime>
+#include <date/tz.h>
 
 namespace DateUtils{
 
@@ -18,7 +19,7 @@ namespace DateUtils{
 
         // Convert tm to time_point<system_clock, days>
         auto midnight = std::chrono::system_clock::from_time_t(std::mktime(&local_tm));
-        return std::chrono::floor<std::chrono::days>(midnight);
+        return std::chrono::floor<date::days>(midnight);
     }
 
 #if WITH_ADVANCE_DATE
