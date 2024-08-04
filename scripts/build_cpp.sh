@@ -5,6 +5,9 @@ set -e
 pushd ..
 
 mkdir -p build
+pipx ensurepath
+export PATH=/home/$USER/.local/bin:$PATH
+
 conan install . --build=missing -s build_type=Release
 
 pushd build
