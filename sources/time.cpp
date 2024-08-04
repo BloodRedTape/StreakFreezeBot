@@ -16,10 +16,14 @@ namespace DateUtils{
 #else
         localtime_r(&time_t_now, &local_tm);
 #endif
+        int year = local_tm.tm_year + 1900;  // tm_year is years since 1900
+        unsigned month = local_tm.tm_mon + 1; // tm_mon is months since January (0-11)
+        unsigned day = local_tm.tm_mday;
 
-        // Convert tm to time_point<system_clock, days>
-        auto midnight = std::chrono::system_clock::from_time_t(std::mktime(&local_tm));
-        return std::chrono::floor<date::days>(midnight);
+        // Create a year_month_day object
+        date::year_month_day date(date::year{year}, date::month{month}, date::day{day});
+
+        return date;
     }
 
 #if WITH_ADVANCE_DATE

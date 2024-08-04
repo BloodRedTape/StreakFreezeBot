@@ -21,7 +21,7 @@ export const Freeze: React.FC<{ freeze: StreakFreezeType, id: number }> = ({ fre
 			.then(Refresh)
 	}
 
-	const CanFreeze = !userContext?.IsProtected() || false;
+	const CanFreeze = !userContext?.IsProtected() && userContext?.Streak !== 0 || false;
 
 	const UseButton = (<Button size="s" onClick={OnUse} disabled={!CanFreeze}>Use</Button>)
 
