@@ -209,6 +209,11 @@ std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id, F
 		return std::nullopt;
 	}
 
+	if(NoStreak(date)){
+		LogUser(Error, "using freeze without a streak");
+		return std::nullopt;
+	}
+
 	if (freeze_id >= Freezes.size()) {
 		LogUser(Error, "Invalid FreezeId: %", freeze_id);
 		return std::nullopt;

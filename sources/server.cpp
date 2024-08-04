@@ -157,6 +157,9 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	if(user.IsProtected(today))
 		return Fail(resp, "Can't use freeze today, already protected!");
 
+	if(user.NoStreak(today))
+		return Fail(resp, "Can't use freeze without a streak!");
+
 	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value(), FreezeUsedBy::User);
 	
 	if (!freeze.has_value())
