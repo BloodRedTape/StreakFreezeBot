@@ -416,8 +416,9 @@ const std::string& HttpApiServer::GetOrDownloadTgFile(const std::string& id) {
 		return (m_TelegramCache[id] = res->body);
 	
 	LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
-
-	return "";
+	
+	static std::string Empty = "";
+	return Empty;
 }
 
 void HttpApiServer::GetPersistentTodo(const httplib::Request& req, httplib::Response& resp){

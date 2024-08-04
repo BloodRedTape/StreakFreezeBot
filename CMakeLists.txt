@@ -4,6 +4,9 @@ cmake_policy(SET CMP0091 NEW)
 
 project(StreakFreezeBot)
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+
 add_library(inih STATIC "libs/inih/ini.c" "libs/inih/cpp/INIReader.cpp")
 target_include_directories(inih PUBLIC "libs/inih" PUBLIC "libs/inih/cpp")
 
@@ -48,7 +51,6 @@ else()
 	target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
 endif()
 
-target_compile_features(StreakFreezeBot PUBLIC cxx_std_17)
 
 if(WITH_DEBUG_COMMANDS)
 	target_compile_definitions(StreakFreezeBot PRIVATE WITH_ADVANCE_DATE=1)
