@@ -1,10 +1,13 @@
-import { Button, Placeholder, Banner, Avatar } from "@xelene/tgui"
+import { Button, Placeholder, Banner, Avatar, Text } from "@xelene/tgui"
 import React, { useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
+import { Img } from "../core/Img"
+import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
 import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
+import { GetImageLinkFor } from "../helpers/Resources"
 import { Loading } from "./Loading"
-
+import { Entry } from "../core/Entry"
 
 const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ friend, onRemoved }) => {
 	const FriendAvatar = (
@@ -31,13 +34,37 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 		</React.Fragment>
 	)
 
-	const streakMessage = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} Days streak`
+	const Header = (
+		<Entry
+			after={
+				friend.TodayProtection !== ProtectionType.None
+					? <Img
+						style={{
+							height: '24px',
+							width: '24px',
+							marginTop: 'auto',
+							marginBottom: 'auto',
+							marginLeft: '5px'
+						}}
+						src={GetImageLinkFor(friend.TodayProtection)}
+					/>
+					: undefined
+			}
+			afterFloatLeft={true}
+		>
+			<Text
+				weight="2"
+			>
+				{friend.FullName}
+			</Text>
+		</Entry>	
+	)
 
 	return (
 		<Banner
 			before={FriendAvatar}
-			header={friend.FullName}
-			subheader={streakMessage}
+			header={Header}
+			subheader={friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`}
 			type="section"
 			style={{background: 'var(--tg-theme-header-bg-color)', marginBottom: '5px'}}
 		>

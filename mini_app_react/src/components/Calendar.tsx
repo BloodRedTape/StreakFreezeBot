@@ -3,6 +3,7 @@ import { differenceInDays } from 'date-fns';
 import { CSSProperties } from 'react';
 import { Img } from '../core/Img';
 import { ProtectionType, useGetUserContext } from '../core/UserContext';
+import { GetImageLinkFor } from '../helpers/Resources';
 
 enum DayType{
     NotADay,
@@ -29,11 +30,11 @@ const GetColorFor = (type: DayType) => {
         ],
         [
             DayType.Freeze,
-            ['#4da9fa', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FreezeBackground.png']
+            ['#4da9fa', 'white', GetImageLinkFor(ProtectionType.Freeze)]
         ],
         [
             DayType.Commit,
-            ['#f59842', 'white', 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/FlameBackground.png']
+            ['#f59842', 'white', GetImageLinkFor(ProtectionType.Commit)]
         ]
     ]);
 
