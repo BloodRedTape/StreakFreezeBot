@@ -42,12 +42,7 @@ target_link_libraries(StreakFreezeBot
 
 if(CMAKE_WITH_CONAN)
 	find_package(OpenSSL)
-	if(WIN32)
-		target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
-	else()
-		target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
-		target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
-	endif()
+	target_link_libraries(StreakFreezeBot PUBLIC openssl::openssl)
 else()
 	target_link_libraries(StreakFreezeBot PUBLIC ssl PUBLIC crypto)
 endif()

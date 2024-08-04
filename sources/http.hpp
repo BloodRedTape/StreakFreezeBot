@@ -10,13 +10,7 @@
 DEFINE_LOG_CATEGORY(Http)
 
 inline httplib::Client MakeSecureClient(const std::string& endpoint) {
-#ifdef WIN32
 	return httplib::Client(endpoint);
-#else
-	httplib::Client client(endpoint, "/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ssl-cert-snakeoil.pem");
-	client.enable_server_certificate_verification(false);
-	return client;
-#endif
 }
 
 inline std::optional<std::string> HttpGet(const std::string& endpoint, const std::string &path, httplib::Headers headers = {}) {
