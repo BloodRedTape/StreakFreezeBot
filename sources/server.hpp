@@ -32,6 +32,8 @@ private:
 	TgBot::Bot m_Bot;
 
 	std::vector<Notification> m_Notifications;
+
+	std::unordered_map<std::string, std::string> m_TelegramCache;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -62,6 +64,8 @@ public:
 	void GetFriends(const httplib::Request &req, httplib::Response &resp);
 
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
+
+	const std::string &GetOrDownloadTgFile(const std::string &path);
 
 	void GetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
 

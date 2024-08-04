@@ -377,18 +377,13 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 
             std::string fileId = photos->photos[0][0]->fileId;
 
-            TgBot::File::Ptr file = m_Bot.getApi().getFile(fileId);
+			const auto &content = GetOrDownloadTgFile(fileId);
 
-            std::string fileUrl = "https://api.telegram.org/file/bot" + m_Bot.getToken() + "/" + file->filePath;
-            httplib::Client cli = MakeSecureClient("https://api.telegram.org");
-            auto res = cli.Get(fileUrl.c_str());
-
-            if (res && res->status == 200) {
+            if (content.size()) {
                 resp.status = httplib::StatusCode::OK_200;
-                resp.set_content(res->body, "image/jpeg");
+                resp.set_content(content, "image/jpeg");
             } else {
-				LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
-                resp.status = httplib::StatusCode::InternalServerError_500;
+                resp.status = httplib::StatusCode::NotFound_404;
                 resp.set_content("Failed to download photo", "text/plain");
             }
         } catch (const std::exception& e) {
@@ -402,6 +397,24 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 
 	LogTelegramBridge(Error, "Bad request: item %, id %", item, id);
 	resp.status = httplib::StatusCode::BadRequest_400;
+}
+
+const std::string& HttpApiServer::GetOrDownloadTgFile(const std::string& id) {
+	if(m_TelegramCache.count(id))
+		return m_TelegramCache[id];
+
+    TgBot::File::Ptr file = m_Bot.getApi().getFile(id);
+
+    std::string fileUrl = "https://api.telegram.org/file/bot" + m_Bot.getToken() + "/" + file->filePath;
+    httplib::Client cli = MakeSecureClient("https://api.telegram.org");
+    auto res = cli.Get(fileUrl.c_str());
+
+    if (res && res->status == 200) 
+		return (m_TelegramCache[id] = res->body);
+	
+	LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
+
+	return "";
 }
 
 void HttpApiServer::GetPersistentTodo(const httplib::Request& req, httplib::Response& resp){
