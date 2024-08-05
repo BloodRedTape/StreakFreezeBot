@@ -1,6 +1,8 @@
 #pragma once
 
 #include <INIReader.h>
+#include <queue>
+#include <chrono>
 #include "simple_bot.hpp"
 #include "model.hpp"
 #include "logger.hpp"
@@ -15,6 +17,8 @@ private:
 	std::string m_WebAppUrl;
 
 	std::string m_WebApiUrl;
+
+	std::queue<Notification> m_Notifications;
 public:
 	StreakBot(const INIReader &config);
 
@@ -23,8 +27,6 @@ public:
 	void Start(TgBot::Message::Ptr message);
 
 	void Reset(TgBot::Message::Ptr message);
-
-	void HandleNotifications(const std::vector<Notification> &notification);
 
 	static bool IsPrivate(TgBot::Message::Ptr message);
 

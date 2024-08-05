@@ -52,6 +52,15 @@ StreakBot::StreakBot(const INIReader& config):
 }
 
 void StreakBot::Tick() {
+	constexpr int NotsPerTick = 4;
+
+	for (int i = 0; i < NotsPerTick; i++) {
+		const auto &notification = m_Notifications.front();
+		SendMessage(notification.UserId, 0, notification.Message);
+		m_Notifications.pop();
+	}
+
+
 	httplib::Client client(m_WebApiUrl);
 
 	auto resp = client.Get("/notifications");
@@ -60,7 +69,11 @@ void StreakBot::Tick() {
 		return LogBot(Error, "Can't get notifications from %, because of internal error %", client.host(), httplib::to_string(resp.error()));
 	
 	try {
-		HandleNotifications(nlohmann::json::parse(resp->body));
+		std::vector<Notification> notifications = nlohmann::json::parse(resp->body);
+
+		for (const auto& notification : notifications) {
+			m_Notifications.push(notification);
+		}
 	} catch (const std::exception& e) {
 		LogBot(Error, "Can't parse notifications %", e.what());
 	}
@@ -74,13 +87,6 @@ void StreakBot::Reset(TgBot::Message::Ptr message) {
 	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
 
 	SetupUserUiWith(message, "Streak history is reset now");
-}
-
-void StreakBot::HandleNotifications(const std::vector<Notification>& notifications){
-	for (const auto& notification : notifications) {
-		SendMessage(notification.UserId, 0, notification.Message);
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
