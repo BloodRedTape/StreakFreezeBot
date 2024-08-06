@@ -4,7 +4,7 @@ import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
-import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
+import { PostNudge, PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
 import { GetImageLinkFor } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
@@ -27,8 +27,17 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 		PostRemoveFriend(friend.Id).finally(onRemoved)
 	}
 
+	const CanNudge = true;
+
+	const OnNudged = () => {
+		PostNudge(friend.Id)
+	}
+
+	const NudgeButton = (<Button size="s" onClick={OnNudged} disabled={!CanNudge}>Nudge</Button>)
+
 	const Keyboard = (
 		<React.Fragment key=".0">
+			{ NudgeButton }
 			<Button
 				mode="plain"
 				size="s"

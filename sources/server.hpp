@@ -81,6 +81,8 @@ public:
 
 	void GetNotifications(const httplib::Request &req, httplib::Response &resp);
 
+	void NudgeFriend(const httplib::Request &req, httplib::Response &resp);
+
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
 
 	std::optional<std::int64_t> GetIdParam(const httplib::Request &req, const std::string &name)const;

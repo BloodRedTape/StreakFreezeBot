@@ -173,3 +173,7 @@ export const GetPersistentCompletion = () => {
 export const PostPersistentCompletion = (todo: ToDoCompletion) => {
 	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion', {method: 'POST', body: JSON.stringify(todo)})
 }
+
+export const PostNudge = (friend: number) => {
+	return fetch(MakeUserRequestLocation() + '/nudge/' + friend, {method: 'POST'})
+}

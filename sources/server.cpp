@@ -70,6 +70,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Get ("/notifications", &ThisClass::GetNotifications);
 
+	Post("/user/:id/nudge/:friend", &ThisClass::NudgeFriend);
+
 	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
 		try {
@@ -570,6 +572,53 @@ void HttpApiServer::GetNotifications(const httplib::Request& req, httplib::Respo
 	resp.status = 200;
 	resp.set_content(nlohmann::json(m_Notifications).dump(), "application/json");
 	m_Notifications.clear();
+}
+
+
+std::string ToTagLink(const std::string& tag) {
+	return "https://t.me/" + tag;
+}
+
+std::string ToLink(const std::string& tag) {
+	return Format("<a href=\"%\">%</a>", ToTagLink(tag), tag);
+}
+
+void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t friend_id= GetIdParam(req, "friend").value_or(0);
+
+	if (!id || !friend_id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &friend_user = m_DB.GetUser(friend_id, today);
+
+	if (!friend_user.HasFriend(id))
+		return Fail(resp, "Can't nudge, this user is not a friend");
+
+	auto from = m_Bot.getApi().getChat(id);
+
+	if(!from)
+		return Fail(resp, "Can't fetch your chat info");
+
+	std::string message = Format("%: ", ToLink(from->username));
+
+	if(friend_user.NoStreak(today))
+		message += "Hey, still no streak?";
+	else if(friend_user.IsProtected(today))
+		message += "Protected streak, great!";
+	else 
+		message += "Wanna throw away your streak?";
+	
+	m_Notifications.push_back({
+		friend_id,
+		message,
+		today
+	});
+
+	Ok(resp, "Nudged!");
 }
 
 HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){
