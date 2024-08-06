@@ -136,6 +136,7 @@ export const FriendsSection = () => {
 			</div>
 			<br/>
 			<Button onClick={OnInvite} stretched>Invite More</Button>
+			<br/>
 		</div>
 	)
 
