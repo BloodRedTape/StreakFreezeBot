@@ -615,14 +615,17 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 
 	std::string message = Format("%: ", ToLink(from->username));
 
-	if(friend_user.NoStreak(today)){
+	if (friend_user.NoStreak(today)){
 		if(user.Streak(today))
 			message += "Hey, still no streak? Join me!";
 		else
 			message += "Hey, still no streak?";
-	}else if(friend_user.IsProtected(today))
-		message += "Protected streak, great!";
-	else {
+	} else if (friend_user.IsProtected(today)){
+		if(user.IsProtected(today))
+			message += "We both commited today, cool!";
+		else
+			message += "Protected streak, great!";
+	} else {
 		if(user.IsProtected(today))
 			message += "I've already commited today, join me!";
 		else
