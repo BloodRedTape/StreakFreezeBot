@@ -603,6 +603,7 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 
 	auto today = DateUtils::Now();
 	auto &friend_user = m_DB.GetUser(friend_id, today);
+	auto &user = m_DB.GetUser(id, today);
 
 	if (!friend_user.HasFriend(id))
 		return Fail(resp, "Can't nudge, this user is not a friend");
@@ -614,12 +615,19 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 
 	std::string message = Format("%: ", ToLink(from->username));
 
-	if(friend_user.NoStreak(today))
-		message += "Hey, still no streak?";
-	else if(friend_user.IsProtected(today))
+	if(friend_user.NoStreak(today)){
+		if(user.Streak(today))
+			message += "Hey, still no streak? Join me!";
+		else
+			message += "Hey, still no streak?";
+	}else if(friend_user.IsProtected(today))
 		message += "Protected streak, great!";
-	else 
-		message += "Wanna throw away your streak?";
+	else {
+		if(user.IsProtected(today))
+			message += "I've already commited today, join me!";
+		else
+			message += "Wanna throw away your streak?";
+	}
 	
 	m_Notifications.push_back({
 		friend_id,
