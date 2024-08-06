@@ -51,8 +51,6 @@ public:
 
 	void GetAvailableFreezes(const httplib::Request &req, httplib::Response &resp);
 
-	void ResetStreak(const httplib::Request &req, httplib::Response &resp);
-
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
 
 	void GetQuote(const httplib::Request &req, httplib::Response &resp);

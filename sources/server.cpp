@@ -52,7 +52,6 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
-	Post("/user/:id/reset_streak", &ThisClass::ResetStreak);
 	Get ("/quote", &ThisClass::GetQuote);
 	Get ("/user/:id/friends", &ThisClass::GetFriends);
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
@@ -140,7 +139,7 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	if (!user.Commit(today))
 		return Fail(resp, "Something wrong");
 
-	Ok(resp, Format("Whoa, extended streak to % days", m_DB.Streak(id, today)));
+	Ok(resp, Format("Whoa, extended streak to % days", user.Streak(today)));
 }
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -220,17 +219,6 @@ void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Re
 	auto &user = m_DB.GetUser(id, today);
 	
 	resp.set_content(nlohmann::json(user.AvailableFreezes(today)).dump(), "application/json");
-}
-
-void HttpApiServer::ResetStreak(const httplib::Request& req, httplib::Response& resp) {
-	std::int64_t id = GetUser(req).value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-	
-	m_DB.ResetStreak(id);
 }
 
 std::optional<std::int64_t> HttpApiServer::GetUser(const httplib::Request& req)const {
