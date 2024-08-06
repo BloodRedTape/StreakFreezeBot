@@ -514,7 +514,10 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 	auto today = DateUtils::Now();
 
 	for (auto id: m_DB.GetUsers()) {
-		const auto &user = m_DB.GetUser(id, today);
+		auto &user = m_DB.GetUser(id, today);
+
+		if(user.IsProtected(today))
+			continue;
 
 		if (!user.IsProtected(today) && user.IsProtected(DateUtils::Yesterday(today))) {
 			bool can_be_freezed = user.AvailableFreezes(today).size();
@@ -525,6 +528,12 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 					: Format("The day is almost over, don't lose your % days streak!", user.Streak(today));
 
 			m_Notifications.push_back({id, message, today});
+			continue;
+		} 
+		
+		if (user.TodayPersistentCompletion(today).Checks.size()) {
+			m_Notifications.push_back({id, "Don't let go, finish what you've started!", today});
+			continue;
 		}
 	}
 }
