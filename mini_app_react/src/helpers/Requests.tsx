@@ -83,12 +83,14 @@ export const PostResetStreak = () => {
 	return fetch(MakeUserRequestLocation() + '/reset_streak', {method: 'POST'})
 }
 
+const Fail = 'Failure'
+
 export const GetResultMessageType = (json: any) => {
 	if ('Ok' in json) {
 		return 'Success'
 	}
 	if ('Fail' in json) {
-		return 'Failure'
+		return Fail
 	}
 
 	return 'Program Error'
@@ -103,6 +105,20 @@ export const JsonFromResp = (response: Response) => {
 }
 
 export const PopupFromJson = (json: any) => {
+	const params: PopupParams = {
+		title: GetResultMessageType(json),
+		message: GetResultMessage(json),
+		buttons: [
+			{id: "none", type: 'ok'}
+		]
+	};
+	postEvent('web_app_open_popup', params)
+}
+
+export const ErrorPopupFromJson = (json: any) => {
+	if (GetResultMessageType(json) !== Fail)
+		return
+
 	const params: PopupParams = {
 		title: GetResultMessageType(json),
 		message: GetResultMessage(json),
