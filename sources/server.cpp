@@ -622,7 +622,7 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 			message += "Hey, still no streak?";
 	} else if (friend_user.IsProtected(today)){
 		if(user.IsProtected(today))
-			message += "We both commited today, cool!";
+			message += "We've both commited today, cool!";
 		else
 			message += "Protected streak, great!";
 	} else {
