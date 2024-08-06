@@ -10,11 +10,16 @@ import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
 
 const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ friend, onRemoved }) => {
+	const OnOpenProfile = () => {
+		window.Telegram?.WebApp.openTelegramLink('https://t.me/' + friend.Username)
+	}
+
 	const FriendAvatar = (
 		<Avatar
 			size={48}
-			src={ProfilePhotoUrlFor(friend.Id) }
+			src={ProfilePhotoUrlFor(friend.Id)}
 			fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
+			onClick={OnOpenProfile}
 		/>
 	)
 
@@ -51,9 +56,11 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 					: undefined
 			}
 			afterFloatLeft={true}
+			onClick={OnOpenProfile}
 		>
 			<Text
 				weight="2"
+				onClick={OnOpenProfile}
 			>
 				{friend.FullName}
 			</Text>
