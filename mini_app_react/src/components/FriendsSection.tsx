@@ -126,8 +126,8 @@ export const FriendsSection = () => {
 
 	const FriendsPlaceholder = (
 		<Placeholder
-			action={<Button size="l" stretched onClick={OnInvite}>Invite Friends</Button>}
-			description="Send invite link to add a friend"
+			action={<Button size="l" stretched onClick={OnInvite}>Share Invite Link</Button>}
+			description="Share invite link to add a friend"
 			header="No Friends?"
 		>		
 			<img 
