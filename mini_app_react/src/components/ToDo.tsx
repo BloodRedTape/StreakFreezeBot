@@ -20,7 +20,7 @@ const AlignCenterStyle: CSSProperties = {
 	justifyContent: 'center'
 }
 
-const EntryText: React.FC<{ text: string }> = ({text}) => (
+ const EntryText: React.FC<{ text: string }> = ({text}) => (
 	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
 )
 
@@ -145,7 +145,13 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 		FetchUserContext().then(setUserContext)
 	}	
 
+	const CanCommit = !userContext?.IsProtected() && userContext?.PersistentCompletion.IsComplete(userContext.PersistentTodo) || false;
+	const CanCheck = !userContext?.IsProtected() || false
+
 	const MakeCommitPopup = () => {
+		if (!CanCommit)
+			return
+
 		const params: PopupParams = {
 			title: 'Before the lie came to life',
 			message: 'Can you face yourself and answer for what you have done?',
@@ -158,15 +164,12 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 	}
 
 	on('popup_closed', payload => {
-
+		if (!CanCommit)
+			return
 
 		if(payload.button_id === CommitPopupButtonId)
 			PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
 	})
-	
-	const CanCommit = !userContext?.IsProtected() && userContext?.PersistentCompletion.IsComplete(userContext.PersistentTodo) || false;
-	const CanCheck = !userContext?.IsProtected() || false
-
 
 	const CommitButton = (
 		<Button
