@@ -1,5 +1,5 @@
-import { Button, Placeholder, Banner, Avatar, Text } from "@xelene/tgui"
-import React, { useState } from "react"
+import { Button, Placeholder, Avatar, Text, Cell, Section } from "@xelene/tgui"
+import React, { CSSProperties, useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
@@ -8,8 +8,20 @@ import { PostNudge, PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requ
 import { GetImageLinkFor } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
+import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
+import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 
-const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ friend, onRemoved }) => {
+const AlignCenterStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'center'
+}
+
+const EntryText: React.FC<{ text: string }> = ({text}) => (
+	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
+)
+
+const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: boolean }> = ({ friend, onRemoved, isEdit }) => {
 	const OnOpenProfile = () => {
 		window.Telegram?.WebApp.openTelegramLink('https://t.me/' + friend.Username)
 	}
@@ -35,17 +47,14 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 
 	const NudgeButton = (<Button size="s" onClick={OnNudged} disabled={!CanNudge}>Nudge</Button>)
 
-	const Keyboard = (
-		<React.Fragment key=".0">
-			{ NudgeButton }
-			<Button
-				mode="plain"
-				size="s"
-				onClick={OnRemove}
-			>
-				Remove
-			</Button>
-		</React.Fragment>
+	const RemoveButton = (
+		<Button
+			mode="plain"
+			size="s"
+			onClick={OnRemove}
+		>
+			Remove
+		</Button>
 	)
 
 	const Header = (
@@ -65,33 +74,33 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void }> = ({ fr
 					: undefined
 			}
 			afterFloatLeft={true}
-			onClick={OnOpenProfile}
 		>
 			<Text
 				weight="2"
-				onClick={OnOpenProfile}
 			>
 				{friend.FullName}
 			</Text>
 		</Entry>	
 	)
 
+	const FriendSubheader = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`
+
 	return (
-		<Banner
+		<Cell
 			before={FriendAvatar}
-			header={Header}
-			subheader={friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`}
-			type="section"
-			style={{background: 'var(--tg-theme-header-bg-color)', marginBottom: '5px'}}
+			after={ isEdit ? RemoveButton : NudgeButton }
+			subtitle={FriendSubheader}
+			style={{background: 'var(--tg-theme-header-bg-color)'}}
 		>
-			{Keyboard }
-		</Banner>
+			{ Header }
+		</Cell>
 	)
 }
 
 export const FriendsSection = () => {
 
 	const [friends, setFriends] = useState<FriendType[]>()
+	const [edit, setEdit] = useState(false)
 
 	const Refresh = () => FetchFriends().then(setFriends)
 
@@ -112,7 +121,7 @@ export const FriendsSection = () => {
 	}
 
 	const Friends = friends?.map(friend => (
-		<FriendEntry friend={friend} onRemoved={Refresh}/>
+		<FriendEntry friend={friend} onRemoved={Refresh} isEdit={edit}/>
 	))
 
 	const FriendsPlaceholder = (
@@ -129,14 +138,53 @@ export const FriendsSection = () => {
 		</Placeholder>
 	)
 
+	const EditButton = (
+		<Button
+			size='s'
+			mode='bezeled'
+			onClick={()=>setEdit(true)}
+			style={{ marginLeft: 'auto', marginRight: '5px' }}
+		>
+			<div style={AlignCenterStyle}>
+				<Icon28Edit/>
+				<EntryText text=" Edit"/>
+			</div>
+		</Button>
+	)
+
+	const SaveButton = (
+		<Button
+			size="s"
+			mode="bezeled"
+			onClick={()=>setEdit(false)}
+			style={{ marginLeft: 'auto', marginRight: '5px' }}
+		>
+			<div style={AlignCenterStyle}>
+				<Icon28Archive/>
+				<EntryText text=" Save"/>
+			</div>
+		</Button>
+	)
+
+	const SectionHeader = (
+		<div style={{display: 'flex', alignItems: 'center', justifyItems: 'space-between'}}>
+			<Text weight="2">Friends</Text>
+			{edit ? SaveButton : EditButton }
+		</div>
+	)
+
 	const FriendsList = (
 		<div>
-			<div>
+			{ SectionHeader }
+			<Section
+				style={{marginTop: '10px', marginBottom: '10px'}}
+			>
 				{Friends ?? <div></div>}
-			</div>
-			<br/>
-			<Button onClick={OnInvite} stretched>Invite More</Button>
-			<br/>
+			</Section>
+			{edit
+				? <Button onClick={OnInvite} stretched>Share Invite Link</Button>
+				: null
+			}
 		</div>
 	)
 
