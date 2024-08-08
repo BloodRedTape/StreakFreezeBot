@@ -109,7 +109,6 @@ const NudgeModal: React.FC<{ friend: FriendType }> = ({ friend }) => {
 		<div style={{ padding: '5%' }}>
 			<Entry
 				after={CloseButton}
-				style={{marginTop: '5%', marginBottom: '5%'}}
 			>
 				<Text weight="2">Send Nudge</Text>
 			</Entry>
@@ -127,7 +126,7 @@ const NudgeModal: React.FC<{ friend: FriendType }> = ({ friend }) => {
 				{QuoteButtons}
 			</div>
 
-			<div style={{ paddingTop: '5%', paddingBottom: '5%' }}>
+			<div style={{ paddingTop: '5%', paddingBottom: '15%' }}>
 				{NudgeButton}
 			</div>
 		</div>
@@ -143,6 +142,7 @@ export const NudgeButton: React.FC<{ friend: FriendType }> = ({ friend }) => {
 	return (
 		<Modal
 			trigger={OpenModalButton}
+			style={{background: 'var(--tg-theme-header-bg-color)'} }
 		>
 			<NudgeModal friend={friend}/>
 		</Modal>
