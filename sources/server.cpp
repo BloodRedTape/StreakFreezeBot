@@ -601,24 +601,9 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 		return Fail(resp, "Can't fetch your chat info");
 
 	std::string message = Format("%: ", ToLink(from->username));
-
-	if (friend_user.NoStreak(today)){
-		if(user.Streak(today))
-			message += "Hey, still no streak? Join me!";
-		else
-			message += "Hey, still no streak?";
-	} else if (friend_user.IsProtected(today)){
-		if(user.IsProtected(today))
-			message += "We've both commited today, cool!";
-		else
-			message += "Protected streak, great!";
-	} else {
-		if(user.IsProtected(today))
-			message += "I've already commited today, join me!";
-		else
-			message += "Wanna throw away your streak?";
-	}
 	
+	message += req.body;
+
 	m_Notifications.push_back({
 		friend_id,
 		message,

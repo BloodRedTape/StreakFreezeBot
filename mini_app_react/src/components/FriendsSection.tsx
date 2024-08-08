@@ -4,13 +4,14 @@ import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
-import { PostNudge, PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
+import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
 import { GetImageLinkFor } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
+import { NudgeButton } from "./Nudge"
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -39,14 +40,6 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 	const OnRemove = () => {
 		PostRemoveFriend(friend.Id).finally(onRemoved)
 	}
-
-	const CanNudge = true;
-
-	const OnNudged = () => {
-		PostNudge(friend.Id)
-	}
-
-	const NudgeButton = (<Button size="s" onClick={OnNudged} disabled={!CanNudge}>Nudge</Button>)
 
 	const RemoveButton = (
 		<Button
@@ -89,7 +82,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 	return (
 		<Cell
 			before={FriendAvatar}
-			after={ isEdit ? RemoveButton : NudgeButton }
+			after={isEdit ? RemoveButton : (<NudgeButton friend={friend }/>) }
 			subtitle={FriendSubheader}
 			style={{background: 'var(--tg-theme-header-bg-color)'}}
 		>
