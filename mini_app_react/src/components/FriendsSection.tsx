@@ -112,7 +112,7 @@ export const FriendsSection = () => {
 		Refresh()
 	}
 
-	const friends: FriendType[] = friendsState ?? friendsCookies.Friends ?? []
+	const friends: FriendType[] | undefined = friendsState ?? friendsCookies.Friends
 
 	const OnInvite = () => {
 		const link = MakeInviteLink()
