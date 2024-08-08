@@ -10,6 +10,7 @@ import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
+import { useCookies } from "react-cookie"
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -98,14 +99,20 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 }
 
 export const FriendsSection = () => {
-
-	const [friends, setFriends] = useState<FriendType[]>()
+	const [friendsState, setFriendsState] = useState<FriendType[]>()
 	const [edit, setEdit] = useState(false)
+	const [friendsCookies, setFriendsCookies] = useCookies(['Friends'])
 
-	const Refresh = () => FetchFriends().then(setFriends)
+	const Refresh = () => FetchFriends().then((friends) => {
+		setFriendsCookies("Friends", friends)
+		setFriendsState(friends)
+	})
 
-	if (friends === undefined)
+	if (friendsState === undefined) {
 		Refresh()
+	}
+
+	const friends: FriendType[] = friendsState ?? friendsCookies.Friends ?? []
 
 	const OnInvite = () => {
 		const link = MakeInviteLink()
@@ -143,7 +150,7 @@ export const FriendsSection = () => {
 			size='s'
 			mode='bezeled'
 			onClick={()=>setEdit(true)}
-			style={{ marginLeft: 'auto', marginRight: '5px' }}
+			style={{ marginLeft: 'auto', marginRight: '0px' }}
 		>
 			<div style={AlignCenterStyle}>
 				<Icon28Edit/>
@@ -157,7 +164,7 @@ export const FriendsSection = () => {
 			size="s"
 			mode="bezeled"
 			onClick={()=>setEdit(false)}
-			style={{ marginLeft: 'auto', marginRight: '5px' }}
+			style={{ marginLeft: 'auto', marginRight: '0px' }}
 		>
 			<div style={AlignCenterStyle}>
 				<Icon28Archive/>

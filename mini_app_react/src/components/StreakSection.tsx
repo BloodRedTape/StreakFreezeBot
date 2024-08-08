@@ -4,17 +4,24 @@ import { CalendarSection } from './CalendarSection';
 import { GatherUserCompleteName, GetQuote } from '../helpers/Requests';
 import { useState } from 'react';
 import { Loading } from './Loading';
+import { useCookies } from 'react-cookie';
 
 export const StreakSection = () => {
 	const [userContext] = useUserContext()
-
-	const [quote, setQuote] = useState<string>()
+	const [quoteState, setQuoteState] = useState<string>()
+	const [quoteCookies, setQuoteCookies] = useCookies(['Quote'])
 
 	if (userContext == undefined)
 		return (<Loading/>)
 
-	if (quote == undefined)
-		GetQuote().then(setQuote)
+	const quote: string = quoteState ?? quoteCookies.Quote ?? 'There is a way...'
+
+	if (quoteState === undefined) {
+		GetQuote().then((quote) => {
+			setQuoteCookies('Quote', quote)
+			setQuoteState(quote)
+		})
+	}
 
 
 
@@ -27,7 +34,7 @@ export const StreakSection = () => {
 				<Text weight="2">{ streakDescription }</Text>
 				<br/>
 				<br/>
-				<Blockquote type="text"> { quote ?? 'There is the way....' } </Blockquote>
+				<Blockquote type="text"> { quote } </Blockquote>
 			</List>
 			<CalendarSection/>
 		</List>
