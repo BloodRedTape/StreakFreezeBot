@@ -59,7 +59,7 @@ const GetQuoteList = (streak: number, today: boolean, friend: FriendType): Array
 				{ Emoji: "🥰", Text: "Let's commit together!!!!" },
 				{ Emoji: "😭", Text: "Wanna throw away your streak?" },
 				{ Emoji: "😇", Text: "We are such a late commiters" },
-				{ Emoji: "🤮", Text: "Whoever breaks the streak is a loser." },
+				{ Emoji: "🤮", Text: "Whoever breaks the streak is gay." },
 			];
 	}
 	
