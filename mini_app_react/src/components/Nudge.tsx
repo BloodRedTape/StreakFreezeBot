@@ -51,7 +51,7 @@ const GetQuoteList = (streak: number, today: boolean, friend: FriendType): Array
 			return [
 				{ Emoji: "😈", Text: "It would be gay not to commit today!" },
 				{ Emoji: "🤩", Text: "I've already commited today, join me!" },
-				{ Emoji: "🌷", Text: "People who commit get girls or wherever!" },
+				{ Emoji: "🌷", Text: "People who commit get girls or whatever!" },
 				{ Emoji: "👹", Text: "Commit or get nuked!" },
 			];
 		else
