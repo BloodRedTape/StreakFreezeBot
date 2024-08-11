@@ -1,14 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "freeze.hpp"
+#include "streak.hpp"
 #include "todo.hpp"
-
-enum class Protection{
-    None,
-    Commit,
-    Freeze
-};
 
 struct FriendInfo {
     std::int64_t Id = 0;
@@ -26,44 +20,51 @@ public:
     static constexpr size_t InvalidIndex = -1;
 private:
 	std::vector<StreakFreeze> Freezes;
-    std::vector<Date> Commits;
     std::int64_t MaxFreezes = 2;
     std::vector<std::int64_t> Friends;
 
-    std::vector<ToDoDescription> Persistent;
-    ToDoCompletion PersistentCompletion;
+    std::vector<Streak> Streaks;
 public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, Commits, MaxFreezes, Friends, Persistent, PersistentCompletion)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, MaxFreezes, Friends, Streaks)
 public:
-    bool IsCommitedAt(Date date)const;
+
+    User() = default;
+
+    User(std::vector<StreakFreeze> &&freezes, std::int64_t max_freezes, std::vector<std::int64_t> &&friends, std::vector<Streak> &&streaks);
+    
+    bool AddStreak(const std::string &descr);
+
+    bool HasStreak(const std::string &descr)const;
+
+    Streak *GetStreak(std::int64_t id);
+
+    const std::vector<Streak> &GetStreaks()const{ return Streaks; }
+
+    std::vector<std::int64_t> ActiveStreaks(Date today)const;
+
+    std::vector<std::int64_t> ActivePendingStreaks(Date today)const;
+
+    std::vector<std::int64_t> UnactiveStreaks(Date today)const;
+
+    std::int64_t ActiveCount(Date today)const;
+
+    bool ActiveNoCount(Date today)const{ return ActiveCount(today) == 0; }
+
+    std::vector<Protection> ActiveHistory(Date start, Date end)const;
+
+    std::vector<Protection> ActiveHistoryForToday(Date today)const;
 
     bool IsFreezedAt(Date date)const;
 
-    bool IsProtected(Date date)const{ return IsCommitedAt(date) || IsFreezedAt(date); }
-
-    bool IsProtected(Date start, Date end)const;
-
     bool IsFreezedByAt(Date date, FreezeUsedBy by)const;
 
-    std::optional<Date> FirstCommitDate()const;
+    const std::vector<StreakFreeze> &GetFreezes()const{ return Freezes; }
 
-    bool Commit(Date date);
-    
-    ToDoCompletion &TodayPersistentCompletion(Date today);
+    bool AreActiveProtected(Date date)const;
 
-    bool SetPersistentCompletion(Date today, const std::vector<std::int8_t> &checks);
+    bool AreActiveCommited(Date date)const;
 
-    bool IsPersistentRunning(Date today, const ToDoDescription &descr)const;
-
-    ToDoDescription &GetPersistentTodo(Date today);
-
-    bool SetPersistentTodo(Date today, const ToDoDescription &descr);
-
-    std::vector<Protection> History(Date start, Date end)const;
-
-    std::vector<Protection> HistoryForToday(Date today)const;
-
-    Protection ProtectionAt(Date date)const;
+    Protection ActiveProtection(Date date)const;
 
     void AddFreeze(std::int32_t expire_in_days, std::string &&reason, Date today);
 
@@ -73,13 +74,16 @@ public:
 
     bool CanAddFreeze(Date today)const;
 
-    std::int64_t Streak(Date today)const;
-
-    bool NoStreak(Date today)const{ return Streak(today) == 0; }
-
     std::optional<std::int64_t> UseAnyFreeze(Date date, FreezeUsedBy by);
 
     std::optional<std::int64_t> UseFreeze(Date date, std::int64_t freeze_id, FreezeUsedBy by);
+    
+    template<typename PredType>
+    std::optional<Date> FnCommitEver(PredType pred)const;
+
+    std::optional<Date> FirstCommitEver()const;
+
+    std::optional<Date> LastCommitEver()const;
 
     std::vector<std::int64_t> AutoFreezeExcept(Date today);
 
@@ -92,6 +96,4 @@ public:
     bool HasFriend(std::int64_t id)const;
 
     const std::vector<std::int64_t> &GetFriends()const{ return Friends; }
-
-    static ToDoDescription &InstanceForEdit(std::vector<ToDoDescription> &descriptions);
 };

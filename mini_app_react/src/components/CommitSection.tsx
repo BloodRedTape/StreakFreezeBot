@@ -14,23 +14,23 @@ export const CommitSection = () => {
 	}
 
 	const OnEdited = (todo: ToDoDescription) => {
-		if (userContext?.PersistentTodo !== undefined && todo.Equal(userContext?.PersistentTodo))
-			return
 		PostPersistentTodo(todo).then(JsonFromResp).then(ErrorPopupFromJson).then(Refresh)
 	}
 
-	const [completion, setCompletion] = useState<ToDoCompletion>(userContext?.PersistentCompletion ?? new ToDoCompletion())
+	const [completion, setCompletion] = useState<ToDoCompletion>(new ToDoCompletion())
 
 	const OnChangedComplection = (completion: ToDoCompletion) => {
 		PostPersistentCompletion(completion).then(Refresh)
 		setCompletion(completion)
 	}
 
+	let descr = new ToDoDescription(userContext?.Today, userContext?.Streaks.map(e=>e.Description))
+
 	return (
 		<div>
 			<ToDoSection
 				title="Persistent"
-				value={userContext?.PersistentTodo ?? new ToDoDescription()}
+				value={descr}
 				onEdited={OnEdited}
 				completion={completion}
 				onChangedCompletion={OnChangedComplection}

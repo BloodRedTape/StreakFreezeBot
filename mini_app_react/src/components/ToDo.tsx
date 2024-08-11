@@ -141,7 +141,7 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 		FetchUserContext().then(setUserContext)
 	}	
 
-	const CanCommit = !userContext?.IsProtected() && userContext?.PersistentCompletion.IsComplete(userContext.PersistentTodo) || false;
+	const CanCommit = !userContext?.IsProtected() || false;
 	const CanCheck = !userContext?.IsProtected() || false
 
 	const OnCommit = () => {

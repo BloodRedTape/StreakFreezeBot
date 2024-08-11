@@ -3,6 +3,7 @@
 #include <bsl/log.hpp>
 #include <bsl/defer.hpp>
 #include <bsl/stdlib.hpp>
+#include "migration.hpp"
 #include <cassert>
 
 DEFINE_LOG_CATEGORY(Model)
@@ -33,11 +34,14 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 		try{
 			auto user_json = nlohmann::json::parse(ReadEntireFile(path.string()), nullptr, false, true);
 
-			m_Users[id.value()] = user_json;
+			m_Users[id.value()] = MigrateIfNeeded<User>(user_json);
 		}catch(const std::exception &e){
 			Println("Can't parse json at %, because: %", path, e.what());
 		}
 	}
+	
+	for(auto user: GetUsers())
+		SaveUserToFile(user);
 }
 
 void StreakDatabase::AddFriends(std::int64_t first, std::int64_t second){
@@ -62,7 +66,7 @@ std::vector<FriendInfo> StreakDatabase::GetFriendsInfo(std::int64_t user, Date t
 	for (std::int64_t id: m_Users[user].GetFriends()) {
 		auto &f = m_Users[id];
 
-		result.push_back({id, f.Streak(today), f.ProtectionAt(today)});
+		result.push_back({id, f.ActiveCount(today), f.ActiveProtection(today)});
 	}
 
 	return result;

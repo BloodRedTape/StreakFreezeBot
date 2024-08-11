@@ -46,6 +46,8 @@ public:
 
 	void Commit(const httplib::Request &req, httplib::Response &resp);
 
+	void AddStreak(const httplib::Request &req, httplib::Response &resp);
+
 	void UseFreeze(const httplib::Request &req, httplib::Response &resp);
 
 	void AddFreeze(const httplib::Request &req, httplib::Response &resp);
@@ -75,14 +77,6 @@ public:
 	const std::string &GetOrDownloadTgFile(const std::string &path);
 
 	const std::string &GetOrDownloadPlaceholder(const std::string &first_name, const std::string &last_name);
-
-	void GetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
-
-	void SetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
-
-	void GetPersistentCompletion(const httplib::Request &req, httplib::Response &resp);
-
-	void SetPersistentCompletion(const httplib::Request &req, httplib::Response &resp);
 
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 

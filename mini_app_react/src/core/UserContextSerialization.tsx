@@ -1,7 +1,8 @@
 import { DebugLog } from "../helpers/Debug";
+import { ParseStreakType } from "./Streak";
 import { ProtectionType, StreakFreezeType, UserContextType } from "./UserContext";
 
-const FromApiDate = (data: any) => {
+export const FromApiDate = (data: any) => {
 	if (Array.isArray(data) && data.length >= 3) {
 	    return new Date(data[2], data[1] - 1, data[0]);
     } else {
@@ -75,6 +76,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.Today = FromApiDate(data.Today)
 		context.Streak = data.Streak || 0
 		context.Friends = (data.Friends || []).map((friend: any): number => friend)
+		context.Streaks = (data.Streaks || []).map((streak: any) => ParseStreakType(streak))
 	} catch (e: any) {
 		DebugLog(e);
 	}

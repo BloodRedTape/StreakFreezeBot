@@ -34,8 +34,9 @@ add_executable(StreakFreezeBot
 	"sources/todo.cpp"
 	"sources/timer_client.cpp"
 	"sources/openai.cpp"
+	"sources/streak.cpp" 
+	"sources/migration.cpp"
 )
-
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl
