@@ -8,8 +8,6 @@ import { ToDoCompletion, ToDoDescription } from "../core/ToDo"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { JsonFromResp, PopupFromJson, PostCommit } from "../helpers/Requests"
 import { Entry } from "../core/Entry"
-import { on, PopupParams, postEvent } from "@telegram-apps/sdk-react"
-
 
 type OnChanged = (value: ToDoDescription) => void
 type OnChangeMode = () => void
@@ -136,8 +134,6 @@ type ToDoUsageProperties = {
 }
 
 const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeCompletion, onChangeMode, title }) => {
-	const CommitPopupButtonId = 'CommitApproved'
-
 	const setUserContext = useSetUserContext()
 	const userContext = useGetUserContext()
 
@@ -148,28 +144,12 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 	const CanCommit = !userContext?.IsProtected() && userContext?.PersistentCompletion.IsComplete(userContext.PersistentTodo) || false;
 	const CanCheck = !userContext?.IsProtected() || false
 
-	const MakeCommitPopup = () => {
+	const OnCommit = () => {
 		if (!CanCommit)
 			return
 
-		const params: PopupParams = {
-			title: 'Before the lie came to life',
-			message: 'Can you face yourself and answer for what you have done?',
-			buttons: [
-				{id: CommitPopupButtonId, type: 'default', text: 'Yes'},
-				{id: "none", type: 'cancel'},
-		]	
-		};
-		postEvent('web_app_open_popup', params)
+		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
 	}
-
-	on('popup_closed', payload => {
-		if (!CanCommit)
-			return
-
-		if(payload.button_id === CommitPopupButtonId)
-			PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
-	})
 
 	const CommitButton = (
 		<Button
@@ -177,7 +157,7 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 			disabled={!CanCommit}
 			stretched
 			mode="filled"
-			onClick={MakeCommitPopup}
+			onClick={OnCommit}
 		>
 			Commit
 		</Button>
