@@ -344,8 +344,9 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 	auto today = DateUtils::Now();
 	const auto &user = m_DB.GetUser(id, today);
 
+	auto chat = m_Bot.getApi().getChat(id);
+
 	if (item == "full") {
-		auto chat = m_Bot.getApi().getChat(id);
 		
 		nlohmann::json json = { 
 			{"Username", chat->username},
@@ -362,8 +363,16 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
             TgBot::UserProfilePhotos::Ptr photos = m_Bot.getApi().getUserProfilePhotos(id);
 
             if (photos->totalCount == 0) {
-                resp.status = httplib::StatusCode::NotFound_404;
-                resp.set_content("No profile photos found", "text/plain");
+				auto placeholder = GetOrDownloadPlaceholder(chat->firstName, chat->lastName);
+			
+				if (placeholder.size()) {
+					resp.status = httplib::StatusCode::OK_200;
+					resp.set_content(placeholder, "image/png");
+				}else{
+					resp.status = httplib::StatusCode::NotFound_404;
+					resp.set_content("Failed to fetch avatar", "text/plain");
+				}
+
                 return;
             }
 
@@ -375,8 +384,8 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
                 resp.status = httplib::StatusCode::OK_200;
                 resp.set_content(content, "image/jpeg");
             } else {
-                resp.status = httplib::StatusCode::NotFound_404;
-                resp.set_content("Failed to download photo", "text/plain");
+				resp.status = httplib::StatusCode::NotFound_404;
+				resp.set_content("Failed to fetch telegram avatar", "text/plain");
             }
         } catch (const std::exception& e) {
 			LogTelegramBridge(Error, "Crashed on photo fetch: %", e.what());
@@ -405,6 +414,23 @@ const std::string& HttpApiServer::GetOrDownloadTgFile(const std::string& id) {
 		return (m_TelegramCache[id] = res->body);
 	
 	LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
+	
+	static std::string Empty = "";
+	return Empty;
+}
+
+const std::string& HttpApiServer::GetOrDownloadPlaceholder(const std::string& first, const std::string &last){
+	const std::string key = first + "+" + last;
+
+	if(m_PlaceholdersCache.count(key))
+		return m_PlaceholdersCache[key];
+
+
+	auto fallback = HttpGet("https://avatar.iran.liara.run", Format("/username?username=%", key));
+
+
+	if (fallback.has_value())
+		return (m_PlaceholdersCache[key] = std::move(fallback.value()));
 	
 	static std::string Empty = "";
 	return Empty;

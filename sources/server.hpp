@@ -34,6 +34,7 @@ private:
 	std::vector<Notification> m_Notifications;
 
 	std::unordered_map<std::string, std::string> m_TelegramCache;
+	std::unordered_map<std::string, std::string> m_PlaceholdersCache;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -64,6 +65,8 @@ public:
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
 
 	const std::string &GetOrDownloadTgFile(const std::string &path);
+
+	const std::string &GetOrDownloadPlaceholder(const std::string &first_name, const std::string &last_name);
 
 	void GetPersistentTodo(const httplib::Request &req, httplib::Response &resp);
 
