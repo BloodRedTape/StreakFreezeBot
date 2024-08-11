@@ -5,8 +5,97 @@
 
 DEFINE_LOG_CATEGORY(User)
 
-bool User::IsCommitedAt(Date date)const {
-	return boost::count(Commits, date);
+User::User(std::vector<StreakFreeze> &&freezes, std::int64_t max_freezes, std::vector<std::int64_t> &&friends, std::vector<Streak> &&streaks):
+	Freezes(std::move(freezes)),
+	MaxFreezes(max_freezes),
+	Friends(friends),
+	Streaks(streaks)
+{}
+
+bool User::AddStreak(const std::string& descr) {
+	if(HasStreak(descr))
+		return (LogUser(Error, "Streak '%' is already created", descr), false);
+	
+	Streaks.push_back(Streak(descr));
+
+	return true;
+}
+
+bool User::HasStreak(const std::string& descr)const {
+	auto IsSameDescription = [&](const Streak& streak) {
+		return streak.Description == descr;
+	};
+
+	return boost::count_if(Streaks, IsSameDescription);
+}
+
+Streak* User::GetStreak(std::int64_t id){
+	if(id >= Streaks.size())
+		return nullptr;
+
+	return &Streaks[id];
+}
+
+std::vector<std::int64_t> User::ActiveStreaks(Date today)const {
+	std::vector<std::int64_t> streaks;
+	for (auto i = 0; i < Streaks.size(); i++) {
+		if(Streaks[i].Count(today, Freezes))
+			streaks.push_back(i);
+	}
+	return streaks;
+}
+
+std::vector<std::int64_t> User::ActivePendingStreaks(Date today)const {
+	std::vector<std::int64_t> streaks;
+	for (auto i = 0; i < Streaks.size(); i++) {
+		if(Streaks[i].Count(today, Freezes) && !Streaks[i].IsProtectedAt(today, Freezes))
+			streaks.push_back(i);
+	}
+	return streaks;
+}
+
+std::vector<std::int64_t> User::UnactiveStreaks(Date today)const {
+	auto active = ActiveStreaks(today);
+
+	std::vector<std::int64_t> streaks;
+
+	for (auto i = 0; i < Streaks.size(); i++) {
+		if(!boost::count(active, i))
+			streaks.push_back(i);
+	}
+
+	return streaks;
+}
+
+std::int64_t User::ActiveCount(Date today)const {
+	std::int64_t streak = AreActiveProtected(today);
+	
+	date::year_month_day check_date = DateUtils::Yesterday(today);
+
+	while (AreActiveProtected(check_date)) {
+		streak += AreActiveCommited(check_date);
+		check_date = DateUtils::Yesterday(check_date);
+	}
+
+	return streak;
+}
+
+std::vector<Protection> User::ActiveHistory(Date start, Date end)const {
+	std::vector<Protection> history;
+
+	for (auto date : DateUtils::Range(start, end))
+		history.push_back(ActiveProtection(date));
+
+	return history;
+}
+
+std::vector<Protection> User::ActiveHistoryForToday(Date today)const {
+	auto start = FirstCommitEver();
+
+	if(!start.has_value())
+		return {};
+
+	return ActiveHistory(start.value(), today);
 }
 
 bool User::IsFreezedAt(Date date)const {
@@ -30,105 +119,29 @@ bool User::IsFreezedByAt(Date date, FreezeUsedBy by)const {
 	return false;
 }
 
-bool User::IsProtected(Date start, Date end)const {
-	for (auto date : DateUtils::Range(start, end)) {
-		if(!IsProtected(date))
+bool User::AreActiveCommited(Date date)const {
+	if (!ActiveStreaks(date).size())
+		return false;
+
+	for (auto id : ActiveStreaks(date)) {
+		if (id >= Streaks.size()) {
+			LogUser(Error, "Invalid streak id %", id);
+			continue;
+		}
+
+		if (!Streaks[id].IsCommitedAt(date))
 			return false;
 	}
 
 	return true;
 }
 
-std::optional<Date> User::FirstCommitDate()const {
-	return Commits.size() ? std::make_optional(Commits.front()) : std::nullopt;
+bool User::AreActiveProtected(Date date)const {
+	return AreActiveCommited(date) || IsFreezedAt(date);
 }
 
-bool User::Commit(Date date) {
-	if(IsProtected(date))
-		return (LogUser(Error, "Can't commit on protected %", date), false);
-
-	auto &todo = GetPersistentTodo(date);
-	if(todo.IsPending())
-		todo.Start(date);
-
-	if(!TodayPersistentCompletion(date).IsComplete(GetPersistentTodo(date)))
-		return (LogUser(Error, "Can't commit on incomplete todo list"), false);
-
-	Commits.push_back(date);
-	std::sort(Commits.begin(), Commits.end());
-	return true;
-}
-
-ToDoCompletion& User::TodayPersistentCompletion(Date today){
-	if(PersistentCompletion.Date != today)
-		PersistentCompletion = ToDoCompletion(today);
-
-	return PersistentCompletion;
-}
-
-bool User::SetPersistentCompletion(Date today, const std::vector<std::int8_t> &completion){
-	TodayPersistentCompletion(today).Checks = completion;
-	return true;
-}
-
-bool User::IsPersistentRunning(Date today, const ToDoDescription& descr) const{
-	return !descr.IsPending() && Streak(today);
-}
-
-ToDoDescription &User::GetPersistentTodo(Date today){
-	//GetRunningTodo
-	for (auto &persistent : boost::adaptors::reverse(Persistent)) {
-		if(IsPersistentRunning(today, persistent))
-			return persistent;
-	}
-	
-	//GetPendingTodo
-	assert(boost::count_if(Persistent, [](const auto &d){ return d.IsPending(); }) <= 1);
-
-	for (auto& persistent : boost::adaptors::reverse(Persistent)){
-		if(persistent.IsPending())
-			return persistent;
-	}
-	
-	//Create new pending
-	if(Persistent.size())
-		Persistent.push_back({std::nullopt, Persistent.back().List});
-	else
-		Persistent.push_back({});
-	return Persistent.back();
-}
-
-bool User::SetPersistentTodo(Date today, const ToDoDescription& descr){
-	auto &todo = GetPersistentTodo(today);
-
-	if (IsPersistentRunning(today, todo))
-		return (LogUser(Error, "Can't override already running todo"), false);
-
-	todo = descr;
-
-	return true;
-}
-
-std::vector<Protection> User::History(Date start, Date end)const{
-	std::vector<Protection> history;
-
-	for (auto date : DateUtils::Range(start, end))
-		history.push_back(ProtectionAt(date));
-
-	return history;
-}
-
-std::vector<Protection> User::HistoryForToday(Date today)const{
-	auto start = FirstCommitDate();
-
-	if(!start.has_value())
-		return {};
-
-	return History(start.value(), today);
-}
-
-Protection User::ProtectionAt(Date date)const{
-	if(IsCommitedAt(date))
+Protection User::ActiveProtection(Date date)const {
+	if(AreActiveCommited(date))
 		return Protection::Commit;
 
 	if(IsFreezedAt(date))
@@ -171,21 +184,8 @@ bool User::CanAddFreeze(Date today)const {
 	return AvailableFreezes(today).size() < MaxFreezes;
 }
 
-std::int64_t User::Streak(Date today)const {
-	std::int64_t streak = IsCommitedAt(today);
-	
-	date::year_month_day check_date = DateUtils::Yesterday(today);
-
-	while (IsProtected(check_date)) {
-		streak += IsCommitedAt(check_date);
-		check_date = DateUtils::Yesterday(check_date);
-	}
-
-	return streak;
-}
-
 std::optional<std::int64_t> User::UseAnyFreeze(Date date, FreezeUsedBy by) {
-	if (IsProtected(date)) {
+	if (AreActiveProtected(date)) {
 		LogUser(Error, "Using freeze on a protected day");
 		return std::nullopt;
 	}
@@ -204,12 +204,12 @@ std::optional<std::int64_t> User::UseAnyFreeze(Date date, FreezeUsedBy by) {
 }
 
 std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id, FreezeUsedBy by) {
-	if(IsProtected(date)){
+	if(AreActiveProtected(date)){
 		LogUser(Error, "using freeze on an already protected day");
 		return std::nullopt;
 	}
 
-	if(NoStreak(date)){
+	if(!ActiveStreaks(date).size()){
 		LogUser(Error, "using freeze without a streak");
 		return std::nullopt;
 	}
@@ -231,12 +231,44 @@ std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id, F
 	return freeze_id;
 }
 
+template<typename PredType>
+std::optional<Date> User::FnCommitEver(PredType pred)const {
+	std::optional<Date> result;
+
+	for (const auto &streak : Streaks) {
+		auto first = streak.FirstCommitDate();
+
+		if(!first.has_value())
+			continue;
+
+		if(!result.has_value()){
+			result = first;
+			continue;
+		}
+
+		result = pred(result.value(), first.value());
+	}
+
+	return result;
+}
+
+std::optional<Date> User::FirstCommitEver()const {
+	return FnCommitEver([](auto &l, auto &r){return std::min(l, r);});
+}
+
+std::optional<Date> User::LastCommitEver()const {
+	return FnCommitEver([](auto &l, auto &r){return std::max(l, r);});
+}
+
 std::vector<std::int64_t> User::AutoFreezeExcept(Date today) {
-	if(!Commits.size())
+	auto first = FirstCommitEver();
+	auto last = LastCommitEver();
+
+	if(!first.has_value() || !last.has_value())
 		return {};
 
-	Date begin = Commits.front();
-	Date end = std::max(Commits.back(), today);
+	Date begin = first.value();
+	Date end = std::max(last.value(), today);
 
 	std::vector<std::int64_t> freezes;
 
@@ -244,7 +276,7 @@ std::vector<std::int64_t> User::AutoFreezeExcept(Date today) {
 		if(date == today)
 			break;
 
-		if(IsProtected(date))
+		if(AreActiveProtected(date))
 			continue;
 
 		std::optional<std::int64_t> index = UseAnyFreeze(date, FreezeUsedBy::Auto);
@@ -284,17 +316,3 @@ bool User::HasFriend(std::int64_t id)const {
 	return boost::count(Friends, id);
 }
 
-ToDoDescription& User::InstanceForEdit(std::vector<ToDoDescription>& descriptions){
-	auto HasNotStarted = [](const ToDoDescription &descr) {
-		return !descr.Started.has_value();
-	};
-
-	assert(boost::count_if(descriptions, HasNotStarted) <= 1);
-	
-	auto it = boost::find_if(descriptions, HasNotStarted);
-
-	if (it == descriptions.end())
-		it = descriptions.emplace({});
-
-	return *it;
-}

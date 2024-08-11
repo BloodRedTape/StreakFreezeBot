@@ -53,7 +53,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	
 	Get ("/user/:id/full", &ThisClass::GetFullUser);
 	Post("/debug/log", &ThisClass::PostDebugLog);
-	Post("/user/:id/commit",	 &ThisClass::Commit);
+	Post("/user/:id/streak/:streak_id/commit", &ThisClass::Commit);
+	Post("/user/:id/add_streak", &ThisClass::AddStreak);
 	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
@@ -64,11 +65,6 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Get ("/user/:id/friends", &ThisClass::GetFriends);
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
-
-	Get ("/user/:id/todo/persistent", &ThisClass::GetPersistentTodo);
-	Post("/user/:id/todo/persistent", &ThisClass::SetPersistentTodo);
-	Get ("/user/:id/todo/persistent/completion", &ThisClass::GetPersistentCompletion);
-	Post("/user/:id/todo/persistent/completion", &ThisClass::SetPersistentCompletion);
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
@@ -120,21 +116,29 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 
 	//NOTE: History is first because it corrects all the other info
 	auto user_json = nlohmann::json(user);
-	user_json["History"] = user.HistoryForToday(today);
+	user_json["History"] = user.ActiveHistoryForToday(today);
 	user_json["Today"] = DateUtils::Now();
-	user_json["Streak"] = user.Streak(today);
-	user_json["StreakStart"] = user.FirstCommitDate().value_or(today);
+	user_json["Streak"] = user.ActiveCount(today);
+	user_json["StreakStart"] = user.FirstCommitEver().value_or(today);
+	
+	for (const auto& streak : user.GetStreaks()) {
+		nlohmann::json json;
+		json["Description"] = streak.Description;
+		json["History"] = streak.HistoryForToday(today, user.GetFreezes());
+		json["Start"] = streak.FirstCommitDate().value_or(today);
+		json["Count"] = streak.Count(today, user.GetFreezes());
+		user_json["Streaks"].push_back(json);
+	}
 
 	std::string content = user_json.dump();
 
 	resp.status = httplib::StatusCode::OK_200;
 	resp.set_content(content, "application/json");
 }
-
-void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
+void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
 
-	if (!id) {
+	if (!id || !req.body.size() || req.body.size() > Streak::DescriptionLimit) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
@@ -148,16 +152,43 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 	
-	if(user.IsCommitedAt(today))
-		return Fail(resp, "Already commited today, don't overtime!");
+	if(user.HasStreak(req.body))
+		return Fail(resp, "streak is already created");
+
+	if(!user.AddStreak(req.body))
+		return Fail(resp, "Internal Error");
+
+	Ok(resp, "Added streak!");
+}
+
+void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
+	std::int64_t id = GetUser(req).value_or(0);
+	std::optional<std::int64_t> streak_id = GetIdParam(req, "streak_id");
+
+	if (!id || !streak_id.has_value()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+
+	auto *streak = user.GetStreak(streak_id.value());
+
+	if(!streak)
+		return Fail(resp, "Invalid streak Id");
+	
+	if(streak->IsCommitedAt(today))
+		return Fail(resp, "Already commited today!");
 
 	if(user.IsFreezedAt(today))
 		return Fail(resp, "Freeze is already used!");
 
-	if (!user.Commit(today))
+	if (!streak->Commit(today))
 		return Fail(resp, "Something wrong");
 
-	Ok(resp, Format("Whoa, extended streak to % days", user.Streak(today)));
+	Ok(resp, "Whoa, extended streak");
 }
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -178,10 +209,10 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 	
-	if(user.IsProtected(today))
+	if(user.AreActiveProtected(today))
 		return Fail(resp, "Can't use freeze today, already protected!");
 
-	if(user.NoStreak(today))
+	if(!user.ActiveStreaks(today).size())
 		return Fail(resp, "Can't use freeze without a streak!");
 
 	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value(), FreezeUsedBy::User);
@@ -189,7 +220,7 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	if (!freeze.has_value())
 		return Fail(resp, "You don't have freezes to use for today");
 
-	Ok(resp, Format("Nice, you left with % freezes and protected your % days streak", user.AvailableFreezes(today).size(), user.Streak(today)));
+	Ok(resp, Format("Nice, you left with % freezes", user.AvailableFreezes(today).size()));
 }
 
 void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -655,135 +686,28 @@ const std::string& HttpApiServer::GetOrDownloadPlaceholder(const std::string& fi
 	return Empty;
 }
 
-void HttpApiServer::GetPersistentTodo(const httplib::Request& req, httplib::Response& resp){
-	std::int64_t id = GetIdParam(req, "id").value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (!IsAuthForUser(req, id)) {
-		resp.status = httplib::StatusCode::Unauthorized_401;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	auto &user = m_DB.GetUser(id, today);
-
-	auto todo = user.GetPersistentTodo(today);
-
-	resp.status = httplib::StatusCode::OK_200;
-	resp.set_content(nlohmann::json(todo).dump(), "application/json");
-}
-
-void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Response& resp){
-	std::int64_t id = GetIdParam(req, "id").value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (!IsAuthForUser(req, id)) {
-		resp.status = httplib::StatusCode::Unauthorized_401;
-		return;
-	}
-	
-	std::optional<ToDoDescription> description = GetJsonObject<ToDoDescription>(req.body);
-
-	if (!description.has_value()) {
-		resp.status = httplib::StatusCode::Conflict_409;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveUserToFile(id); };
-
-	if(user.GetPersistentTodo(today).IsRunning())
-		return Fail(resp, "Trying to override already running ToDo");
-
-	if(!user.SetPersistentTodo(today, description.value()))
-		return Fail(resp, "Internal error during ToDo setup");
-
-	Ok(resp, "ToDo is now set!");
-}
-
-void HttpApiServer::GetPersistentCompletion(const httplib::Request& req, httplib::Response& resp){
-	std::int64_t id = GetIdParam(req, "id").value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (!IsAuthForUser(req, id)) {
-		resp.status = httplib::StatusCode::Unauthorized_401;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	auto &user = m_DB.GetUser(id, today);
-
-	auto completion = user.TodayPersistentCompletion(today);
-
-	resp.status = httplib::StatusCode::OK_200;
-	resp.set_content(nlohmann::json(completion).dump(), "application/json");
-}
-
-void HttpApiServer::SetPersistentCompletion(const httplib::Request& req, httplib::Response& resp){
-	std::int64_t id = GetIdParam(req, "id").value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (!IsAuthForUser(req, id)) {
-		resp.status = httplib::StatusCode::Unauthorized_401;
-		return;
-	}
-	
-	auto completion = GetJsonProperty<std::vector<std::int8_t>>(req.body, "Checks");
-
-	if (!completion.has_value()) {
-		resp.status = httplib::StatusCode::Conflict_409;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	auto &user = m_DB.GetUser(id, today);
-	defer{ m_DB.SaveUserToFile(id); };
-
-	if(!user.SetPersistentCompletion(today, completion.value()))
-		return Fail(resp, "Internal error during ToDo setup");
-
-	Ok(resp, "ToDo is now set!");
-}
-
 void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Response& resp){
 	auto today = DateUtils::Now();
 
 	for (auto id: m_DB.GetUsers()) {
 		auto &user = m_DB.GetUser(id, today);
 
-		if(user.IsProtected(today))
+		if(user.AreActiveProtected(today))
 			continue;
 
-		if (!user.IsProtected(today) && user.IsProtected(DateUtils::Yesterday(today))) {
+		if (!user.AreActiveProtected(today) && user.AreActiveProtected(DateUtils::Yesterday(today))) {
 			bool can_be_freezed = user.AvailableFreezes(today).size();
 
 			std::string message = 
 				can_be_freezed
 					? Format("The day is almost over! Don't waste your streak freeze, commit instead!")
-					: Format("The day is almost over, don't lose your % days streak!", user.Streak(today));
+					: Format("The day is almost over, don't lose your % days streak!", user.ActiveCount(today));
 
 			m_Notifications.push_back({id, message, today});
 			continue;
 		} 
 		
-		if (user.TodayPersistentCompletion(today).Checks.size()) {
+		if (user.ActivePendingStreaks(today).size()) {
 			m_Notifications.push_back({id, "Don't let go, finish what you've started!", today});
 			continue;
 		}
@@ -814,15 +738,15 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 		if (user.IsFreezedByAt(yesterday, FreezeUsedBy::Auto)) {
 			m_Notifications.push_back({
 				id,
-				Format("Whoa, saved your % days streak with a freeze, be careful next time!", user.Streak(today)),
+				Format("Whoa, saved your % days streak with a freeze, be careful next time!", user.ActiveCount(today)),
 				today
 			});
 		}
 
-		if (user.Streak(yesterday) && !user.IsProtected(yesterday)) {
+		if (user.ActiveCount(yesterday) && !user.AreActiveProtected(yesterday)) {
 			m_Notifications.push_back({
 				id,
-				Format("You've lost your % days streak... At least now you can setup a new ToDo list", user.Streak(yesterday)),
+				Format("You've lost your % days streak... At least now you can setup a new ToDo list", user.ActiveCount(yesterday)),
 				today
 			});
 		}
