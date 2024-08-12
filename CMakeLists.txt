@@ -18,6 +18,7 @@ add_subdirectory(libs/json)
 add_subdirectory(libs/tgbot-cpp)
 set(COMPILE_WITH_C_LOCALE ON)
 add_subdirectory(libs/date)
+add_subdirectory(libs/hmac_sha256)
 
 
 add_executable(StreakFreezeBot
@@ -42,6 +43,7 @@ target_link_libraries(StreakFreezeBot
 	PUBLIC httplib
 	PUBLIC TgBot
 	PUBLIC date
+	PUBLIC hmac_sha256
 )
 
 if(CMAKE_WITH_CONAN)

@@ -11,6 +11,14 @@ export const GatherCurrentUserId = (): number => {
 	}
 }
 
+export const MakeTelegramAuthHeaders = (): [string, string][] =>{
+	const launchParams = retrieveLaunchParams();
+	return [
+		['DataCheckString', launchParams.initDataRaw ?? 'None'],
+		['Hash', launchParams.initData?.hash ?? 'None']
+	]
+}
+
 export const GatherUserCompleteName = (): string => {
 	const launchParams = retrieveLaunchParams();
 
@@ -28,59 +36,65 @@ const MakeUserRequestLocation = () => {
 }
 
 export const GetFullUser = () => {
-	return fetch(MakeUserRequestLocation() + '/full')
+	return fetch(MakeUserRequestLocation() + '/full', { headers: MakeTelegramAuthHeaders()})
 }
 
 export const GetAvailableFreezes = () => {
-	return fetch(MakeUserRequestLocation() + '/available_freezes')
+	return fetch(MakeUserRequestLocation() + '/available_freezes', { headers: MakeTelegramAuthHeaders()})
 }
 
 export const PostCommit = () => {
-	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST'})
+	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST', headers: MakeTelegramAuthHeaders()})
 }
 
 export const PostAddFreeze = (expire: number, reason: string) => {
 	const body = JSON.stringify({ expire: expire, reason: reason });
+	const headers = MakeTelegramAuthHeaders().concat([ 
+		['Content-Type', 'application/json'],
+	])
+
 	return fetch(MakeUserRequestLocation() + '/add_freeze',
 		{
 			method: 'POST',
 			body: body,
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: headers
 		}
 	)
 }
 
 export const PostUseFreeze = (id: number) => {
 	const body = JSON.stringify({ freeze_id: id });
+	const headers = MakeTelegramAuthHeaders().concat([ 
+		['Content-Type', 'application/json'],
+	])
+
 	return fetch(MakeUserRequestLocation() + '/use_freeze',
 		{
 			method: 'POST',
 			body: body,
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: headers
 		}
 	)
 }
 
 export const PostRemoveFreeze = (id: number) => {
 	const body = JSON.stringify({ freeze_id: id });
+	const headers = MakeTelegramAuthHeaders().concat([ 
+		['Content-Type', 'application/json'],
+	])
+
 	return fetch(MakeUserRequestLocation() + '/remove_freeze',
 		{
 			method: 'POST',
 			body: body,
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: headers
 		}
 	)
 }
 
 
 export const PostResetStreak = () => {
-	return fetch(MakeUserRequestLocation() + '/reset_streak', {method: 'POST'})
+	return fetch(MakeUserRequestLocation() + '/reset_streak', {method: 'POST', headers: MakeTelegramAuthHeaders()})
 }
 
 const Fail = 'Failure'
@@ -148,18 +162,18 @@ export const GetQuote = () => {
 }
 
 export const PostAcceptInvite = (from: number) => {
-	return fetch(MakeUserRequestLocation() + '/friends/accept/' + from, {method: 'POST'})
+	return fetch(MakeUserRequestLocation() + '/friends/accept/' + from, {method: 'POST', headers: MakeTelegramAuthHeaders()})
 }
 export const PostRemoveFriend = (friend: number) => {
-	return fetch(MakeUserRequestLocation() + '/friends/remove/' + friend, {method: 'POST'})
+	return fetch(MakeUserRequestLocation() + '/friends/remove/' + friend, {method: 'POST', headers: MakeTelegramAuthHeaders()})
 }
 
 export const GetFriends = () => {
-	return fetch(MakeUserRequestLocation() + '/friends')
+	return fetch(MakeUserRequestLocation() + '/friends', { headers: MakeTelegramAuthHeaders() })
 }
 
 export const GetTgFullUserById = (id: number) => {
-	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full')
+	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
 }
 
 export const GetTgFullUser = () => {
@@ -175,21 +189,21 @@ export const ProfilePhotoUrl = () => {
 }
 
 export const GetPersistentTodo = () => {
-	return fetch(MakeUserRequestLocation() + '/todo/persistent')
+	return fetch(MakeUserRequestLocation() + '/todo/persistent', { headers: MakeTelegramAuthHeaders() })
 }
 
 export const PostPersistentTodo = (todo: ToDoDescription) => {
-	return fetch(MakeUserRequestLocation() + '/todo/persistent', {method: 'POST', body: JSON.stringify(todo)})
+	return fetch(MakeUserRequestLocation() + '/todo/persistent', {method: 'POST', body: JSON.stringify(todo), headers: MakeTelegramAuthHeaders()})
 }
 
 export const GetPersistentCompletion = () => {
-	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion')
+	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion', {headers: MakeTelegramAuthHeaders()})
 }
 
 export const PostPersistentCompletion = (todo: ToDoCompletion) => {
-	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion', {method: 'POST', body: JSON.stringify(todo)})
+	return fetch(MakeUserRequestLocation() + '/todo/persistent/completion', {method: 'POST', body: JSON.stringify(todo), headers: MakeTelegramAuthHeaders()})
 }
 
 export const PostNudge = (friend: number, text: string) => {
-	return fetch(MakeUserRequestLocation() + '/nudge/' + friend, {method: 'POST', body: text})
+	return fetch(MakeUserRequestLocation() + '/nudge/' + friend, {method: 'POST', body: text, headers: MakeTelegramAuthHeaders()})
 }

@@ -16,3 +16,6 @@
 [submodule "libs/date"]
 	path = libs/date
 	url = https://github.com/HowardHinnant/date.git
+[submodule "libs/hmac_sha256"]
+	path = libs/hmac_sha256
+	url = https://github.com/h5p9sl/hmac_sha256.git

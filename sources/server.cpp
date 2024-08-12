@@ -3,6 +3,7 @@
 #include "http.hpp"
 #include <bsl/log.hpp>
 #include <bsl/defer.hpp>
+#include <hmac_sha256.h>
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
@@ -37,8 +38,11 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	m_QuoteApiKey(
 		config.Get("QuoteApi", "Key", "")
 	),
-	m_Bot(
+	m_BotToken(
 		config.Get("Bot", "Token", "")
+	),
+	m_Bot(
+		m_BotToken
 	),
 	m_Logger(config)
 {
@@ -102,6 +106,11 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	const auto &user = m_DB.GetUser(id, today);
 
@@ -123,6 +132,11 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 
@@ -148,6 +162,11 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 
 	if (!id || !freeze_id.has_value()) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 
@@ -179,6 +198,11 @@ void HttpApiServer::AddFreeze(const httplib::Request& req, httplib::Response& re
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
@@ -200,6 +224,11 @@ void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response&
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
@@ -212,6 +241,11 @@ void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Re
 
 	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 
@@ -243,6 +277,100 @@ std::optional<std::string> HttpApiServer::GetParam(const httplib::Request& req, 
 		return std::nullopt;
 
 	return req.path_params.at(name);
+}
+
+static std::string HMAC_SHA256(const std::string& data, const std::string& key) {
+	std::string result(32, '/0');
+	hmac_sha256(key.data(), key.size(), data.data(), data.size(), result.data(), result.size());
+	return result;
+}
+
+static std::string hex(const std::string& binary) {
+	std::string result;
+	result.reserve(binary.size() * 2);
+
+	for (auto byte : binary) {
+		char digits[3] = {0};
+		sprintf(digits, "%02x", (std::uint8_t)byte);
+		result += digits;
+	}
+
+    return result;
+}
+
+static std::map<std::string, std::string> ParseQueryString(const std::string& query) {
+    std::map<std::string, std::string> values;
+    std::size_t start = 0;
+    std::size_t end;
+    
+    // Process the query string
+    while ((end = query.find('&', start)) != std::string::npos) {
+        std::string pair = query.substr(start, end - start);
+        
+        // Split each pair by '=' to get the key and value
+        std::size_t equal_sign = pair.find('=');
+        if (equal_sign != std::string::npos) {
+            std::string key = pair.substr(0, equal_sign);
+            std::string value = pair.substr(equal_sign + 1);
+            values[key] = value;
+        }
+        
+        start = end + 1;
+    }
+    
+    // Process the last key-value pair (or the only one if no '&' character)
+    if (start < query.length()) {
+        std::string pair = query.substr(start);
+        std::size_t equal_sign = pair.find('=');
+        if (equal_sign != std::string::npos) {
+            std::string key = pair.substr(0, equal_sign);
+            std::string value = pair.substr(equal_sign + 1);
+            values[key] = value;
+        }
+    }
+    
+    return values;
+}
+
+static std::string BuildCheckDataString(const std::map<std::string, std::string> &values) {
+	std::string result;
+	bool is_first = true;
+
+	for (const auto& [key, value] : values) {
+		if (is_first) {
+			is_first = false;
+		} else {
+			result.push_back('\n');
+		}
+		result.append(key + "=" + value);
+	}
+
+	return result;
+}
+
+bool HttpApiServer::IsAuthForUser(const httplib::Request &req, std::int64_t user) const{
+	const char *CheckDataStringKey = "Datacheckstring";
+	const char *HashKey = "Hash";
+
+	if(!req.headers.count(HashKey) || !req.headers.count(CheckDataStringKey))
+		return false;
+
+	std::map<std::string, std::string> query = ParseQueryString(req.headers.find(CheckDataStringKey)->second);
+	
+	nlohmann::json user_json = nlohmann::json::parse(query["user"], nullptr, false, false);
+
+	if(user_json["id"].get<std::int64_t>() != user)
+		return false;
+
+	query.erase("hash");
+
+	std::string CheckDataString = BuildCheckDataString(query);
+	std::string Hash = req.headers.find(HashKey)->second;
+
+	std::string secret_key = HMAC_SHA256(m_BotToken, "WebAppData");
+	std::string hashed_check_data_string = HMAC_SHA256(CheckDataString, secret_key);
+	std::string result = hex(hashed_check_data_string);
+	return result == Hash;
 }
 
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){
@@ -291,6 +419,11 @@ void HttpApiServer::AcceptFriendInvite(const httplib::Request& req, httplib::Res
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	m_DB.AddFriends(id, from);
 
 	Ok(resp, "Added friends");
@@ -305,6 +438,11 @@ void HttpApiServer::RemoveFriend(const httplib::Request& req, httplib::Response&
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	m_DB.RemoveFriends(id, from);
 
 	Ok(resp, "Removed friend");
@@ -316,6 +454,11 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 
 	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 
@@ -340,7 +483,7 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
-	
+
 	auto today = DateUtils::Now();
 	const auto &user = m_DB.GetUser(id, today);
 
@@ -444,6 +587,11 @@ void HttpApiServer::GetPersistentTodo(const httplib::Request& req, httplib::Resp
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 
@@ -458,6 +606,11 @@ void HttpApiServer::SetPersistentTodo(const httplib::Request& req, httplib::Resp
 
 	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 	
@@ -489,6 +642,11 @@ void HttpApiServer::GetPersistentCompletion(const httplib::Request& req, httplib
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 
@@ -503,6 +661,11 @@ void HttpApiServer::SetPersistentCompletion(const httplib::Request& req, httplib
 
 	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 	
@@ -611,6 +774,11 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 
 	if (!id || !friend_id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 

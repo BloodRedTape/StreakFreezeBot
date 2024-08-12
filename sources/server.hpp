@@ -29,6 +29,7 @@ private:
 	std::string m_LastQuote;
 	
 	HybridLogger m_Logger;
+	std::string m_BotToken;
 	TgBot::Bot m_Bot;
 
 	std::vector<Notification> m_Notifications;
@@ -89,6 +90,8 @@ public:
 	std::optional<std::int64_t> GetIdParam(const httplib::Request &req, const std::string &name)const;
 
 	std::optional<std::string> GetParam(const httplib::Request &req, const std::string &name)const;
+
+	bool IsAuthForUser(const httplib::Request &req, std::int64_t user)const;
 
 	HttpApiServer &Get(const std::string &pattern, HttpApiHandler handler);
 
