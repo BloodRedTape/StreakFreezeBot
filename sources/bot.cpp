@@ -42,6 +42,7 @@ StreakBot::StreakBot(const INIReader& config):
 
 	OnCommand("start", this, &ThisClass::Start, "start");
 	OnCommand("invalidate_quote", this, &ThisClass::InvalidateQuote);
+	OnCommand("push_quote", this, &ThisClass::PushQuote);
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
@@ -83,11 +84,29 @@ void StreakBot::Start(TgBot::Message::Ptr message) {
 	SetupUserUiWith(message, "Hi there!");
 }
 
+auto Admin = "BloodRedTape";
+
 void StreakBot::InvalidateQuote(TgBot::Message::Ptr message) {
-	if(message->from->username != "BloodRedTape")
+	if(message->from->username != Admin)
 		return;
 
 	HttpPost(m_WebApiUrl, "/quote/invalidate", {{"BotToken", getToken()}});
+}
+
+void StreakBot::PushQuote(TgBot::Message::Ptr message) {
+	if(message->from->username != Admin)
+		return;
+
+	std::string quote;
+
+	auto space = message->text.find_first_of(' ');
+
+	if(space == std::string::npos)
+		return;
+
+	quote = message->text.substr(space + 1);
+
+	HttpPost(m_WebApiUrl, "/quote/push", {{"BotToken", getToken()}}, quote);
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {

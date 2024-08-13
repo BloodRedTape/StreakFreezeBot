@@ -28,6 +28,8 @@ public:
 
 	void InvalidateQuote(TgBot::Message::Ptr message);
 
+	void PushQuote(TgBot::Message::Ptr message);
+
 	static bool IsPrivate(TgBot::Message::Ptr message);
 
 #if WITH_ADVANCE_DATE	

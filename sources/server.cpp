@@ -60,6 +60,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
 	Get ("/quote", &ThisClass::GetQuote);
 	Post("/quote/invalidate", &ThisClass::PostInvalidateQuote);
+	Post("/quote/push", &ThisClass::PostPushQuote);
 	Get ("/user/:id/friends", &ThisClass::GetFriends);
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
@@ -378,6 +379,32 @@ bool HttpApiServer::IsAuthForUser(const httplib::Request &req, std::int64_t user
 
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){
 	LogHttpApiDebug(Display, "%", req.body);
+	resp.status = 200;
+}
+
+void HttpApiServer::PostPushQuote(const httplib::Request& req, httplib::Response& resp){
+	auto token = req.headers.find("BotToken");
+
+	if (token == req.headers.end()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (token->second != m_BotToken) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto quotes = std::move(m_Quotes);
+
+	m_Quotes.push(req.body);
+	
+	while (quotes.size()) {
+		m_Quotes.push(quotes.front());
+		quotes.pop();
+	}
+
+	m_LastUpdate = std::chrono::steady_clock::now();
 	resp.status = 200;
 }
 
