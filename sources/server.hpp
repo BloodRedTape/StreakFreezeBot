@@ -56,6 +56,8 @@ public:
 
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
 
+	void PostInvalidateQuote(const httplib::Request &req, httplib::Response &resp);
+
 	void GetQuote(const httplib::Request &req, httplib::Response &resp);
 
 	void AcceptFriendInvite(const httplib::Request &req, httplib::Response &resp);

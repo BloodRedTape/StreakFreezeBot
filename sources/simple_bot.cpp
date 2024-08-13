@@ -293,6 +293,9 @@ void SimpleBot::OnMyChatMember(ChatMemberStatusHandler chat_member){
 void SimpleBot::UpdateCommandDescriptions() {
     std::vector<TgBot::BotCommand::Ptr> commands;
     for (const auto& [command, descr] : m_CommandDescriptions) {
+        if(!descr.size())
+            continue;
+
         auto bot_command = std::make_shared<TgBot::BotCommand>();
         bot_command->command = command;
         bot_command->description = descr;

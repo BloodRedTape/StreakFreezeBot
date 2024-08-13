@@ -45,14 +45,14 @@ const char* OpenAI::ToString(OpenAI::Role role) {
     return "";
 }
 
-std::optional<std::string> OpenAI::Complete(const std::string &key, std::vector<Message> messages, const std::string &model)
+std::optional<std::string> OpenAI::Complete(const std::string &key, std::vector<Message> messages, float temperature, const std::string &model)
 {
     httplib::Client client(ApiLink);
 
     auto responce = client.Post(
         "/v1/chat/completions", 
         {{"Authorization", "Bearer " + key}}, 
-        Format(R"({"model": "%", "messages": %})", model, json(messages).dump()), 
+        Format(R"({"model": "%", "messages": %, "temperature": %})", model, json(messages).dump(), temperature), 
         "application/json"
     );
 

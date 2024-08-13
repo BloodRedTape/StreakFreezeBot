@@ -59,6 +59,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
 	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
 	Get ("/quote", &ThisClass::GetQuote);
+	Post("/quote/invalidate", &ThisClass::PostInvalidateQuote);
 	Get ("/user/:id/friends", &ThisClass::GetFriends);
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
@@ -380,12 +381,17 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 	resp.status = 200;
 }
 
+void HttpApiServer::PostInvalidateQuote(const httplib::Request& req, httplib::Response& resp){
+	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
+	resp.status = 200;
+}
+
 static bool GenerateNewQuotes(std::queue<std::string>& quotes, const std::string &key) {
 	const char *Prompt = 
-R"(give me json strings array of 10 motivational quotes in a post-modern sarcastic style, output them in a format of
+R"(give me json strings array of 15 motivational quotes in a post-modern sarcastic style, output them in a format of
 ["Quote 1 text", "Quote 2 text", ....])";
 
-	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, "gpt-4o-mini").value_or("");
+	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, 1.0f, "gpt-4o").value_or("");
 
 	if(!response.size())
 		return false;

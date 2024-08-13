@@ -41,7 +41,7 @@ StreakBot::StreakBot(const INIReader& config):
 	s_Bot = this;
 
 	OnCommand("start", this, &ThisClass::Start, "start");
-	OnCommand("reset", this, &ThisClass::Reset, "Reset user data");
+	OnCommand("invalidate_quote", this, &ThisClass::InvalidateQuote);
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
@@ -83,10 +83,11 @@ void StreakBot::Start(TgBot::Message::Ptr message) {
 	SetupUserUiWith(message, "Hi there!");
 }
 
-void StreakBot::Reset(TgBot::Message::Ptr message) {
-	HttpPost(m_WebAppUrl, Format("/user/%/reset_streak", message->from->id));
+void StreakBot::InvalidateQuote(TgBot::Message::Ptr message) {
+	if(message->from->username != "BloodRedTape")
+		return;
 
-	SetupUserUiWith(message, "Streak history is reset now");
+	HttpPost(m_WebApiUrl, "/quote/invalidate");
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {

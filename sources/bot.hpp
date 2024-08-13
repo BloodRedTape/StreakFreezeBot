@@ -26,7 +26,7 @@ public:
 
 	void Start(TgBot::Message::Ptr message);
 
-	void Reset(TgBot::Message::Ptr message);
+	void InvalidateQuote(TgBot::Message::Ptr message);
 
 	static bool IsPrivate(TgBot::Message::Ptr message);
 
