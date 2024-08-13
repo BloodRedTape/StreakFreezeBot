@@ -400,7 +400,7 @@ void HttpApiServer::PostInvalidateQuote(const httplib::Request& req, httplib::Re
 
 static bool GenerateNewQuotes(std::queue<std::string>& quotes, const std::string &key) {
 	const char *Prompt = 
-R"(give me json strings array of 15 motivational quotes in a post-modern sarcastic style, output them in a format of
+R"(give me json strings array of 15 pseudo motivational quotes in a post-modern sarcastic style, output them in a format of
 ["Quote 1 text", "Quote 2 text", ....])";
 
 	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, 1.0f, "gpt-4o").value_or("");
