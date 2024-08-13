@@ -87,7 +87,7 @@ void StreakBot::InvalidateQuote(TgBot::Message::Ptr message) {
 	if(message->from->username != "BloodRedTape")
 		return;
 
-	HttpPost(m_WebApiUrl, "/quote/invalidate");
+	HttpPost(m_WebApiUrl, "/quote/invalidate", {{"BotToken", getToken()}});
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {

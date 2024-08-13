@@ -382,6 +382,18 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 }
 
 void HttpApiServer::PostInvalidateQuote(const httplib::Request& req, httplib::Response& resp){
+	auto token = req.headers.find("BotToken");
+
+	if (token == req.headers.end()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (token->second != m_BotToken) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
 	resp.status = 200;
 }

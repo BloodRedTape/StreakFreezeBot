@@ -40,10 +40,10 @@ inline nlohmann::json HttpGetJson(const std::string& endpoint, const std::string
 	return nlohmann::json::parse(res.value(), nullptr, false, false);
 }
 
-inline std::optional<std::string> HttpPost(const std::string& endpoint, const std::string &path) {
+inline std::optional<std::string> HttpPost(const std::string& endpoint, const std::string &path, httplib::Headers headers = {}) {
     httplib::Client client = MakeSecureClient(endpoint);
 
-	auto resp = client.Post(path);
+	auto resp = client.Post(path, headers);
 
 	if (!resp || resp.error() != httplib::Error::Success){
 		LogHttp(Error, "POST Request to % failed with internal error %", endpoint + path, httplib::to_string(resp.error()));
