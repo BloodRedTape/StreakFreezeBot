@@ -56,8 +56,11 @@ std::optional<std::string> OpenAI::Complete(const std::string &key, std::vector<
         "application/json"
     );
 
-    if(!responce || responce->status != httplib::StatusCode::OK_200)
-        return std::nullopt;
+    if(!responce)
+        return (LogOpenAI(Error, "Request failed with %", httplib::to_string(responce.error())), std::nullopt);
+
+    if(responce->status != httplib::StatusCode::OK_200)
+        return (LogOpenAI(Error, "Request failed with status %", responce->status), std::nullopt);
 
     json body = json::parse(responce->body, nullptr, false, false);
 

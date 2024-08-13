@@ -439,6 +439,8 @@ void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& res
 		m_LastUpdate = now;
 	}
 
+	LogHttpApiServerIf(!m_Quotes.size(), Warning, "Returning placeholder quote for some reason");
+
 	resp.status = 200;
 	resp.set_content(Format(R"({"quote": "%"})", m_Quotes.size() ? m_Quotes.front() : "Somethimes it's time..."), "application/json");
 }
