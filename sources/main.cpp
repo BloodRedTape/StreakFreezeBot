@@ -33,13 +33,15 @@ int main(int argc, char *argv[]) {
 
 	bot.Log("Started: %", BSL_WITH_EXTERNAL_LOG_FUNCTION);
 
-	try{
-		while (true) {
-			bot.LongPollIteration();
+	while (true) {
+		bot.LongPollIteration();
+
+		try{
 			bot.Tick();
+		} catch (const std::exception& e) {
+			bot.Log("BotTickException: %", e.what());
 		}
-	} catch (const std::exception& e) {
-		bot.Log("Crashed: %", e.what());
 	}
+
 	return 0;
 }

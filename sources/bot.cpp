@@ -105,11 +105,13 @@ void StreakBot::SetupUserUiWith(TgBot::Message::Ptr source, const std::string& t
 	auto web_app = std::make_shared<TgBot::WebAppInfo>();
 	web_app->url = m_WebAppUrl;
 
-	{
+	try{
 		auto menu_button = std::make_shared<TgBot::MenuButtonWebApp>();
 		menu_button->text = "Streak";
 		menu_button->webApp = web_app;
 
 		getApi().setChatMenuButton(source->chat->id, menu_button);
+	}catch (const std::exception& e) {
+		Log("Failed to set chat menu: %", e.what());
 	}
 }

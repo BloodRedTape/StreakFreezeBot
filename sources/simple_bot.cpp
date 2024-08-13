@@ -72,23 +72,33 @@ SimpleBot::SimpleBot(const std::string& token):
     getEvents().onUnknownCommand([this](TgBot::Message::Ptr message) {
         std::string command = ParseCommand(message);
 
-        Println("Command '%'", command);
-
         if (!command.size()) {
             return;
         }
-
-        BroadcastCommand(command, message);
+        
+        try{
+            BroadcastCommand(command, message);
+        } catch (const std::exception& e) {
+            Log("Caught exception on '%' command broadcast: %", command, e.what());
+        }
     });
 
-    m_Username = getApi().getMe()->username;
+    try{
+        m_Username = getApi().getMe()->username;
+    } catch (const std::exception& e) {
+        Log("Failed to get bot identity: %", e.what());
+    }
 }
 
 void SimpleBot::LongPoll(){
 	TgBot::TgLongPoll long_poll(*this);
 
     while(true){
-        long_poll.start();
+        try{
+            long_poll.start();
+        } catch (const std::exception& e) {
+			Log("LongPoolException: %", e.what());
+        }
     }
 }
 
@@ -104,7 +114,11 @@ void SimpleBot::Log(const std::string& message){
 }
 
 void SimpleBot::ClearOldUpdates(){
-    getApi().getUpdates(-1, 1);
+    try{
+        getApi().getUpdates(-1, 1);
+    } catch (const std::exception& e) {
+        Log("Failed to clear old updates: %", e.what());
+    }
 }
 
 TgBot::Message::Ptr SimpleBot::SendMessage(std::int64_t chat, std::int32_t topic, const std::string& message, std::int64_t reply_message) {
@@ -284,8 +298,12 @@ void SimpleBot::UpdateCommandDescriptions() {
         bot_command->description = descr;
         commands.push_back(bot_command);
     }
-
-    getApi().setMyCommands(commands);
+    
+    try{
+        getApi().setMyCommands(commands);
+    } catch (const std::exception& e) {
+        Log("Failed to set bot commands: %", e.what());
+    }
 }
 
 std::string SimpleBot::ParseCommand(TgBot::Message::Ptr message)
@@ -323,5 +341,9 @@ SimplePollBot::SimplePollBot(const std::string &token, std::int32_t limit, std::
 {}
 
 void SimplePollBot::LongPollIteration() {
-    m_Poll.start();
+    try{
+        m_Poll.start();
+    } catch (const std::exception& e) {
+		Log("LongPoolException: %", e.what());
+    }
 }
