@@ -383,14 +383,7 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 }
 
 void HttpApiServer::PostPushQuote(const httplib::Request& req, httplib::Response& resp){
-	auto token = req.headers.find("BotToken");
-
-	if (token == req.headers.end()) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (token->second != m_BotToken) {
+	if (IsAuthByBot(req)) {
 		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
@@ -409,20 +402,23 @@ void HttpApiServer::PostPushQuote(const httplib::Request& req, httplib::Response
 }
 
 void HttpApiServer::PostInvalidateQuote(const httplib::Request& req, httplib::Response& resp){
-	auto token = req.headers.find("BotToken");
-
-	if (token == req.headers.end()) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (token->second != m_BotToken) {
+	if (IsAuthByBot(req)) {
 		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
 
 	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
 	resp.status = 200;
+}
+
+bool HttpApiServer::IsAuthByBot(const httplib::Request& req) const{
+	auto token = req.headers.find("BotToken");
+
+	if (token == req.headers.end()) {
+		return false;
+	}
+
+	return token->second == m_BotToken;
 }
 
 static bool GenerateNewQuotes(std::queue<std::string>& quotes, const std::string &key) {
