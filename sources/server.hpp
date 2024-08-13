@@ -3,6 +3,7 @@
 #include <httplib.h>
 #include <INIReader.h>
 #include <chrono>
+#include <queue>
 #include "model.hpp"
 #include <tgbot/Bot.h>
 #include "logger.hpp"
@@ -23,10 +24,10 @@ private:
 	int m_Port;
 	StreakDatabase m_DB;
 
-	std::string m_QuoteApiKey;
+	std::string m_OpenAIKey;
 	int m_QuoteUpdateMinutes = 60;
 	std::chrono::steady_clock::time_point m_LastUpdate;
-	std::string m_LastQuote;
+	std::queue<std::string> m_Quotes;
 	
 	HybridLogger m_Logger;
 	std::string m_BotToken;

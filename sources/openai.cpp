@@ -1,0 +1,60 @@
+#include "openai.hpp"
+#include <bsl/format.hpp>
+#include <nlohmann/json.hpp>
+#include <sstream>
+
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <httplib.h>
+
+using json = nlohmann::json;
+
+void to_json(json& j, const OpenAI::Role& role) {
+    switch(role) {
+        case OpenAI::Role::System:
+            j = "system";
+            break;
+        case OpenAI::Role::User:
+            j = "user";
+            break;
+        case OpenAI::Role::Assistant:
+            j = "assistant";
+            break;
+        default:
+            j = "none";
+            break;
+    }
+}
+
+void to_json(json& j, const OpenAI::Message& message) {
+    j = json{{"role", message.Role}, {"content", message.Content}};
+}
+
+const char* OpenAI::ToString(OpenAI::Role role) {
+    switch(role){
+        case OpenAI::Role::System:
+            return "System";
+            break;
+        case OpenAI::Role::User:
+            return "User";
+            break;
+        case OpenAI::Role::Assistant:
+            return "Assistant";
+    }
+    return "";
+}
+
+std::string OpenAI::Complete(const std::string &key, std::vector<Message> messages, const std::string &model)
+{
+    httplib::Client client(ApiLink);
+
+    auto responce = client.Post(
+        "/v1/chat/completions", 
+        {{"Authorization", "Bearer " + key}}, 
+        Format(R"({"model": "%", "messages": %})", model, json(messages).dump()), 
+        "application/json"
+    );
+
+    json body = json::parse(responce->body);
+
+    return body["choices"].front()["message"]["content"];
+}

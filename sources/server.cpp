@@ -4,10 +4,12 @@
 #include <bsl/log.hpp>
 #include <bsl/defer.hpp>
 #include <hmac_sha256.h>
+#include "openai.hpp"
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
 DEFINE_LOG_CATEGORY(TelegramBridge)
+DEFINE_LOG_CATEGORY(OpenAI)
 
 void Fail(httplib::Response &resp, const std::string &error) {
 	resp.set_content(nlohmann::json::object({{"Fail", error}}).dump(), "application/json");
@@ -35,8 +37,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		config.Get(SectionName, "WebAppConfigPath", ".")
 	),
 	m_DB(config),
-	m_QuoteApiKey(
-		config.Get("QuoteApi", "Key", "")
+	m_OpenAIKey(
+		config.Get("OpenAI", "Key", "")
 	),
 	m_BotToken(
 		config.Get("Bot", "Token", "")
@@ -378,36 +380,48 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 	resp.status = 200;
 }
 
+static bool GenerateNewQuotes(std::queue<std::string>& quotes, const std::string &key) {
+	const char *Prompt = 
+R"(give me json strings array of 10 motivational quotes in a post-modern sarcastic style, output them in a format of
+["Quote 1 text", "Quote 2 text", ....])";
+
+
+	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, "gpt-4o-mini");
+
+	auto begin = response.find_first_of('[');
+	auto end = response.find_last_of(']');
+
+	if(begin == std::string::npos || end == std::string::npos)
+		return (LogOpenAI(Error, "Got unparsable response: %", response), false);
+
+	auto json = nlohmann::json::parse(response.substr(begin, end - begin + 1), nullptr, false, false);
+
+	if(!json.size())
+		return (LogOpenAI(Error, "Got zero quotes: %", response), false);
+
+	for (auto quote : json) {
+		quotes.push(quote.get<std::string>());
+	}
+}
+
 void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& resp){
-	
+
 	auto now = std::chrono::steady_clock::now();
 
 	auto duration = std::chrono::duration_cast<std::chrono::minutes>(now - m_LastUpdate);
 	
 	if(duration >= std::chrono::minutes(m_QuoteUpdateMinutes)){
-		const auto url = "https://api.api-ninjas.com";
+		if(m_Quotes.size())
+			m_Quotes.pop();
 
-		auto body = HttpGetJson(url, "/v1/quotes?category=success", {
-			{"X-Api-Key", m_QuoteApiKey}
-		});
+		if (!m_Quotes.size())
+			GenerateNewQuotes(m_Quotes, m_OpenAIKey);
 
-		const std::string backing_quote = R"({ "quote": "There is nothing better that extending your streak"})";
-
-		std::string quote;
-
-		if (body.is_array()) {
-			quote = body.front().dump();
-		} else {
-			LogHttpApiServer(Error, "Quote got unparsable response: %\nusing fallback quote", body.dump());
-			quote = backing_quote;
-		}
-		
-		m_LastQuote = quote;
 		m_LastUpdate = now;
 	}
 
 	resp.status = 200;
-	resp.set_content(m_LastQuote, "application/json");
+	resp.set_content(Format(R"({"quote": "%"})", m_Quotes.size() ? m_Quotes.front() : "Somethimes it's time..."), "application/json");
 }
 
 void HttpApiServer::AcceptFriendInvite(const httplib::Request& req, httplib::Response& resp) {
