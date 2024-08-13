@@ -93,7 +93,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		res.status = httplib::StatusCode::InternalServerError_500;
 	});
 
-	m_LastUpdate = std::chrono::steady_clock::now() - std::chrono::minutes(m_QuoteUpdateMinutes);
+	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
 }
 
 void HttpApiServer::Run(){
@@ -385,23 +385,42 @@ static bool GenerateNewQuotes(std::queue<std::string>& quotes, const std::string
 R"(give me json strings array of 10 motivational quotes in a post-modern sarcastic style, output them in a format of
 ["Quote 1 text", "Quote 2 text", ....])";
 
+	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, "gpt-4o-mini").value_or("");
 
-	std::string response = OpenAI::Complete(key, {{OpenAI::Role::User, Prompt}}, "gpt-4o-mini");
+	if(!response.size())
+		return false;
 
 	auto begin = response.find_first_of('[');
 	auto end = response.find_last_of(']');
 
-	if(begin == std::string::npos || end == std::string::npos)
+	if(begin == std::string::npos || end == std::string::npos || end <= begin)
 		return (LogOpenAI(Error, "Got unparsable response: %", response), false);
+	
+	auto count = end - begin + 1;
+	
+	try{
+		std::string json_string = response.substr(begin, count);
 
-	auto json = nlohmann::json::parse(response.substr(begin, end - begin + 1), nullptr, false, false);
+		auto json = nlohmann::json::parse(json_string, nullptr, false, false);
 
-	if(!json.size())
-		return (LogOpenAI(Error, "Got zero quotes: %", response), false);
+		if(!json.is_array())
+			return (LogOpenAI(Error, "Expected Json array, got: %", response), false);
 
-	for (auto quote : json) {
-		quotes.push(quote.get<std::string>());
+		if(!json.size())
+			return (LogOpenAI(Error, "Got zero quotes: %", response), false);
+
+		for (auto quote : json) {
+			if (!quote.is_string()) {
+				continue;
+			}
+			quotes.push(quote.get<std::string>());
+		}
+		return true;
+	} catch (const std::exception& e) {
+		LogOpenAI(Error, "Caught exception during generated quotes parsing: %", e.what());
 	}
+
+	return false;
 }
 
 void HttpApiServer::GetQuote(const httplib::Request& req, httplib::Response& resp){

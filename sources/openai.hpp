@@ -23,5 +23,5 @@ public:
 		std::string Content;
 	};
 public:
-	static std::string Complete(const std::string& key, std::vector<Message> message, const std::string &model = DefaultModel);
+	static std::optional<std::string> Complete(const std::string& key, std::vector<Message> message, const std::string &model = DefaultModel);
 };

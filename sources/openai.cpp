@@ -1,10 +1,12 @@
 #include "openai.hpp"
 #include <bsl/format.hpp>
+#include <bsl/log.hpp>
 #include <nlohmann/json.hpp>
 #include <sstream>
-
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include <httplib.h>
+
+DEFINE_LOG_CATEGORY(OpenAI)
 
 using json = nlohmann::json;
 
@@ -43,7 +45,7 @@ const char* OpenAI::ToString(OpenAI::Role role) {
     return "";
 }
 
-std::string OpenAI::Complete(const std::string &key, std::vector<Message> messages, const std::string &model)
+std::optional<std::string> OpenAI::Complete(const std::string &key, std::vector<Message> messages, const std::string &model)
 {
     httplib::Client client(ApiLink);
 
@@ -54,7 +56,15 @@ std::string OpenAI::Complete(const std::string &key, std::vector<Message> messag
         "application/json"
     );
 
-    json body = json::parse(responce->body);
+    if(!responce || responce->status != httplib::StatusCode::OK_200)
+        return std::nullopt;
 
-    return body["choices"].front()["message"]["content"];
+    json body = json::parse(responce->body, nullptr, false, false);
+
+    try{
+        return body["choices"].front()["message"]["content"];
+    }catch (const std::exception& e) {
+        LogOpenAI(Error, "can't parse reponse: %\nCaught exception: %", responce->body, e.what());
+    }
+    return std::nullopt;
 }
