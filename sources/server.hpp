@@ -60,6 +60,8 @@ public:
 
 	void PostInvalidateQuote(const httplib::Request &req, httplib::Response &resp);
 
+	bool IsAuthByBot(const httplib::Request &req)const;
+
 	void GetQuote(const httplib::Request &req, httplib::Response &resp);
 
 	void AcceptFriendInvite(const httplib::Request &req, httplib::Response &resp);
