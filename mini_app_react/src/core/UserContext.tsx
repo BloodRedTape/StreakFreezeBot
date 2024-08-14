@@ -17,6 +17,12 @@ export enum ProtectionType {
 	Freeze
 }
 
+export const ProtectionAt = (date: Date, history: ProtectionType[], start: Date): ProtectionType => {
+	const index = differenceInDays(date, start)
+
+	return history[index] ?? ProtectionType.None
+}
+
 export class UserContextType{
 	public Freezes: Array<StreakFreezeType> = []
 	public MaxFreezes: number = 0
@@ -31,9 +37,7 @@ export class UserContextType{
 	public AvailableFreezes: Array<number> = []
 
 	public ProtectionAt(date: Date): ProtectionType{
-		const index = differenceInDays(date, this.StreakStart)
-
-		return this.History[index] ?? ProtectionType.None
+		return ProtectionAt(date, this.History, this.StreakStart)
 	}
 
 	public IsProtectedAt(date: Date): boolean {

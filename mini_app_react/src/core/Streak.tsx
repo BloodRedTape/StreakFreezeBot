@@ -1,4 +1,4 @@
-import { differenceInDays } from "date-fns"
+import { differenceInDays, getDaysInMonth } from "date-fns"
 import { ProtectionType } from "./UserContext"
 import { FromApiDate, ParseProtectionType } from "./UserContextSerialization"
 
@@ -26,6 +26,19 @@ export class StreakType{
 	public Unactive(): boolean {
 		return this.Count === 0
 	}
+
+	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{
+		let count = 0;
+
+		for (let i = 0; i < getDaysInMonth(anchor); i++) {
+			const date = new Date(anchor.getFullYear(), anchor.getMonth(), i + 1);
+
+			count += this.ProtectionAt(date) == protection ? 1 : 0;
+		}
+
+		return count;
+	}
+
 };
 
 

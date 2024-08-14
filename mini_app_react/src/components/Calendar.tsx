@@ -1,8 +1,11 @@
-import { Cell, Section, Text } from '@xelene/tgui';
-import { differenceInDays } from 'date-fns';
-import { CSSProperties } from 'react';
+import { Breadcrumbs, Cell, IconButton, List, Section, Text } from '@xelene/tgui';
+import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
+import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
+import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
+import { addMonths, differenceInDays } from 'date-fns';
+import { CSSProperties, ReactNode } from 'react';
 import { Img } from '../core/Img';
-import { ProtectionType, useGetUserContext } from '../core/UserContext';
+import { ProtectionAt, ProtectionType, useGetUserContext } from '../core/UserContext';
 import { GetImageLinkFor } from '../helpers/Resources';
 
 enum DayType{
@@ -87,7 +90,9 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ day, type, today }) => {
 
 export type CalendarProps = {
     month: number,
-    year: number
+    year: number,
+    history: ProtectionType[],
+    start: Date
 }
 
 
@@ -101,13 +106,10 @@ const ProtectionToDayType = (protection: ProtectionType) => {
     return map.get(protection) ?? DayType.NotADay
 }
 
-const GetDayTypeFor = (date: Date) => {
-    const userContext = useGetUserContext()
+export const GetAnchorDate = () => {
+	const date = new Date(Date.now())
 
-    if (userContext == undefined)
-        return DayType.NotADay
-
-    return ProtectionToDayType(userContext.ProtectionAt(date))
+	return new Date(date.getFullYear(), date.getMonth(), 1)
 }
 
 export const Calendar = (props: CalendarProps) => {
@@ -140,7 +142,15 @@ export const Calendar = (props: CalendarProps) => {
     )
 
     const DetectDayType = (day: number) => {
-        return day === 0 ? DayType.NotADay : GetDayTypeFor(new Date(date.getFullYear(), date.getMonth(), day))
+        return day === 0
+            ? DayType.NotADay
+            : ProtectionToDayType(
+                ProtectionAt(
+                    new Date(date.getFullYear(), date.getMonth(), day),
+                    props.history,
+                    props.start
+                )
+            )
     }
 
     const MakeDay = (day: any) => {
@@ -166,3 +176,79 @@ export const Calendar = (props: CalendarProps) => {
         </Section>
     );
 };
+
+export const CalendarWithSelector: React.FC<{history: ProtectionType[], start: Date, today: Date, onDateChanged: (date: Date)=>void, afterSelector?: ReactNode}> = ({ history, start, today, onDateChanged, afterSelector }) => {
+
+	const monthNames = [
+		"January", "February", "March", "April", "May", "June(gay)",
+		"July", "August", "September", "October", "November", "December"
+    ];
+
+    let monthIndex = today.getMonth()
+	let month = monthIndex + 1
+	let year = today.getFullYear()
+	let monthName = monthNames[monthIndex]
+
+	const SelectorTextStyle: CSSProperties = {
+		display: 'inline-block',
+		marginTop: 'auto',
+		marginBottom: 'auto',
+	}
+
+	const SelectorControlsStyle: CSSProperties = {
+		display: 'inline-block',
+		marginLeft: 'auto',
+		marginRight: '0'
+	}
+
+	const SelectorStyle: CSSProperties = {
+		display: 'flex',
+		alignItems: 'center'
+	}
+
+	const MonthSelector = (
+		<div style={SelectorStyle}>
+			<Text style={SelectorTextStyle} weight="2">{monthName} {year}</Text>
+			<div style={SelectorControlsStyle}>
+				<IconButton style={{marginRight: '10px'}} size="s" onClick={ ()=>onDateChanged(addMonths(today,-1)) }><Icon24ChevronLeft/></IconButton>
+				<IconButton size="s" onClick={ ()=>onDateChanged(addMonths(today, 1)) }><Icon24ChevronRight/></IconButton>
+			</div>
+		</div>
+    )
+
+    return (
+        <div>
+			<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
+                {MonthSelector}
+                {afterSelector}
+			</div>
+            <Calendar year={year} month={month} history={history} start={start}/>
+        </div>
+    )
+}
+
+export const MonthStats: React.FC<{ stats: [string, number][] }> = ({stats}) => {
+	const MonthStatsStyle: CSSProperties = {
+		display: 'inline-block',
+		paddingLeft: 'auto',
+		paddingRight: 'auto',
+		marginLeft: 'auto',
+		marginRight: 'auto',
+	}
+
+	return (
+		<div style={MonthStatsStyle}>
+			<Breadcrumbs >
+			{stats.map((pair) => 
+				(<BreadCrumbsItem >
+					<List>
+						<Text weight="2">{pair[0]}</Text>
+						<br/>
+						<Text weight="3">{pair[1]} Days</Text>
+					</List>
+				</BreadCrumbsItem>)
+			)}
+			</Breadcrumbs>
+		</div>
+	)
+}

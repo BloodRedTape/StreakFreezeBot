@@ -1,4 +1,4 @@
-import { Button, Checkbox, IconButton, Input, Section, Text } from "@xelene/tgui";
+import { Button, Checkbox, IconButton, Input, Modal, Section, Text, Title } from "@xelene/tgui";
 import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle";
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive";
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close";
@@ -8,6 +8,7 @@ import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { ErrorPopupFromJson, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit } from "../helpers/Requests";
+import { CalendarWithSelector, GetAnchorDate, MonthStats } from "./Calendar";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -42,6 +43,35 @@ const StreaksHeader: React.FC<{ icon: JSX.Element, text: string, onAction: () =>
 	)
 
 	return Header;
+}
+
+const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
+	let [anchor, setAnchor] = useState(GetAnchorDate())
+
+	let stats = Object.entries({
+		'Commited': streak.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
+		'Freezed': streak.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0
+	})
+
+	return (
+		<div style={{paddingBottom: '10%'}}>
+		<div style={{ padding: '5%'}}>
+			<Title weight="1">Streak '{streak.Description}'</Title>
+			<br/>
+			<br/>
+			<Text weight="2">{streak.Active() ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
+		</div>
+			<CalendarWithSelector
+				today={anchor}
+				onDateChanged={setAnchor}
+				afterSelector={
+					<MonthStats stats={stats} />
+				}
+				history={streak.History}
+				start={streak.Start}
+			/>
+		</div>
+	)
 }
 
 type OnChangeMode = () => void
@@ -80,15 +110,24 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		const Box = IsCommited()
 			? (<Checkbox checked disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
 			: (<Checkbox disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
-		
-		return (
+
+		const EntryContent = (
 			<Entry
 				before={<div style={AlignCenterStyle}>{ Box }</div>}
 				after={<IconButton style={{ opacity: '-1' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
 				style={{ padding: '4px' }}
 			>
-				<EntryText text={streak.Description} />
+				<EntryText text={streak.Description}/>
 			</Entry>
+		)
+
+		return (
+			<Modal
+				trigger={EntryContent}
+				style={{background: 'var(--tg-theme-header-bg-color)'} }
+			>
+				<StreakEntryModal streak={streak}/>
+			</Modal>
 		)
 	}
 
