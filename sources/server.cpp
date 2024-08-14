@@ -146,7 +146,7 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
 
-	if (!id || !req.body.size() || req.body.size() > Streak::DescriptionLimit) {
+	if (!id) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
@@ -156,17 +156,31 @@ void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& re
 		return;
 	}
 
+	std::vector<std::string> streaks = nlohmann::json::parse(req.body, nullptr, false, false);
+
+	if (!streaks.size()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 	
-	if(user.HasStreak(req.body))
-		return Fail(resp, "streak is already created");
+	std::string error;
 
-	if(!user.AddStreak(req.body))
-		return Fail(resp, "Internal Error");
+	for (const auto& streak : streaks) {
+		if (user.HasStreak(streak))
+			continue;
 
-	Ok(resp, "Added streak!");
+		if (!user.AddStreak(streak))
+			error += "Internal Error";
+	}
+	
+	if(error.size())
+		return Fail(resp, error);
+
+	Ok(resp, "Added streaks!");
 }
 
 void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {

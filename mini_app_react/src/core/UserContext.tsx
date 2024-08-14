@@ -48,6 +48,10 @@ export class UserContextType{
 		return this.StreakSize() != 0;
 	}
 
+	public HasStreakNamed(name: string): boolean {
+		return this.Streaks.find(s => s.Description === name) !== undefined
+	}
+
 	public StreakSize(): number {
 		return this.Streak;
 	}
