@@ -148,7 +148,7 @@ const ToDoUsage: React.FC<ToDoUsageProperties> = ({ value, completion, onChangeC
 		if (!CanCommit)
 			return
 
-		PostCommit().then(JsonFromResp).then(PopupFromJson).then(Refresh);
+		PostCommit([]).then(JsonFromResp).then(PopupFromJson).then(Refresh);
 	}
 
 	const CommitButton = (

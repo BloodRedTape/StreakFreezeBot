@@ -43,8 +43,8 @@ export const GetAvailableFreezes = () => {
 	return fetch(MakeUserRequestLocation() + '/available_freezes', { headers: MakeTelegramAuthHeaders()})
 }
 
-export const PostCommit = () => {
-	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST', headers: MakeTelegramAuthHeaders()})
+export const PostCommit = (streaks: number[]) => {
+	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
 
 export const PostAddFreeze = (expire: number, reason: string) => {
