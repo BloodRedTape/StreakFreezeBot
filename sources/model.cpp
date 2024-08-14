@@ -34,7 +34,7 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 		try{
 			auto user_json = nlohmann::json::parse(ReadEntireFile(path.string()), nullptr, false, true);
 
-			m_Users[id.value()] = MigrateIfNeeded<User>(user_json);
+			m_Users[id.value()] = user_json;
 		}catch(const std::exception &e){
 			Println("Can't parse json at %, because: %", path, e.what());
 		}

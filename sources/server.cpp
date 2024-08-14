@@ -53,7 +53,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	
 	Get ("/user/:id/full", &ThisClass::GetFullUser);
 	Post("/debug/log", &ThisClass::PostDebugLog);
-	Post("/user/:id/streak/:streak_id/commit", &ThisClass::Commit);
+	Post("/user/:id/commit", &ThisClass::Commit);
 	Post("/user/:id/add_streak", &ThisClass::AddStreak);
 	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
@@ -114,20 +114,28 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 	auto today = DateUtils::Now();
 	const auto &user = m_DB.GetUser(id, today);
 
+	auto StreakToJson = [user, today](const Streak &streak, std::int64_t id) {
+		return nlohmann::json({ 
+			{"Description", streak.Description},
+			{"History", streak.HistoryForToday(today, user.GetFreezes())},
+			{"Start", streak.FirstCommitDate().value_or(today)},
+			{"Count", streak.Count(today, user.GetFreezes())},
+			{"Id", id}
+		});
+	};
+
 	//NOTE: History is first because it corrects all the other info
 	auto user_json = nlohmann::json(user);
 	user_json["History"] = user.ActiveHistoryForToday(today);
 	user_json["Today"] = DateUtils::Now();
 	user_json["Streak"] = user.ActiveCount(today);
 	user_json["StreakStart"] = user.FirstCommitEver().value_or(today);
+	user_json["Streaks"] = nlohmann::json::array();
 	
-	for (const auto& streak : user.GetStreaks()) {
-		nlohmann::json json;
-		json["Description"] = streak.Description;
-		json["History"] = streak.HistoryForToday(today, user.GetFreezes());
-		json["Start"] = streak.FirstCommitDate().value_or(today);
-		json["Count"] = streak.Count(today, user.GetFreezes());
-		user_json["Streaks"].push_back(json);
+	const auto &streaks = user.GetStreaks();
+	for (auto i = 0; i<streaks.size(); i++){
+		const auto &streak = streaks[i];
+		user_json["Streaks"].push_back(StreakToJson(streak, i));
 	}
 
 	std::string content = user_json.dump();
@@ -163,9 +171,15 @@ void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& re
 
 void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
-	std::optional<std::int64_t> streak_id = GetIdParam(req, "streak_id");
 
-	if (!id || !streak_id.has_value()) {
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	std::vector<std::int64_t> streaks = nlohmann::json::parse(req.body, nullptr, false, false);
+
+	if (!streaks.size()) {
 		resp.status = httplib::StatusCode::BadRequest_400;
 		return;
 	}
@@ -174,19 +188,32 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 
-	auto *streak = user.GetStreak(streak_id.value());
-
-	if(!streak)
-		return Fail(resp, "Invalid streak Id");
-	
-	if(streak->IsCommitedAt(today))
-		return Fail(resp, "Already commited today!");
-
 	if(user.IsFreezedAt(today))
 		return Fail(resp, "Freeze is already used!");
 
-	if (!streak->Commit(today))
-		return Fail(resp, "Something wrong");
+	std::string error;
+	
+	for(auto streak_id: streaks){
+		auto *streak = user.GetStreak(streak_id);
+
+		if(!streak){
+			error += "Invalid streak Id\n";
+			continue;
+		}
+	
+		if (streak->IsCommitedAt(today)) {
+			error += "Already commited today!\n";
+			continue;
+		}
+
+		if (!streak->Commit(today)){
+			error += "Backend error\n";
+			continue;
+		}
+	}
+	
+	if(error.size())
+		return Fail(resp, error);
 
 	Ok(resp, "Whoa, extended streak");
 }
