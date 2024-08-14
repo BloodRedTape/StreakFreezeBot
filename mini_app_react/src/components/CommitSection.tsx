@@ -1,4 +1,5 @@
-import { Button, Checkbox, IconButton, Text } from "@xelene/tgui";
+import { Button, Checkbox, IconButton, Input, Section, Text } from "@xelene/tgui";
+import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle";
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive";
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close";
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit";
@@ -6,7 +7,7 @@ import { CSSProperties, useState } from "react";
 import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
-import { JsonFromResp, PopupFromJson, PostCommit } from "../helpers/Requests";
+import { ErrorPopupFromJson, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit } from "../helpers/Requests";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -114,16 +115,25 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		</Button>
 	)
 
+	const StreakEntriesStyle: CSSProperties = {
+		paddingTop: '5px',
+		paddingBottom: '5px',
+	}
+
 	const ActiveStreakSection = (
 		<div>
 			{ActiveStreakEntires.length ? <Text weight="3">Active</Text> : null}
-			{ActiveStreakEntires}
+			<Section style={StreakEntriesStyle}>
+				{ActiveStreakEntires}
+			</Section>
 		</div>
 	)
 	const UnactiveStreakSection = (
 		<div>
 			{UnactiveStreakEntires.length ? <Text weight="3">Unactive</Text> : null}
-			{UnactiveStreakEntires}
+			<Section style={StreakEntriesStyle}>
+				{UnactiveStreakEntires}
+			</Section>
 		</div>
 	)
 
@@ -137,13 +147,101 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	)
 }
 
-const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode }> = ({onChangeMode}) => {
-	const OnSave = () => {
-		onChangeMode()
+const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }) => {
+	const userContext = useGetUserContext()
+	const setUserContext = useSetUserContext()
+
+	const Refresh = () => {
+		FetchUserContext().then(setUserContext)
 	}
 
+	const [tempStreaks, setTempStreaks] = useState<string[]>([])
+	const [entry, setEntry] = useState("")
+
+	const EntryStyle: CSSProperties = {
+		padding: '5px'
+	}
+
+	const StreakEntries = userContext?.Streaks.map((streak) => {
+		return (
+			<Entry style={EntryStyle}>
+				<EntryText text={streak.Description} />
+			</Entry>
+		)
+	})
+
+	const TempStreakEntries = tempStreaks.map((description, index) => {
+		const OnRemove = () => {
+			setTempStreaks(
+				tempStreaks.filter((_, i) => i !== index)
+			)
+		}
+
+		const RemoveButton = (
+			<IconButton size='s' mode='plain' onClick={OnRemove}>
+				<Icon28Close />
+			</IconButton>
+		)
+
+		return (
+			<Entry style={EntryStyle} after={RemoveButton}>
+				<EntryText text={description}/>
+			</Entry>
+		)
+	})
+
+	const OnSave = () => {
+		onChangeMode()
+		if(tempStreaks.length !== 0)
+			PostAddStreak(tempStreaks).then(JsonFromResp).then(ErrorPopupFromJson).then(Refresh)
+	}
+
+	const OnAdd = () => {
+		if (entry.length === 0 || userContext?.HasStreakNamed(entry))
+			return
+
+		setTempStreaks(tempStreaks.concat([entry]))
+		setEntry("")
+	}
+	
+	const AddCurrent = (
+		<IconButton
+			size='s'
+			mode='plain'
+			onClick={OnAdd}
+			style={{ marginLeft: 'auto', marginRight: '0px' }}
+		>
+			<Icon28AddCircle />
+		</IconButton>
+	)
+
+	const EditCurrent = (
+		<Entry
+			after={AddCurrent}
+			style={{padding: '5px'}}
+		>
+			<Input
+				placeholder="Clean your house!"
+				value={entry}
+				status={ userContext?.HasStreakNamed(entry) ? "error" : "default" }
+				header={ userContext?.HasStreakNamed(entry) ? `Streak '${entry}' is already added` : null }
+				onChange={e => setEntry(e.target.value)}
+				style={{marginLeft: '0px', marginRight: '0px'}}
+			/>
+		</Entry>
+	)
+
+
 	return (
-		<StreaksHeader icon={<Icon28Archive/>} text="Save" onAction={ OnSave }/>	
+		<div>
+			<StreaksHeader icon={<Icon28Archive />} text="Save" onAction={OnSave} />	
+			<Section>
+				{StreakEntries}
+				{TempStreakEntries}
+				{EditCurrent }
+			</Section>
+		</div>
+
 	)
 }
 

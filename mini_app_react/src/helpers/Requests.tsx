@@ -47,6 +47,10 @@ export const PostCommit = (streaks: number[]) => {
 	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
 
+export const PostAddStreak = (streaks: string[]) => {
+	return fetch(MakeUserRequestLocation() + '/add_streak', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
+}
+
 export const PostAddFreeze = (expire: number, reason: string) => {
 	const body = JSON.stringify({ expire: expire, reason: reason });
 	const headers = MakeTelegramAuthHeaders().concat([ 
