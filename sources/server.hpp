@@ -50,6 +50,10 @@ public:
 
 	void RemoveStreak(const httplib::Request &req, httplib::Response &resp);
 
+	void PostPendingSubmition(const httplib::Request &req, httplib::Response &resp);
+
+	void GetPendingSubmition(const httplib::Request &req, httplib::Response &resp);
+
 	void UseFreeze(const httplib::Request &req, httplib::Response &resp);
 
 	void AddFreeze(const httplib::Request &req, httplib::Response &resp);

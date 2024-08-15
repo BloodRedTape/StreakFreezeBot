@@ -15,6 +15,13 @@ struct FriendInfo {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(FriendInfo, Id, Streak, TodayProtection, Username, FullName)
 };
 
+struct PendingSubmition{
+    std::vector<std::int64_t> Ids;
+    Date At;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(PendingSubmition, Ids, At)
+};
+
 class User {
 public:
     static constexpr size_t InvalidIndex = -1;
@@ -22,10 +29,11 @@ private:
 	std::vector<StreakFreeze> Freezes;
     std::int64_t MaxFreezes = 2;
     std::vector<std::int64_t> Friends;
-
     std::vector<Streak> Streaks;
+
+    mutable PendingSubmition TodaySubmition;
 public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, MaxFreezes, Friends, Streaks)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, MaxFreezes, Friends, Streaks, TodaySubmition)
 public:
 
     User() = default;
@@ -41,6 +49,8 @@ public:
     Streak *GetStreak(const std::string &descr);
 
     const std::vector<Streak> &GetStreaks()const{ return Streaks; }
+
+    std::vector<std::int64_t> &SubmitionFor(Date today)const;
 
     std::vector<std::int64_t> ActiveStreaks(Date today)const;
 

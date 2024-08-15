@@ -56,6 +56,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/commit", &ThisClass::Commit);
 	Post("/user/:id/add_streak", &ThisClass::AddStreak);
 	Post("/user/:id/remove_streak", &ThisClass::RemoveStreak);
+	Get ("/user/:id/pending_submition", &ThisClass::GetPendingSubmition);
+	Post("/user/:id/pending_submition", &ThisClass::PostPendingSubmition);
 	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
@@ -220,6 +222,50 @@ void HttpApiServer::RemoveStreak(const httplib::Request& req, httplib::Response&
 	}
 }
 
+void HttpApiServer::PostPendingSubmition(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	std::vector<std::int64_t> pending = nlohmann::json::parse(req.body, nullptr, false, false);
+	
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+
+	user.SubmitionFor(today) = pending;
+}
+
+void HttpApiServer::GetPendingSubmition(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	
+	std::string json = nlohmann::json(user.SubmitionFor(today)).dump();
+
+	resp.status = httplib::StatusCode::OK_200;
+	resp.set_content(json, "application/json");
+}
+
 void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
 
@@ -267,6 +313,8 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 			continue;
 		}
 	}
+
+	user.SubmitionFor(today) = {};
 	
 	if(error.size())
 		return Fail(resp, error);
@@ -827,9 +875,11 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 		}
 
 		if (user.ActiveCount(yesterday) && !user.AreActiveProtected(yesterday)) {
+			auto active = user.ActiveStreaks(today);
+
 			m_Notifications.push_back({
 				id,
-				Format("You've lost your % days streak... At least now you can setup a new ToDo list", user.ActiveCount(yesterday)),
+				Format("You've lost your % days active streak...\nRemember that you still have % streaks to protect!", user.ActiveCount(yesterday), active.size()),
 				today
 			});
 		}
