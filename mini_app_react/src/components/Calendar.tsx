@@ -1,4 +1,4 @@
-import { Breadcrumbs, Cell, IconButton, List, Section, Text } from '@xelene/tgui';
+import { Breadcrumbs, IconButton, List, Text } from '@xelene/tgui';
 import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
 import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
 import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
@@ -166,14 +166,12 @@ export const Calendar = (props: CalendarProps) => {
     )
 
     return (
-        <Section>
-            <Cell style={{background: 'var(--tg-theme-header-bg-color)'}}>
-                <table style={{ width: '100%', tableLayout: 'fixed' }}>
-                    <thead> { Headings } </thead>
-                    <tbody> { weeks.map(MakeRow) } </tbody>
-                </table>
-            </Cell>
-        </Section>
+        <div style={{background: 'var(--tg-theme-header-bg-color)', borderRadius: '5%', padding: '5%'}}>
+            <table style={{ width: '100%', tableLayout: 'fixed' }}>
+                <thead> { Headings } </thead>
+                <tbody> { weeks.map(MakeRow) } </tbody>
+            </table>
+        </div>
     );
 };
 
