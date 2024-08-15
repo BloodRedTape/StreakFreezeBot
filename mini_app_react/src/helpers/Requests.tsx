@@ -61,6 +61,27 @@ export const PostRemoveStreak = (streaks: number[]) => {
 	return fetch(MakeUserRequestLocation() + '/remove_streak', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
 
+export const PostPendingSubmition = (streaks: number[]) => {
+	return fetch(MakeUserRequestLocation() + '/pending_submition', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
+}
+
+export const GetPendingSubmition = () => {
+	return fetch(MakeUserRequestLocation() + '/pending_submition', {method: 'GET', headers: MakeTelegramAuthHeaders()})
+}
+
+export const FetchPendingSubmition = async (): Promise<number[]> => {
+	const resp = await GetPendingSubmition()
+
+	if (!resp.ok)
+		return []
+
+	const json = await resp.json()
+
+	const ToNumber = (e: any): number => { return e }
+
+	return json.map(ToNumber) || []
+}
+
 export const PostAddFreeze = (expire: number, reason: string) => {
 	const body = JSON.stringify({ expire: expire, reason: reason });
 	const headers = MakeTelegramAuthHeaders().concat([ 

@@ -48,6 +48,15 @@ Streak* User::GetStreak(const std::string& descr) {
 
 	return &*it;
 }
+
+std::vector<std::int64_t> &User::SubmitionFor(Date today) const {
+	if (TodaySubmition.At != today) {
+		TodaySubmition.At = today;
+		TodaySubmition.Ids = {};
+	}
+
+	return TodaySubmition.Ids;
+}
 std::vector<std::int64_t> User::ActiveStreaks(Date today)const {
 	std::vector<std::int64_t> streaks;
 	for (auto i = 0; i < Streaks.size(); i++) {

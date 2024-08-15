@@ -7,7 +7,7 @@ import { CSSProperties, useState } from "react";
 import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
-import { ErrorPopupFromJson, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostRemoveStreak } from "../helpers/Requests";
+import { ErrorPopupFromJson, FetchPendingSubmition, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
 import { CalendarWithSelector, GetAnchorDate, MonthStats } from "./Calendar";
 
 const AlignCenterStyle: CSSProperties = {
@@ -84,7 +84,14 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		FetchUserContext().then(setUserContext)
 	}
 
+	const [fetched, setFetched] = useState(false)
 	const [toCommit, setToCommit] = useState<number[]>([])
+
+	if (!fetched) {
+		FetchPendingSubmition()
+			.then((pending) => setToCommit(pending.concat(toCommit)))
+			.finally(() => setFetched(true))
+	}
 
 	const OnEdit = () => {
 		onChangeMode()
@@ -96,18 +103,18 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 		let CanCommit = !streak.IsProtectedAt(userContext.Today) //XXX
 		
-		const IsCommited = () => {
-			return streak.ProtectionAt(userContext.Today) == ProtectionType.Commit
+		const IsCheck = () => {
+			return streak.ProtectionAt(userContext.Today) == ProtectionType.Commit || toCommit.includes(streak.Id)
 		}
 
 		const SetCheck = (check: boolean) => {
-			if (check)
-				setToCommit(toCommit.concat([streak.Id]))
-			else
-				setToCommit(toCommit.filter(e => e !== streak.Id))
+			const newArray = check ? toCommit.concat([streak.Id]) : toCommit.filter(e => e !== streak.Id)
+
+			setToCommit(newArray)
+			PostPendingSubmition(newArray)
 		}
 
-		const Box = IsCommited()
+		const Box = IsCheck()
 			? (<Checkbox checked disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
 			: (<Checkbox disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
 
