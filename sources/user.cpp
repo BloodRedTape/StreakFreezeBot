@@ -23,7 +23,7 @@ bool User::AddStreak(const std::string& descr) {
 
 bool User::HasStreak(const std::string& descr)const {
 	auto IsSameDescription = [&](const Streak& streak) {
-		return streak.Description == descr;
+		return streak.Description == descr && streak.Status != StreakStatus::Removed;
 	};
 
 	return boost::count_if(Streaks, IsSameDescription);
@@ -36,6 +36,18 @@ Streak* User::GetStreak(std::int64_t id){
 	return &Streaks[id];
 }
 
+Streak* User::GetStreak(const std::string& descr) {
+	auto IsSameDescription = [&](const Streak& streak) {
+		return streak.Description == descr;
+	};
+
+	auto it = boost::find_if(Streaks, IsSameDescription);
+
+	if(it == Streaks.end())
+		return nullptr;
+
+	return &*it;
+}
 std::vector<std::int64_t> User::ActiveStreaks(Date today)const {
 	std::vector<std::int64_t> streaks;
 	for (auto i = 0; i < Streaks.size(); i++) {

@@ -7,7 +7,7 @@ import { CSSProperties, useState } from "react";
 import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
-import { ErrorPopupFromJson, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit } from "../helpers/Requests";
+import { ErrorPopupFromJson, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostRemoveStreak } from "../helpers/Requests";
 import { CalendarWithSelector, GetAnchorDate, MonthStats } from "./Calendar";
 
 const AlignCenterStyle: CSSProperties = {
@@ -58,8 +58,8 @@ const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
 		<div style={{ padding: '5%'}}>
 			<Title weight="1">Streak '{streak.Description}'</Title>
 			<br/>
-			<br/>
 			<Text weight="2">{streak.Active() ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
+			<br/>
 		</div>
 			<CalendarWithSelector
 				today={anchor}
@@ -197,15 +197,32 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 	}
 
 	const [tempStreaks, setTempStreaks] = useState<string[]>([])
+	const [removeStreaks, setRemoveStreaks] = useState<number[]>([])
 	const [entry, setEntry] = useState("")
 
 	const EntryStyle: CSSProperties = {
 		padding: '5px'
 	}
 
-	const StreakEntries = userContext?.Streaks.map((streak) => {
+	const StreakEntries = userContext?.Streaks
+		.filter(streak => removeStreaks.find(e => e === streak.Id) === undefined)
+		.map((streak) =>
+	{
+		const OnRemove = () => {
+			setRemoveStreaks(
+				removeStreaks.concat([streak.Id])
+			)
+			PostRemoveStreak([streak.Id]).then(JsonFromResp).then(ErrorPopupFromJson)
+		}
+
+		const RemoveButton = (
+			<IconButton size='s' mode='plain' onClick={OnRemove}>
+				<Icon28Close />
+			</IconButton>
+		)
+
 		return (
-			<Entry style={EntryStyle}>
+			<Entry style={EntryStyle} after={streak.History.length === 0 ? RemoveButton : null}>
 				<EntryText text={streak.Description} />
 			</Entry>
 		)
@@ -233,12 +250,19 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 
 	const OnSave = () => {
 		onChangeMode()
-		if(tempStreaks.length !== 0)
-			PostAddStreak(tempStreaks).then(JsonFromResp).then(ErrorPopupFromJson).then(Refresh)
+
+		PostAddStreak(tempStreaks).then(JsonFromResp).then(ErrorPopupFromJson).then(Refresh)
 	}
 
+	const IsNotMakredRemoved = (streak: StreakType)=>{
+		return !removeStreaks.includes(streak.Id)
+	}
+	const TakenStreakNames = userContext?.Streaks.filter(IsNotMakredRemoved).map(s => s.Description).concat(tempStreaks)
+
+	const CanAddEntry = !TakenStreakNames?.includes(entry);
+
 	const OnAdd = () => {
-		if (entry.length === 0 || userContext?.HasStreakNamed(entry))
+		if (entry.length === 0 || !CanAddEntry)
 			return
 
 		setTempStreaks(tempStreaks.concat([entry]))
@@ -264,8 +288,8 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 			<Input
 				placeholder="Clean your house!"
 				value={entry}
-				status={ userContext?.HasStreakNamed(entry) ? "error" : "default" }
-				header={ userContext?.HasStreakNamed(entry) ? `Streak '${entry}' is already added` : null }
+				status={ !CanAddEntry ? "error" : "default" }
+				header={ !CanAddEntry ? `Streak '${entry}' is already added` : null }
 				onChange={e => setEntry(e.target.value)}
 				style={{marginLeft: '0px', marginRight: '0px'}}
 			/>

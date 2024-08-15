@@ -48,6 +48,8 @@ public:
 
 	void AddStreak(const httplib::Request &req, httplib::Response &resp);
 
+	void RemoveStreak(const httplib::Request &req, httplib::Response &resp);
+
 	void UseFreeze(const httplib::Request &req, httplib::Response &resp);
 
 	void AddFreeze(const httplib::Request &req, httplib::Response &resp);

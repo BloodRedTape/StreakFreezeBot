@@ -48,7 +48,17 @@ export const PostCommit = (streaks: number[]) => {
 }
 
 export const PostAddStreak = (streaks: string[]) => {
+	if (!streaks.length)
+		return Promise.resolve(undefined)
+
 	return fetch(MakeUserRequestLocation() + '/add_streak', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
+}
+
+export const PostRemoveStreak = (streaks: number[]) => {
+	if (!streaks.length)
+		return Promise.resolve(undefined)
+
+	return fetch(MakeUserRequestLocation() + '/remove_streak', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
 
 export const PostAddFreeze = (expire: number, reason: string) => {
@@ -104,6 +114,9 @@ export const PostResetStreak = () => {
 const Fail = 'Failure'
 
 export const GetResultMessageType = (json: any) => {
+	if (json === undefined)
+		return 'Undefined'
+
 	if ('Ok' in json) {
 		return 'Success'
 	}
@@ -118,11 +131,14 @@ export const GetResultMessage = (json: any)=>{
 	return json.Ok || json.Fail || 'Internal Error'
 }
 
-export const JsonFromResp = (response: Response) => {
-	return response.json()
+export const JsonFromResp = (response: Response | undefined) => {
+	return response?.json()
 }
 
 export const PopupFromJson = (json: any) => {
+	if (json === undefined)
+		return
+
 	const params: PopupParams = {
 		title: GetResultMessageType(json),
 		message: GetResultMessage(json),
