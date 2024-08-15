@@ -11,13 +11,19 @@ enum class Protection{
     Freeze
 };
 
+enum class StreakStatus {
+    Default,
+    Removed
+};
+
 struct Streak{
     static constexpr std::size_t DescriptionLimit = 70;
 
     std::vector<Date> Commits;
 	std::string Description;
+    StreakStatus Status = StreakStatus::Default;
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE(Streak, Commits, Description)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(Streak, Commits, Description, Status)
 
     Streak() = default;
     

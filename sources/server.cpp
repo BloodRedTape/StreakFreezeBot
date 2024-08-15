@@ -55,6 +55,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/debug/log", &ThisClass::PostDebugLog);
 	Post("/user/:id/commit", &ThisClass::Commit);
 	Post("/user/:id/add_streak", &ThisClass::AddStreak);
+	Post("/user/:id/remove_streak", &ThisClass::RemoveStreak);
 	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
 	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
 	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
@@ -135,7 +136,9 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 	const auto &streaks = user.GetStreaks();
 	for (auto i = 0; i<streaks.size(); i++){
 		const auto &streak = streaks[i];
-		user_json["Streaks"].push_back(StreakToJson(streak, i));
+
+		if(streak.Status != StreakStatus::Removed)
+			user_json["Streaks"].push_back(StreakToJson(streak, i));
 	}
 
 	std::string content = user_json.dump();
@@ -181,6 +184,40 @@ void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& re
 		return Fail(resp, error);
 
 	Ok(resp, "Added streaks!");
+}
+
+void HttpApiServer::RemoveStreak(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	std::vector<std::int64_t> streaks = nlohmann::json::parse(req.body, nullptr, false, false);
+
+	if (!streaks.size()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+
+	for (std::int64_t streak_id: streaks) {
+		auto *streak = user.GetStreak(streak_id);
+
+		if(!streak)
+			continue;
+
+		streak->Status = StreakStatus::Removed;
+	}
 }
 
 void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp) {

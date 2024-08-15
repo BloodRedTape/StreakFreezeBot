@@ -38,6 +38,8 @@ public:
 
     Streak *GetStreak(std::int64_t id);
 
+    Streak *GetStreak(const std::string &descr);
+
     const std::vector<Streak> &GetStreaks()const{ return Streaks; }
 
     std::vector<std::int64_t> ActiveStreaks(Date today)const;
