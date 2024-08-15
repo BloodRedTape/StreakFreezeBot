@@ -3,7 +3,6 @@
 #include <bsl/log.hpp>
 #include <bsl/defer.hpp>
 #include <bsl/stdlib.hpp>
-#include "migration.hpp"
 #include <cassert>
 
 DEFINE_LOG_CATEGORY(Model)
@@ -39,9 +38,6 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 			Println("Can't parse json at %, because: %", path, e.what());
 		}
 	}
-	
-	for(auto user: GetUsers())
-		SaveUserToFile(user);
 }
 
 void StreakDatabase::AddFriends(std::int64_t first, std::int64_t second){
