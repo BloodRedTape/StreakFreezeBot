@@ -228,6 +228,11 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 		return;
 	}
 
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	std::vector<std::int64_t> streaks = nlohmann::json::parse(req.body, nullptr, false, false);
 
 	if (!streaks.size()) {
