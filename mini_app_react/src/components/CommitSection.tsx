@@ -55,12 +55,17 @@ const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
 
 	return (
 		<div style={{paddingBottom: '10%'}}>
-		<div style={{ padding: '5%'}}>
-			<Title weight="1">Streak '{streak.Description}'</Title>
-			<br/>
-			<Text weight="2">{streak.Active() ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
-			<br/>
-		</div>
+			<div style={{ padding: '5%' }}>
+				<div style={{display: 'flex', alignItems: 'center', justifyItems: 'space-between'}}>
+					<Title weight="1">Streak '{streak.Description}'</Title>
+					<Modal.Close>
+						<IconButton size='s' mode='plain'><Icon28Close /></IconButton>
+					</Modal.Close>
+				</div>
+				<br/>
+				<Text weight="2">{streak.Active() ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
+				<br/>
+			</div>
 			<CalendarWithSelector
 				today={anchor}
 				onDateChanged={setAnchor}
@@ -187,7 +192,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 	return (
 		<div>
-			<StreaksHeader icon={<Icon28Edit />} text="Edit" onAction={OnEdit} />	
+			<StreaksHeader icon={<Icon28Edit />} text="Edit" onAction={OnEdit} />
 			{ActiveStreakSection}
 			{UnactiveStreakSection }
 			{CommitButton }
@@ -306,12 +311,14 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 
 	return (
 		<div>
-			<StreaksHeader icon={<Icon28Archive />} text="Save" onAction={OnSave} />	
-			<Section>
-				{StreakEntries}
-				{TempStreakEntries}
-				{EditCurrent }
-			</Section>
+			<StreaksHeader icon={<Icon28Archive />} text="Save" onAction={OnSave} />
+			<div style={{ paddingTop: '5px'}}>
+				<Section>
+					{StreakEntries}
+					{TempStreakEntries}
+					{EditCurrent }
+				</Section>
+			</div>
 		</div>
 
 	)
