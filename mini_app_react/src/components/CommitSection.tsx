@@ -223,13 +223,13 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 		}
 
 		const RemoveButton = (
-			<IconButton size='s' mode='plain' onClick={OnRemove}>
+			<IconButton size='s' mode='plain' onClick={OnRemove} style={streak.History.length === 0 ? {visibility: 'visible'} : {visibility: 'hidden'}}>
 				<Icon28Close />
 			</IconButton>
 		)
 
 		return (
-			<Entry style={EntryStyle} after={streak.History.length === 0 ? RemoveButton : null}>
+			<Entry style={EntryStyle} after={RemoveButton}>
 				<EntryText text={streak.Description} />
 			</Entry>
 		)
