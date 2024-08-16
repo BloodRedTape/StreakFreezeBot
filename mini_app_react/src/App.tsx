@@ -25,6 +25,8 @@ export const App = () => {
     window.Telegram?.WebApp.ready()
     window.Telegram?.WebApp.expand()
 
+    document.body.style.overflow = "hidden"
+
     return (
         <AppRoot>
             <UserContext.Provider value={[userContext, setUserContext]}>

@@ -21,7 +21,7 @@ const tabs: Array<Tab> = [
 ];
 
 const CurrentTab = (Id: number) => {
-    return tabs[Id].Content;
+    return tabs[Id].Content
 }
 
 export const RootTabBar = () => {
