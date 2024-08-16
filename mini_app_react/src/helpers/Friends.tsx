@@ -9,6 +9,13 @@ declare global {
   }
 }
 
+export const MakeWebAppLink = () => {
+    const botName = window.env.BOT_NAME
+    const webAppName = window.env.WEB_APP_NAME
+
+    return `https://t.me/${botName}/${webAppName}`
+}
+
 export const MakeInviteLink = () => {
     const params = retrieveLaunchParams();
 
@@ -16,10 +23,8 @@ export const MakeInviteLink = () => {
         return undefined
 
     const userId = params.initData.user.id
-    const botName = window.env.BOT_NAME
-    const webAppName = window.env.WEB_APP_NAME
     const command = `invite_${userId}`
-    const link = `https://t.me/${botName}/${webAppName}?startapp=${command}`
+    const link = `${MakeWebAppLink()}?startapp=${command}`
 
     return link
 }

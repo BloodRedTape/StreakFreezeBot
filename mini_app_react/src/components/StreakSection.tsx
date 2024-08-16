@@ -1,4 +1,4 @@
-import { List, Text, Blockquote, Title } from '@xelene/tgui';
+﻿import { List, Text, Blockquote, Title } from '@xelene/tgui';
 import { useUserContext } from '../core/UserContext';
 import { CalendarSection } from './CalendarSection';
 import { GatherUserCompleteName, GetQuote } from '../helpers/Requests';
@@ -25,7 +25,14 @@ export const StreakSection = () => {
 
 
 
-	const streakDescription = userContext.HasStreak() ? `Your streak is ${ userContext?.StreakSize() ?? 0 } days now` : 'No streak?'
+	const streakDescription = userContext.HasStreak() ? `Your streak is ${userContext?.StreakSize() ?? 0} days now` : 'No streak?'
+
+	const OnShareQuote = () => {
+		const text = `'${quote}' ©️ StreakFreezeBot`
+		const link = `https://t.me/share/url?url=${text}`
+
+		window.Telegram?.WebApp.openTelegramLink(link)
+	}
 
 	return (
 		<List>
@@ -34,7 +41,7 @@ export const StreakSection = () => {
 				<Text weight="2">{ streakDescription }</Text>
 				<br/>
 				<br/>
-				<Blockquote type="text"> { quote } </Blockquote>
+				<Blockquote type="text" onDoubleClick={OnShareQuote}> { quote } </Blockquote>
 			</List>
 			<CalendarSection/>
 		</List>
