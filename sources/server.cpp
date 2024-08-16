@@ -545,7 +545,7 @@ void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response&
 }
 
 void HttpApiServer::PostPushQuote(const httplib::Request& req, httplib::Response& resp){
-	if (IsAuthByBot(req)) {
+	if (!IsAuthByBot(req)) {
 		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
@@ -564,7 +564,7 @@ void HttpApiServer::PostPushQuote(const httplib::Request& req, httplib::Response
 }
 
 void HttpApiServer::PostInvalidateQuote(const httplib::Request& req, httplib::Response& resp){
-	if (IsAuthByBot(req)) {
+	if (!IsAuthByBot(req)) {
 		resp.status = httplib::StatusCode::Unauthorized_401;
 		return;
 	}
