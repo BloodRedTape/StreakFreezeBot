@@ -32,7 +32,7 @@ export const RootTabBar = () => {
             <div style={{ overflowY: 'scroll', height: '85vh' }}>
                 {CurrentTab(currentTab)}
             </div>
-            <Tabbar>
+            <Tabbar style={{height: '15vh'}}>
                 {tabs.map(({ Id, Name, Icon }) =>
                     <Tabbar.Item
                         style={{ height: '15vh' }}

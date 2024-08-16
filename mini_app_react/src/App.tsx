@@ -1,5 +1,5 @@
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
-import { AppRoot, List } from '@xelene/tgui';
+import { AppRoot } from '@xelene/tgui';
 import { useState } from 'react';
 import { FriendRequestModal } from './components/FriendRequest';
 import { FetchUserContext, UserContext, UserContextType } from './core/UserContext';
@@ -27,11 +27,11 @@ export const App = () => {
 
     return (
         <AppRoot>
-            <UserContext.Provider value = {[userContext, setUserContext]}>
-                <List style={{ background: 'var(--tg-theme-bg-color)' }}>
+            <UserContext.Provider value={[userContext, setUserContext]}>
+                <div style={{ background: 'var(--tg-theme-bg-color)' }}>
                     <FriendRequestModal from={ TryParseInviteLink() }/>
                     <RootTabBar/>
-                </List>
+                </div>
             </UserContext.Provider>
         </AppRoot>
     )
