@@ -121,8 +121,8 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		const EntryContent = (
 			<Entry
 				before={<div style={AlignCenterStyle}>{ Box }</div>}
-				after={<IconButton style={{ opacity: '-1' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
-				style={{ padding: '4px' }}
+				after={<IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
+				style={{ paddingLeft: '10px' }}
 			>
 				<EntryText text={streak.Description}/>
 			</Entry>
@@ -208,7 +208,7 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 	const [entry, setEntry] = useState("")
 
 	const EntryStyle: CSSProperties = {
-		padding: '5px'
+		paddingLeft: '10px'
 	}
 
 	const StreakEntries = userContext?.Streaks
