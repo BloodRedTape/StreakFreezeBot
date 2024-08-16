@@ -89,7 +89,7 @@ std::vector<std::int64_t> User::UnactiveStreaks(Date today)const {
 }
 
 std::int64_t User::ActiveCount(Date today)const {
-	std::int64_t streak = AreActiveProtected(today);
+	std::int64_t streak = AreActiveCommited(today);
 	
 	date::year_month_day check_date = DateUtils::Yesterday(today);
 
