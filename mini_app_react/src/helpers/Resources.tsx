@@ -38,7 +38,7 @@ export const GetCalendarStatImageLinkFor = (protection: ProtectionType)=>{
         ],
         [
             ProtectionType.Commit,
-            'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/StreakFire.png'
+            'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/SmallFire.png'
         ]
     ]);
 
