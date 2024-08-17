@@ -57,8 +57,8 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 				friend.TodayProtection !== ProtectionType.None
 					? <Img
 						style={{
-							height: '24px',
-							width: '24px',
+							height: '22px',
+							width: '22px',
 							marginTop: 'auto',
 							marginBottom: 'auto',
 							marginLeft: '5px'
@@ -68,6 +68,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 					: undefined
 			}
 			afterFloatLeft={true}
+			childrenBoxStyle={{ textOverflow: 'ellipsis' }}
 		>
 			<Text
 				weight="2"
