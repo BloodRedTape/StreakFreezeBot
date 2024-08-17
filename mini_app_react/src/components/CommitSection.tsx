@@ -8,7 +8,8 @@ import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { ErrorPopupFromJson, FetchPendingSubmition, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
-import { CalendarWithSelector, GetAnchorDate, MonthStats } from "./Calendar";
+import { GetCalendarStatImageLinkFor } from "../helpers/Resources";
+import { CalendarWithSelector, GetAnchorDate, MonthStats, StatEntryType } from "./Calendar";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -48,10 +49,20 @@ const StreaksHeader: React.FC<{ icon: JSX.Element, text: string, onAction: () =>
 const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
 	let [anchor, setAnchor] = useState(GetAnchorDate())
 
-	let stats = Object.entries({
-		'Commited': streak.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
-		'Freezed': streak.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0
-	})
+	const stats: StatEntryType[] = [
+		{
+			Name: 'Commited',
+			Value: streak.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
+			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Commit)
+		},
+		{
+			Name: 'Freezed',
+			Value: streak.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0,
+			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Freeze)
+		}
+	]
+	
+
 
 	return (
 		<div style={{paddingBottom: '10%'}}>

@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { ProtectionType, useUserContext } from "../core/UserContext";
-import { CalendarWithSelector, GetAnchorDate, MonthStats } from "./Calendar";
+import { GetCalendarStatImageLinkFor } from "../helpers/Resources";
+import { CalendarWithSelector, GetAnchorDate, MonthStats, StatEntryType,  } from "./Calendar";
 
 export const CalendarSection = () => {
 	const [userContext] = useUserContext()
 	let [anchor, setAnchor] = useState(GetAnchorDate())
 
-	let stats = Object.entries({
-		'Commited': userContext?.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
-		'Freezed': userContext?.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0
-	})
-
+	const stats: StatEntryType[] = [
+		{
+			Name: 'Commited',
+			Value: userContext?.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
+			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Commit)
+		},
+		{
+			Name: 'Freezed',
+			Value: userContext?.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0,
+			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Freeze)
+		}
+	]
 	
 	return (
 		<CalendarWithSelector

@@ -1,9 +1,9 @@
-import { Breadcrumbs, IconButton, List, Text } from '@xelene/tgui';
-import { BreadCrumbsItem } from '@xelene/tgui/dist/components/Navigation/Breadcrumbs/components/BreadCrumbsItem/BreadCrumbsItem';
+import { IconButton, Text } from '@xelene/tgui';
 import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
 import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
 import { addMonths, differenceInDays } from 'date-fns';
 import { CSSProperties, ReactNode } from 'react';
+import { Entry } from '../core/Entry';
 import { Img } from '../core/Img';
 import { ProtectionAt, ProtectionType, useGetUserContext } from '../core/UserContext';
 import { GetImageLinkFor } from '../helpers/Resources';
@@ -225,28 +225,44 @@ export const CalendarWithSelector: React.FC<{history: ProtectionType[], start: D
     )
 }
 
-export const MonthStats: React.FC<{ stats: [string, number][] }> = ({stats}) => {
+export type StatEntryType = {
+    Name: string,
+    Value: number,
+    IconPath: string
+}
+
+const StatEntry: React.FC<{ data: StatEntryType }> = ({ data }) => {
+    return (
+        <div style={{
+            background: 'var(--tg-theme-header-bg-color)',
+            borderRadius: '10px',
+            padding: '5px', 
+            marginLeft: '5px', marginRight: '5px',
+            flex: '1'
+        }}>
+            <Entry
+                before={<Img style={{ width: 30, height: 30, padding: '5px'}} src={data.IconPath}/>}
+            >
+                <div>
+                    <Text style={{ display: 'block' }} weight="2">{data.Name}</Text>
+                    <Text style={{ display: 'block' }} weight="3">{data.Value}</Text>
+                </div>
+            </Entry>
+        </div>
+    )
+}
+
+export const MonthStats: React.FC<{ stats: StatEntryType[] }> = ({stats}) => {
 	const MonthStatsStyle: CSSProperties = {
-		display: 'inline-block',
-		paddingLeft: 'auto',
-		paddingRight: 'auto',
-		marginLeft: 'auto',
-		marginRight: 'auto',
+        display: 'flex',
+        justifyContent: 'center',
+        marginTop: '10px',
+        marginBottom: '10px'
 	}
 
 	return (
 		<div style={MonthStatsStyle}>
-			<Breadcrumbs >
-			{stats.map((pair) => 
-				(<BreadCrumbsItem >
-					<List>
-						<Text weight="2">{pair[0]}</Text>
-						<br/>
-						<Text weight="3">{pair[1]} Days</Text>
-					</List>
-				</BreadCrumbsItem>)
-			)}
-			</Breadcrumbs>
+            {stats.map((entry) => <StatEntry data={entry}/>)}
 		</div>
 	)
 }
