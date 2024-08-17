@@ -5,7 +5,7 @@ import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
 import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
-import { GetImageLinkFor } from "../helpers/Resources"
+import { GetFriendStatusImageLinkFor } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
@@ -63,7 +63,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 							marginBottom: 'auto',
 							marginLeft: '5px'
 						}}
-						src={GetImageLinkFor(friend.TodayProtection)}
+						src={GetFriendStatusImageLinkFor(friend.TodayProtection)}
 					/>
 					: undefined
 			}
