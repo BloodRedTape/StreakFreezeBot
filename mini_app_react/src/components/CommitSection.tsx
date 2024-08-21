@@ -5,6 +5,7 @@ import { Icon28Close } from "@xelene/tgui/dist/icons/28/close";
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit";
 import { CSSProperties, useState } from "react";
 import { Entry } from "../core/Entry";
+import { ForegroundColor } from "../helpers/Theme"
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { ErrorPopupFromJson, FetchPendingSubmition, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
@@ -147,7 +148,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		return (
 			<Modal
 				trigger={EntryContent}
-				style={{background: 'var(--tg-theme-header-bg-color)'} }
+				style={{background: ForegroundColor()} }
 			>
 				<StreakEntryModal streak={streak}/>
 			</Modal>

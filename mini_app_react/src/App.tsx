@@ -5,6 +5,7 @@ import { FriendRequestModal } from './components/FriendRequest';
 import { FetchUserContext, UserContext, UserContextType } from './core/UserContext';
 import { DebugLog } from './helpers/Debug';
 import { TryParseInviteLink } from './helpers/Friends';
+import { BackgroundColor } from './helpers/Theme';
 import { OnEveryHour } from './helpers/Time';
 import { RootTabBar } from './tabs/RootTabBar';
 
@@ -30,7 +31,7 @@ export const App = () => {
     return (
         <AppRoot>
             <UserContext.Provider value={[userContext, setUserContext]}>
-                <div style={{ background: 'var(--tg-theme-bg-color)' }}>
+                <div style={{ background: BackgroundColor() }}>
                     <FriendRequestModal from={ TryParseInviteLink() }/>
                     <RootTabBar/>
                 </div>

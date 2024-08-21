@@ -1,8 +1,9 @@
 import React, { CSSProperties } from "react"
+import { ForegroundColor } from "../helpers/Theme"
 
 export const Foreground: React.FC<React.PropsWithChildren> = ({ children }) => {
 	const style: CSSProperties = {
-		backgroundColor: 'var(--tg-theme-header-bg-color)',
+		backgroundColor: ForegroundColor(),
 		maxHeight: 'fit-content',
 	}
 

@@ -7,6 +7,7 @@ import { Entry } from '../core/Entry';
 import { Img } from '../core/Img';
 import { ProtectionAt, ProtectionType, useGetUserContext } from '../core/UserContext';
 import { GetImageLinkFor } from '../helpers/Resources';
+import { ForegroundColor } from "../helpers/Theme"
 
 enum DayType{
     NotADay,
@@ -166,7 +167,7 @@ export const Calendar = (props: CalendarProps) => {
     )
 
     return (
-        <div style={{background: 'var(--tg-theme-header-bg-color)', borderRadius: '5%', padding: '5%'}}>
+        <div style={{background: ForegroundColor(), borderRadius: '5%', padding: '5%'}}>
             <table style={{ width: '100%', tableLayout: 'fixed' }}>
                 <thead> { Headings } </thead>
                 <tbody> { weeks.map(MakeRow) } </tbody>
@@ -234,7 +235,7 @@ export type StatEntryType = {
 const StatEntry: React.FC<{ data: StatEntryType }> = ({ data }) => {
     return (
         <div style={{
-            background: 'var(--tg-theme-header-bg-color)',
+            background: ForegroundColor(),
             borderRadius: '10px',
             padding: '5px', 
             marginLeft: '5px', marginRight: '5px',

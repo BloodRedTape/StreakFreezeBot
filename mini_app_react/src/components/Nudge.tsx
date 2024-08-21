@@ -5,6 +5,7 @@ import { Entry } from "../core/Entry"
 import { FriendType } from "../core/Friend"
 import { ProtectionType, useGetUserContext } from "../core/UserContext"
 import { PostNudge, ProfilePhotoUrl } from "../helpers/Requests"
+import { ForegroundColor } from "../helpers/Theme"
 
 type Quote = {
 	Emoji: string
@@ -142,7 +143,7 @@ export const NudgeButton: React.FC<{ friend: FriendType }> = ({ friend }) => {
 	return (
 		<Modal
 			trigger={OpenModalButton}
-			style={{background: 'var(--tg-theme-header-bg-color)'} }
+			style={{background: ForegroundColor()} }
 		>
 			<NudgeModal friend={friend}/>
 		</Modal>

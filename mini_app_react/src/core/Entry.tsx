@@ -1,4 +1,5 @@
 import { BaseHTMLAttributes, CSSProperties, ReactNode } from "react"
+import { ForegroundColor } from "../helpers/Theme"
 
 export interface EntryProps extends BaseHTMLAttributes<HTMLDivElement> {
 	before?: ReactNode
@@ -20,7 +21,7 @@ export const Entry: React.FC<React.PropsWithChildren<EntryProps>> = ({children, 
 	}
 
     return (
-    <div style={{ ...style, background: 'var(--tg-theme-header-bg-color)'}} { ...restProps} >
+    <div style={{ ...style, background: ForegroundColor()}} { ...restProps} >
         <div
             style={{
                 display: 'flex',

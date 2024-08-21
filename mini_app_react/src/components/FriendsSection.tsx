@@ -12,6 +12,7 @@ import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
 import { NudgeButton } from "./Nudge"
+import { ForegroundColor } from "../helpers/Theme"
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -85,7 +86,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 			before={FriendAvatar}
 			after={isEdit ? RemoveButton : (<NudgeButton friend={friend }/>) }
 			subtitle={FriendSubheader}
-			style={{background: 'var(--tg-theme-header-bg-color)'}}
+			style={{background: ForegroundColor()}}
 		>
 			{ Header }
 		</Cell>

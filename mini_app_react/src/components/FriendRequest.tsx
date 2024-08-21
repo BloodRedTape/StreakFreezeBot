@@ -2,6 +2,7 @@ import { Modal, Text, Button, Avatar} from "@xelene/tgui"
 import { CSSProperties, useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { GatherCurrentUserId, GetTgFullUserById, JsonFromResp, PostAcceptInvite, ProfilePhotoUrlFor, SimplePopup } from "../helpers/Requests"
+import { ForegroundColor } from "../helpers/Theme"
 
 const FriendRequest: React.FC<{ from: number, onAccepted: ()=>void}> = ({ from, onAccepted }) => {
 	const OnAccept = () => {
@@ -71,7 +72,7 @@ export const FriendRequestModal: React.FC<{ from: number | undefined }> = ({ fro
 	return (
 		<Modal
 			header={<Modal.Header />}
-			style={{ background: 'var(--tg-theme-header-bg-color)' }}
+			style={{ background: ForegroundColor() }}
 			open={ShouldOpenInviteFrom(from)}
 		>
 			<FriendRequest from={from ?? 0} onAccepted={Refresh}/>
