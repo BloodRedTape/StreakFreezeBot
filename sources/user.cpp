@@ -66,6 +66,23 @@ std::vector<std::int64_t> User::ActiveStreaks(Date today)const {
 	return streaks;
 }
 
+std::vector<std::string> User::ActiveStreakDescriptions(Date today) const{
+	std::vector<std::string> descrs;
+
+	for (std::int64_t streak_id : ActiveStreaks(today)) {
+		auto *streak = GetStreak(streak_id);
+
+		if(!streak){
+			LogUser(Warning, "Invalid active streak id: %", streak_id);
+			continue;
+		}
+
+		descrs.push_back(streak->Description);
+	}
+
+	return descrs;
+}
+
 std::vector<std::int64_t> User::ActivePendingStreaks(Date today)const {
 	std::vector<std::int64_t> streaks;
 	for (auto i = 0; i < Streaks.size(); i++) {

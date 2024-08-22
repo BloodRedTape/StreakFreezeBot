@@ -64,6 +64,16 @@ export class UserContextType{
 		return addDays(this.Today, -1)
 	}
 
+	public AreActiveProtected(): boolean {
+		let isProtected = true
+		this.Streaks.forEach((streak) => {
+			if (streak.Active() && !streak.IsProtectedAt(this.Today))
+				isProtected = false
+		})
+
+		return isProtected;
+	}
+
 	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{
 		let count = 0;
 

@@ -132,25 +132,43 @@ export const PostResetStreak = () => {
 	return fetch(MakeUserRequestLocation() + '/reset_streak', {method: 'POST', headers: MakeTelegramAuthHeaders()})
 }
 
-const Fail = 'Failure'
+export enum PostMessageType {
+	Unknown,
+	Ok,
+	Fail,
+	Data
+}
 
-export const GetResultMessageType = (json: any) => {
+export const GetPostMessageType = (json: any) => {
 	if (json === undefined)
-		return 'Undefined'
+		return PostMessageType.Unknown
 
-	if ('Ok' in json) {
-		return 'Success'
-	}
-	if ('Fail' in json) {
-		return Fail
-	}
+	if ('Ok' in json) 
+		return PostMessageType.Ok
 
-	return 'Program Error'
+	if ('Fail' in json)
+		return PostMessageType.Fail
+
+	if ('Data' in json)
+		return PostMessageType.Data
+
+	return PostMessageType.Unknown
 }
 
-export const GetResultMessage = (json: any)=>{
-	return json.Ok || json.Fail || 'Internal Error'
+export const GetPostMessageTypeString = (type: PostMessageType) => {
+	return PostMessageType[type]
 }
+
+export const GetPostMessageContent = (json: any) => {
+	const type = GetPostMessageType(json)
+
+	return json[PostMessageType[type]]
+}
+
+export const GetPostMessageContentString = (json: any) => {
+	return GetPostMessageContent(json) ?? 'Internal error'
+}
+
 
 export const JsonFromResp = (response: Response | undefined) => {
 	return response?.json()
@@ -161,8 +179,8 @@ export const PopupFromJson = (json: any) => {
 		return
 
 	const params: PopupParams = {
-		title: GetResultMessageType(json),
-		message: GetResultMessage(json),
+		title: GetPostMessageTypeString(json),
+		message: GetPostMessageContent(json),
 		buttons: [
 			{id: "none", type: 'ok'}
 		]
@@ -171,12 +189,12 @@ export const PopupFromJson = (json: any) => {
 }
 
 export const ErrorPopupFromJson = (json: any) => {
-	if (GetResultMessageType(json) !== Fail)
-		return
+	if (GetPostMessageType(json) !== PostMessageType.Fail)
+		return 
 
 	const params: PopupParams = {
-		title: GetResultMessageType(json),
-		message: GetResultMessage(json),
+		title: GetPostMessageTypeString(json),
+		message: GetPostMessageContent(json),
 		buttons: [
 			{id: "none", type: 'ok'}
 		]

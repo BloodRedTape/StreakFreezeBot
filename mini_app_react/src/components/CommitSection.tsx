@@ -8,9 +8,10 @@ import { Entry } from "../core/Entry";
 import { ForegroundColor } from "../helpers/Theme"
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
-import { ErrorPopupFromJson, FetchPendingSubmition, JsonFromResp, PopupFromJson, PostAddStreak, PostCommit, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
+import { ErrorPopupFromJson, FetchPendingSubmition, GetPostMessageContent, GetPostMessageType, JsonFromResp, PostAddStreak, PostCommit, PostMessageType, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
 import { GetCalendarStatImageLinkFor } from "../helpers/Resources";
 import { CalendarWithSelector, GetAnchorDate, MonthStats, StatEntryType } from "./Calendar";
+import { ExtendedStreakModal } from "./ExtendedStreak";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -97,17 +98,18 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	const userContext = useGetUserContext()
 	const setUserContext = useSetUserContext()
 
-	const Refresh = () => {
-		FetchUserContext().then(setUserContext)
-	}
-
 	const [fetched, setFetched] = useState(false)
 	const [toCommit, setToCommit] = useState<number[]>([])
+	const [extended, setExtended] = useState<string>()
 
 	if (!fetched) {
 		FetchPendingSubmition()
 			.then((pending) => setToCommit(pending.concat(toCommit)))
 			.finally(() => setFetched(true))
+	}
+
+	const Refresh = () => {
+		FetchUserContext().then(setUserContext)
 	}
 
 	const OnEdit = () => {
@@ -158,11 +160,28 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	const ActiveStreakEntires = userContext?.Streaks.filter(s => s.Active()).map(MakeStreakEntry) ?? []
 	const UnactiveStreakEntires = userContext?.Streaks.filter(s => s.Unactive()).map(MakeStreakEntry) ?? []
 
+	const HandleCommitResult = (json: any) => {
+		const type = GetPostMessageType(json)
+
+		if(type === PostMessageType.Fail)
+			return ErrorPopupFromJson(json)
+
+		if (type !== PostMessageType.Data)
+			return
+
+		const data = GetPostMessageContent(json)
+
+		setExtended(data.Comment)
+	}
+
 	const OnCommit = () => {
 		if (!toCommit.length)
 			return
 
-		PostCommit(toCommit).then(JsonFromResp).then(PopupFromJson).then(Refresh);
+		PostCommit(toCommit)
+			.then(JsonFromResp)
+			.then(HandleCommitResult)
+			.then(Refresh)
 		setToCommit([])
 	}
 
@@ -204,6 +223,12 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 	return (
 		<div>
+			<ExtendedStreakModal
+				count={userContext?.Streak ?? 0}
+				extended={extended !== undefined}
+				comment={extended ?? 'Extend your streak!'}
+				onExtendedFinish={() => setExtended(undefined)}
+			/>
 			<StreaksHeader icon={<Icon28Edit />} text="Edit" onAction={OnEdit} />
 			{ActiveStreakSection}
 			{UnactiveStreakSection }

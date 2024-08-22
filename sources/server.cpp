@@ -20,6 +20,11 @@ void Ok(httplib::Response &resp, const std::string &error) {
 	resp.status = httplib::StatusCode::OK_200;
 };
 
+void Data(httplib::Response &resp, const nlohmann::json &data) {
+	resp.set_content(nlohmann::json::object({{"Data", data}}).dump(), "application/json");
+	resp.status = httplib::StatusCode::OK_200;
+}
+
 HttpApiServer::HttpApiServer(const INIReader& config):
 	m_Config(
 		config
@@ -293,6 +298,8 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	if(user.IsFreezedAt(today))
 		return Fail(resp, "Freeze is already used!");
 
+	const auto initialAreActiveCommited = user.AreActiveCommited(today);
+
 	std::string error;
 	
 	for(auto streak_id: streaks){
@@ -315,11 +322,34 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	}
 
 	user.SubmitionFor(today) = {};
-	
+
 	if(error.size())
 		return Fail(resp, error);
+	
+	if (initialAreActiveCommited == user.AreActiveCommited(today))
+		return Ok(resp, "commited");
 
-	Ok(resp, "Whoa, extended streak");
+	auto descrs = user.ActiveStreakDescriptions(today);
+
+	const auto system = R"(
+You are a quote generation system that should give a people with different goals inspiration to keep going. 
+You can inspire by highlighting benefits of following goal and negative effects of not following the goal. 
+I give you array of goals, you respond with a motivational quote. 
+
+Quote should be simple and short, one sentence long. 
+You can skip some things in order to fix the length requirements. 
+Don't use quotation characters. Give quote straight away
+)";
+
+	std::string array = nlohmann::json(descrs).dump();
+	
+	auto response = OpenAI::Complete(m_OpenAIKey, {{OpenAI::Role::System, system},{OpenAI::Role::User, array}}, 1.f, "gpt-4o-mini");
+
+	nlohmann::json data = nlohmann::json({ 
+		{"Comment", response.value_or("Keep it going!")}
+	});
+	
+	Data(resp, data);
 }
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {

@@ -46,6 +46,10 @@ public:
 
     Streak *GetStreak(std::int64_t id);
 
+    const Streak* GetStreak(std::int64_t id)const {
+        return const_cast<User*>(this)->GetStreak(id);
+    }
+
     Streak *GetStreak(const std::string &descr);
 
     const std::vector<Streak> &GetStreaks()const{ return Streaks; }
@@ -53,6 +57,8 @@ public:
     std::vector<std::int64_t> &SubmitionFor(Date today)const;
 
     std::vector<std::int64_t> ActiveStreaks(Date today)const;
+
+    std::vector<std::string> ActiveStreakDescriptions(Date today)const;
 
     std::vector<std::int64_t> ActivePendingStreaks(Date today)const;
 

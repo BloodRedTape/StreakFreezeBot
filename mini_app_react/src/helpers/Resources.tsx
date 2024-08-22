@@ -44,3 +44,7 @@ export const GetCalendarStatImageLinkFor = (protection: ProtectionType)=>{
 
     return colors.get(protection) ?? ''
 }
+
+export const GetExtendedStreakFire = () => 'https://raw.githubusercontent.com/BloodRedTape/StreakFreezeBot/master/resources/SmallFireHighRes.png'
+export const GetExtendedStreakBorderColor = ()=> '#FF9600'
+export const GetExtendedStreakBackgroundColor = ()=> '#FFB700'
