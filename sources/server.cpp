@@ -100,6 +100,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	});
 
 	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
+
+	RegenerateExtendedCache();
 }
 
 void HttpApiServer::Run(){
@@ -331,23 +333,8 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 	auto descrs = user.ActiveStreakDescriptions(today);
 
-	const auto system = R"(
-You are a joke quote generation system that should give a people with different joke goals jokeful inspiration to keep going. 
-You can inspire by highlighting benefits of following goal and negative effects of not following the goal. 
-All goals are purely jokes, so if goal is to drink beer daily, you should encourage it to do so.
-I give you array of goals, you respond with a motivational quote. 
-
-Quote should be simple and short, one sentence long. 
-You can skip some things in order to fix the length requirements. 
-Don't use quotation characters. Give quote straight away
-)";
-
-	std::string array = nlohmann::json(descrs).dump();
-	
-	auto response = OpenAI::Complete(m_OpenAIKey, {{OpenAI::Role::System, system},{OpenAI::Role::User, array}}, 1.f, "gpt-4o-mini");
-
 	nlohmann::json data = nlohmann::json({ 
-		{"Comment", response.value_or("Keep it going!")}
+		{"Comment", GetOrGenerateExtended(descrs)}
 	});
 	
 	Data(resp, data);
@@ -848,6 +835,48 @@ const std::string& HttpApiServer::GetOrDownloadPlaceholder(const std::string& fi
 	return Empty;
 }
 
+const std::string& HttpApiServer::GetOrGenerateExtended(const std::vector<std::string>& descrs){
+	std::string key = nlohmann::json(descrs).dump();
+	
+	if(m_ExtendedCache.count(key))
+		return m_ExtendedCache[key];
+
+	const auto system = R"(
+You are a joke quote generation system that should give a people with different joke goals jokeful inspiration to keep going. 
+You can inspire by highlighting benefits of following goal and negative effects of not following the goal. 
+All goals are purely jokes, so if goal is to drink beer daily, you should encourage it to do so.
+I give you array of goals, you respond with a motivational quote. 
+
+Quote should be simple and short, one sentence long. 
+You can skip some things in order to fix the length requirements. 
+Don't use quotation characters. Give quote straight away
+)";
+
+	std::string array = nlohmann::json(descrs).dump();
+	
+	auto response = OpenAI::Complete(m_OpenAIKey, {{OpenAI::Role::System, system},{OpenAI::Role::User, array}}, 1.f, "gpt-4o-mini");
+	
+	static std::string Fallback = "Keep it going!";
+	if(!response.has_value())
+		return Fallback;
+	
+	return (m_ExtendedCache[key] = response.value());
+}
+
+void HttpApiServer::RegenerateExtendedCache(){
+	m_ExtendedCache.clear();
+
+	auto today = DateUtils::Now();
+	
+	for (std::int64_t id: m_DB.GetUsers()) {
+		auto &user = m_DB.GetUser(id, today);
+
+		auto descrs = user.ActiveStreakDescriptions(today);
+
+		GetOrGenerateExtended(descrs);
+	}
+}
+
 void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Response& resp){
 	auto today = DateUtils::Now();
 
@@ -915,6 +944,8 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 			});
 		}
 	}
+
+	RegenerateExtendedCache();
 }
 
 void HttpApiServer::GetNotifications(const httplib::Request& req, httplib::Response& resp){

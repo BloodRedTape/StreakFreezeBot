@@ -37,6 +37,7 @@ private:
 
 	std::unordered_map<std::string, std::string> m_TelegramCache;
 	std::unordered_map<std::string, std::string> m_PlaceholdersCache;
+	std::unordered_map<std::string, std::string> m_ExtendedCache;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -83,6 +84,10 @@ public:
 	const std::string &GetOrDownloadTgFile(const std::string &path);
 
 	const std::string &GetOrDownloadPlaceholder(const std::string &first_name, const std::string &last_name);
+
+	const std::string &GetOrGenerateExtended(const std::vector<std::string> &descrs);
+
+	void RegenerateExtendedCache();
 
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 
