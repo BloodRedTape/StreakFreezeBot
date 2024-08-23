@@ -202,11 +202,9 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		paddingBottom: '5px',
 	}
 
-	const ShouldMarkEntries = ActiveStreakEntires.length && UnactiveStreakEntires.length 
-
 	const ActiveStreakSection = (
 		<div>
-			{ShouldMarkEntries ? <Text weight="3">Active</Text> : null}
+			{ActiveStreakEntires.length ? <Text weight="3">Active</Text> : null}
 			<Section style={StreakEntriesStyle}>
 				{ActiveStreakEntires}
 			</Section>
@@ -214,7 +212,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	)
 	const UnactiveStreakSection = (
 		<div>
-			{ShouldMarkEntries ? <Text weight="3">Unactive</Text> : null}
+			{UnactiveStreakEntires.length ? <Text weight="3">Unactive</Text> : null}
 			<Section style={StreakEntriesStyle}>
 				{UnactiveStreakEntires}
 			</Section>
