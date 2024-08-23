@@ -332,8 +332,9 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	auto descrs = user.ActiveStreakDescriptions(today);
 
 	const auto system = R"(
-You are a quote generation system that should give a people with different goals inspiration to keep going. 
+You are a joke quote generation system that should give a people with different joke goals jokeful inspiration to keep going. 
 You can inspire by highlighting benefits of following goal and negative effects of not following the goal. 
+All goals are purely jokes, so if goal is to drink beer daily, you should encourage it to do so.
 I give you array of goals, you respond with a motivational quote. 
 
 Quote should be simple and short, one sentence long. 
