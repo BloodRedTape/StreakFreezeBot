@@ -64,7 +64,7 @@ void StreakBot::Tick() {
 
 	httplib::Client client(m_WebApiUrl);
 
-	auto resp = client.Get("/notifications");
+	auto resp = client.Get("/notifications", {{"BotToken", getToken()}});
 
 	if(!resp)
 		return LogBot(Error, "Can't get notifications from %, because of internal error %", client.host(), httplib::to_string(resp.error()));

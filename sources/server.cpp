@@ -949,6 +949,11 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 }
 
 void HttpApiServer::GetNotifications(const httplib::Request& req, httplib::Response& resp){
+	if (!IsAuthByBot(req)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
 	resp.status = 200;
 	resp.set_content(nlohmann::json(m_Notifications).dump(), "application/json");
 	m_Notifications.clear();
