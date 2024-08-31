@@ -41,7 +41,7 @@ const FreezeInput = () => {
 				<Slider
 					step={1}
 					min={1}
-					max={durations.length - 1}
+					max={durations.length}
 					value={durationIndex}
 					onChange={ e=>setDurationIndex(e) }
 				/>
