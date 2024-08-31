@@ -8,15 +8,16 @@ const FreezeInput = () => {
 	const setUserContext = useSetUserContext()
 
 	const [reason, setReason] = useState<string>("For no reason")
-	const [durationIndex, setDurationIndex] = useState<number>(0)
+	const [durationIndex, setDurationIndex] = useState<number>(2)
 	const durations = [1, 2, 5, 7, 14, 31];
+	const currentDuration = durations[durationIndex - 1]
 
 	const Refresh = () => {
 		FetchUserContext().then(setUserContext)
 	}
 
 	const OnAddFreeze = () => {
-		PostAddFreeze(durations[durationIndex], reason).then(JsonFromResp).then(PopupFromJson).then(Refresh);
+		PostAddFreeze(currentDuration, reason).then(JsonFromResp).then(PopupFromJson).then(Refresh);
 	}
 
 	return (
@@ -36,11 +37,11 @@ const FreezeInput = () => {
 			/>
 
 
-			<Section header={"Expire in " + durations[durationIndex] + " days"}>
+			<Section header={"Expire in " + currentDuration + " days"}>
 				<Slider
 					step={1}
 					min={1}
-					max={7}
+					max={durations.length - 1}
 					value={durationIndex}
 					onChange={ e=>setDurationIndex(e) }
 				/>
