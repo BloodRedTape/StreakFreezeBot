@@ -27,6 +27,15 @@ export class StreakType{
 		return this.Count === 0
 	}
 
+	public HasEverProtected(): boolean {
+		for (let day of this.History) {
+			if (day !== ProtectionType.None)
+				return true;
+		}
+
+		return false;
+	}
+
 	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{
 		let count = 0;
 

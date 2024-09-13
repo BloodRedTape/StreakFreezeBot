@@ -255,16 +255,26 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 		.filter(streak => removeStreaks.find(e => e === streak.Id) === undefined)
 		.map((streak) =>
 	{
+		const canRemove = !streak.HasEverProtected();
+
 		const OnRemove = () => {
+			if (!canRemove)
+				return
+
 			setRemoveStreaks(
 				removeStreaks.concat([streak.Id])
 			)
 			PostRemoveStreak([streak.Id]).then(JsonFromResp).then(ErrorPopupFromJson)
 		}
 
+		const buttonStyle: CSSProperties = {
+			opacity: canRemove ? 1 : 0,
+			cursor: canRemove ? undefined : 'default'
+		}
+
 		const RemoveButton = (
-			<IconButton size='s' mode='plain' onClick={OnRemove} style={streak.History.length === 0 ? {visibility: 'visible'} : {visibility: 'hidden'}}>
-				<Icon28Close />
+			<IconButton size='s' mode='plain' onClick={OnRemove} style={buttonStyle}>
+				<Icon28Close/>
 			</IconButton>
 		)
 
