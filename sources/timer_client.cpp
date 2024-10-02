@@ -41,6 +41,11 @@ void TimerClient::Tick(){
     if (localTime.tm_hour == 22 && !m_AlmostOverCalled) {
         OnDayAlmostOver();
     }
+
+    // Check if it's 2 hours before midnight (22:00 or 10 PM)
+    if (localTime.tm_hour == 23 && localTime.tm_min >= 40 && !m_MomentBeforeNewDayCalled) {
+        OnMomentBeforeNewDay();
+    }
 }
 
 void TimerClient::OnDayAlmostOver(){
@@ -48,7 +53,13 @@ void TimerClient::OnDayAlmostOver(){
 	Post("/timer/day_almost_over");
 }
 
+void TimerClient::OnMomentBeforeNewDay(){
+    m_MomentBeforeNewDayCalled = true;
+	Post("/timer/moment_before_new_day");
+}
+
 void TimerClient::OnNewDay(){
 	m_AlmostOverCalled = false;
+	m_MomentBeforeNewDayCalled = false;
 	Post("/timer/new_day");
 }

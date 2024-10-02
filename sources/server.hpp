@@ -91,6 +91,8 @@ public:
 
 	void OnDayAlmostOver(const httplib::Request &req, httplib::Response &resp);
 
+	void OnMomentBeforeNewDay(const httplib::Request &req, httplib::Response &resp);
+
 	void OnNewDay(const httplib::Request &req, httplib::Response &resp);
 
 	void GetNotifications(const httplib::Request &req, httplib::Response &resp);

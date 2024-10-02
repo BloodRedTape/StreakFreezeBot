@@ -1,4 +1,4 @@
-#include "server.hpp"
+﻿#include "server.hpp"
 #include "model.hpp"
 #include "http.hpp"
 #include <bsl/log.hpp>
@@ -10,6 +10,8 @@ DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
 DEFINE_LOG_CATEGORY(TelegramBridge)
 DEFINE_LOG_CATEGORY(OpenAI)
+
+#define UTF8(text) ((const char *)u8##text)
 
 void Fail(httplib::Response &resp, const std::string &error) {
 	resp.set_content(nlohmann::json::object({{"Fail", error}}).dump(), "application/json");
@@ -77,6 +79,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
 	Post("/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
+	Post("/timer/moment_before_new_day", &ThisClass::OnMomentBeforeNewDay);
 	Post("/timer/new_day", &ThisClass::OnNewDay);
 
 	Get ("/notifications", &ThisClass::GetNotifications);
@@ -891,17 +894,40 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 
 			std::string message = 
 				can_be_freezed
-					? Format("The day is almost over! Don't waste your streak freeze, commit instead!")
-					: Format("The day is almost over, don't lose your % days streak!", user.ActiveCount(today));
+					? Format(UTF8("😡 The day is almost over! Don't waste your streak freeze, commit instead!"))
+					: Format(UTF8("😡 The day is almost over, don't lose your % days streak!"), user.ActiveCount(today));
 
 			m_Notifications.push_back({id, message, today});
 			continue;
 		} 
 		
 		if (user.ActivePendingStreaks(today).size()) {
-			m_Notifications.push_back({id, "Don't let go, finish what you've started!", today});
+			m_Notifications.push_back({id, UTF8("😏 Don't let go, finish what you've started!"), today});
 			continue;
 		}
+	}
+}
+
+void HttpApiServer::OnMomentBeforeNewDay(const httplib::Request& req, httplib::Response& resp){
+	auto today = DateUtils::Now();
+
+	for (auto id: m_DB.GetUsers()) {
+		auto &user = m_DB.GetUser(id, today);
+
+		if(user.AreActiveProtected(today))
+			continue;
+
+		if (!user.AreActiveProtected(today) && user.AreActiveProtected(DateUtils::Yesterday(today))) {
+			bool can_be_freezed = user.AvailableFreezes(today).size();
+
+			std::string message = 
+				can_be_freezed
+					? Format(UTF8("😱 Can't wait anymore!!! Commit now or lose your streak freeze!"))
+					: Format(UTF8("😱 Can't wait anymore!!! Commit now or lose your % days streak!"), user.ActiveCount(today));
+
+			m_Notifications.push_back({id, message, today});
+			continue;
+		} 
 	}
 }
 
@@ -919,7 +945,7 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 			if (!user.CanUseFreezeAt(freeze, DateUtils::Tomorrow(today))) {
 				m_Notifications.push_back({
 					id,
-					"Today is the last day for one of your streak freezes, use it right now!",
+					UTF8("👀 Today is the last day for one of your streak freezes, use it right now!"),
 					today
 				});
 				break;
@@ -929,7 +955,7 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 		if (user.IsFreezedByAt(yesterday, FreezeUsedBy::Auto)) {
 			m_Notifications.push_back({
 				id,
-				Format("Whoa, saved your % days streak with a freeze, be careful next time!", user.ActiveCount(today)),
+				Format(UTF8("🥶 Whoa, saved your % days streak with a freeze, be careful next time!"), user.ActiveCount(today)),
 				today
 			});
 		}
@@ -939,7 +965,7 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 
 			m_Notifications.push_back({
 				id,
-				Format("You've lost your % days active streak...\nRemember that you still have % streaks to protect!", user.ActiveCount(yesterday), active.size()),
+				Format(UTF8("😭 You've lost your % days active streak...\n😜 Remember that you still have % streaks to protect!"), user.ActiveCount(yesterday), active.size()),
 				today
 			});
 		}
