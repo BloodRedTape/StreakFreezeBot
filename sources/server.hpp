@@ -19,9 +19,9 @@ public:
 private:
 	INIReader m_Config;
 	std::string m_WebAppPath;
-	std::string m_WebAppConfigPath;
 	std::string m_Hostname;
 	int m_Port;
+	bool m_RegenerateExtendedCache = true;
 	StreakDatabase m_DB;
 
 	std::string m_OpenAIKey;
@@ -79,7 +79,15 @@ public:
 
 	void GetFriends(const httplib::Request &req, httplib::Response &resp);
 
+	void NewChallenge(const httplib::Request &req, httplib::Response &resp);
+
+	void JoinChallenge(const httplib::Request &req, httplib::Response &resp);
+
+	void GetChallengeParticipants(const httplib::Request &req, httplib::Response &resp);
+
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
+
+	void GetPlaceholder(const httplib::Request &req, httplib::Response &resp);
 
 	const std::string &GetOrDownloadTgFile(const std::string &path);
 

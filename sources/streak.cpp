@@ -9,6 +9,9 @@ bool Streak::IsCommitedAt(Date date) const{
 }
 
 bool Streak::IsFreezedAt(Date date, const std::vector<StreakFreeze> &freezes)const {
+	if(!IsFreezable())
+		return false;
+
 	for (auto& freeze : freezes) {
 		if(freeze.UsedAt.has_value() && freeze.UsedAt.value() == date)
 			return true;
@@ -25,7 +28,6 @@ bool Streak::IsProtected(Date start, Date end, const std::vector<StreakFreeze>& 
 
 	return true;
 }
-
 
 std::optional<Date> Streak::FirstCommitDate() const{
 	return Commits.size() ? std::make_optional(Commits.front()) : std::nullopt;
@@ -63,12 +65,14 @@ std::vector<Protection> Streak::History(Date start, Date end, const std::vector<
 }
 
 std::vector<Protection> Streak::HistoryForToday(Date today, const std::vector<StreakFreeze> &freezes)const{
-	auto start = FirstCommitDate();
+	auto first = FirstCommitDate();
 
-	if(!start.has_value())
+	if(!first.has_value())
 		return {};
 
-	return History(start.value(), today, freezes);
+	auto start = std::min(first.value(), today);
+
+	return History(start, today, freezes);
 }
 
 Protection Streak::ProtectionAt(Date date, const std::vector<StreakFreeze> &freezes)const{

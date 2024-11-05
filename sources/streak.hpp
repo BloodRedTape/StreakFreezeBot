@@ -8,7 +8,8 @@
 enum class Protection{
     None,
     Commit,
-    Freeze
+    Freeze,
+    NothingToProtect
 };
 
 enum class StreakStatus {
@@ -22,8 +23,9 @@ struct Streak{
     std::vector<Date> Commits;
 	std::string Description;
     StreakStatus Status = StreakStatus::Default;
+    std::optional<std::int32_t> Challenge;
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE(Streak, Commits, Description, Status)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Streak, Commits, Description, Status, Challenge)
 
     Streak() = default;
     
@@ -50,6 +52,18 @@ struct Streak{
 
     bool IsProtected(Date start, Date end, const std::vector<StreakFreeze>& freezes)const;
 
+    bool IsChallenge()const {
+        return Challenge.has_value();
+    }
+
+    bool IsFromChallenge(std::int64_t challenge_id)const {
+        return Challenge.has_value() && Challenge.value() == challenge_id;
+    }
+
+    bool IsFreezable()const {
+        return !IsChallenge();
+    }
+
     std::optional<Date> FirstCommitDate()const;
 
     bool Commit(Date date);
@@ -64,4 +78,15 @@ struct Streak{
 
     Protection ProtectionAt(Date date, const std::vector<StreakFreeze> &freezes)const;
 
+};
+
+struct StreakPayload {
+    std::int64_t Id = 0;
+    std::vector<Protection> History;
+    Date Start;
+    std::int64_t Count = 0;
+    bool Required = false;
+    bool Freezable = false;
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(StreakPayload, Id, History, Start, Count, Required, Freezable)
 };

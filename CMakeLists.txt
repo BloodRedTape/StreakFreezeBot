@@ -19,6 +19,7 @@ add_subdirectory(libs/tgbot-cpp)
 set(COMPILE_WITH_C_LOCALE ON)
 add_subdirectory(libs/date)
 add_subdirectory(libs/hmac_sha256)
+add_subdirectory(libs/rx-ranges)
 
 
 add_executable(StreakFreezeBot
@@ -35,7 +36,7 @@ add_executable(StreakFreezeBot
 	"sources/timer_client.cpp"
 	"sources/openai.cpp"
 	"sources/streak.cpp" 
-)
+ "sources/challenge.cpp")
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl
@@ -45,6 +46,7 @@ target_link_libraries(StreakFreezeBot
 	PUBLIC TgBot
 	PUBLIC date
 	PUBLIC hmac_sha256
+	PUBLIC rx::ranges
 )
 
 if(CMAKE_WITH_CONAN)

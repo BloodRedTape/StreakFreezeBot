@@ -27,6 +27,8 @@ namespace DateUtils{
         return Yesterday(Now());
     }
 
+    std::int64_t DaysDiff(Date first, Date second);
+
     extern std::vector<Date> Range(Date from, Date to);
 
     namespace Debug{

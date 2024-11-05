@@ -1,8 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include "streak.hpp"
 #include "todo.hpp"
+#include "challenge.hpp"
+#include "ranges.hpp"
 
 struct FriendInfo {
     std::int64_t Id = 0;
@@ -12,14 +15,14 @@ struct FriendInfo {
     std::string Username;
     std::string FullName;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(FriendInfo, Id, Streak, TodayProtection, Username, FullName)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FriendInfo, Id, Streak, TodayProtection, Username, FullName)
 };
 
 struct PendingSubmition{
     std::vector<std::int64_t> Ids;
     Date At;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(PendingSubmition, Ids, At)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PendingSubmition, Ids, At)
 };
 
 class User {
@@ -33,7 +36,7 @@ private:
 
     mutable PendingSubmition TodaySubmition;
 public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, Freezes, MaxFreezes, Friends, Streaks, TodaySubmition)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User, Freezes, MaxFreezes, Friends, Streaks, TodaySubmition)
 public:
 
     User() = default;
@@ -43,6 +46,10 @@ public:
     bool AddStreak(const std::string &descr);
 
     bool HasStreak(const std::string &descr)const;
+
+    void AddChallengeStreak(const std::string &descr, std::int64_t challenge);
+
+    void RemoveStreak(std::int64_t streak_id);
 
     Streak *GetStreak(std::int64_t id);
 
@@ -54,23 +61,17 @@ public:
 
     const std::vector<Streak> &GetStreaks()const{ return Streaks; }
 
+    std::vector<Streak> GetStreaksWithPayload()const{ return Streaks; }
+
     std::vector<std::int64_t> &SubmitionFor(Date today)const;
 
-    std::vector<std::int64_t> ActiveStreaks(Date today)const;
+    auto StreakIdsRange()const { return rx::seq() | rx::first_n(Streaks.size()) | filter(this, &User::IsValidStreak); }
 
-    std::vector<std::string> ActiveStreakDescriptions(Date today)const;
+    auto StreaksRange()const {
+        return GetStreaks();
+    }
 
-    std::vector<std::int64_t> ActivePendingStreaks(Date today)const;
-
-    std::vector<std::int64_t> UnactiveStreaks(Date today)const;
-
-    std::int64_t ActiveCount(Date today)const;
-
-    bool ActiveNoCount(Date today)const{ return ActiveCount(today) == 0; }
-
-    std::vector<Protection> ActiveHistory(Date start, Date end)const;
-
-    std::vector<Protection> ActiveHistoryForToday(Date today)const;
+    bool IsValidStreak(std::int64_t streak)const{ return streak < Streaks.size(); }
 
     bool IsFreezedAt(Date date)const;
 
@@ -78,15 +79,13 @@ public:
 
     const std::vector<StreakFreeze> &GetFreezes()const{ return Freezes; }
 
-    bool AreActiveProtected(Date date)const;
-
-    bool AreActiveCommited(Date date)const;
-
-    Protection ActiveProtection(Date date)const;
-
     void AddFreeze(std::int32_t expire_in_days, std::string &&reason, Date today);
 
     void RemoveFreeze(std::size_t freeze_id);
+
+    bool HasAnyFreezable(Date today)const;
+
+    bool HasSomethingToFreeze(Date today)const;
 
     std::vector<std::size_t> AvailableFreezes(Date today) const;
 

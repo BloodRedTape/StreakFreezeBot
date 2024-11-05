@@ -2,10 +2,11 @@ import { Tabbar } from '@xelene/tgui';
 import { Icon28Stats } from "@xelene/tgui/dist/icons/28/stats"
 import { Icon28Chat } from "@xelene/tgui/dist/icons/28/chat"
 import { Icon28Heart } from "@xelene/tgui/dist/icons/28/heart"
-import { useState } from 'react';
+import { Icon28Attach } from "@xelene/tgui/dist/icons/28/attach"
 import { CommitTab } from './CommitTab';
 import { FriendsTab } from './FriendsTab';
 import { StreakTab } from './StreakTab';
+import { ChallengesTab } from './ChallengesTab';
 
 class Tab {
     public Id: number = 0
@@ -16,21 +17,20 @@ class Tab {
 
 const tabs: Array<Tab> = [
     {Id: 0, Name: "Streak",  Content: <StreakTab/>, Icon:  <Icon28Stats /> },
-    {Id: 1, Name: "Commit",  Content: <CommitTab/>, Icon: <Icon28Heart/> },
-    {Id: 2, Name: "Friends", Content: <FriendsTab/>, Icon: <Icon28Chat/>},
+    {Id: 1, Name: "Challenge", Content: <ChallengesTab/>, Icon: <Icon28Attach/>},
+    {Id: 2, Name: "Commit",  Content: <CommitTab/>, Icon: <Icon28Heart/> },
+    {Id: 3, Name: "Friends", Content: <FriendsTab/>, Icon: <Icon28Chat/>},
 ];
 
 const CurrentTab = (Id: number) => {
     return tabs[Id].Content
 }
 
-export const RootTabBar = () => {
-    const [currentTab, setCurrentTab] = useState(tabs[0].Id);
-
+export const RootTabBar: React.FC<{ onSetTab: (tab: number) => void, tab: number }> = ({onSetTab, tab}) => {
     return (
         <div>
             <div style={{ overflowY: 'scroll', height: '85vh' }}>
-                {CurrentTab(currentTab)}
+                {CurrentTab(tab)}
             </div>
             <Tabbar style={{height: '15vh'}}>
                 {tabs.map(({ Id, Name, Icon }) =>
@@ -38,8 +38,8 @@ export const RootTabBar = () => {
                         style={{ height: '15vh' }}
                         key={Id}
                         text={Name}
-                        selected={Id === currentTab}
-                        onClick={() => setCurrentTab(Id)}
+                        selected={Id === tab}
+                        onClick={() => onSetTab(Id)}
                     >
                         {Icon}
                     </Tabbar.Item>)}

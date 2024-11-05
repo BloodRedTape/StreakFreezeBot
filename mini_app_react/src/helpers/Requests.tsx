@@ -1,5 +1,7 @@
 import { PopupParams, postEvent, retrieveLaunchParams } from "@telegram-apps/sdk-react";
+import { ChallengeParticipantType, ChallengeRulesType, ParseChallengeParticipantType } from "../core/Challenge";
 import { ToDoCompletion, ToDoDescription } from "../core/ToDo";
+import { ToApiDate } from "../core/UserContextSerialization";
 
 export const GatherCurrentUserId = (): number => {
 	const debugId = 399828804
@@ -188,9 +190,9 @@ export const PopupFromJson = (json: any) => {
 	postEvent('web_app_open_popup', params)
 }
 
-export const ErrorPopupFromJson = (json: any) => {
+export const ErrorPopupFromJson = (json: any): boolean => {
 	if (GetPostMessageType(json) !== PostMessageType.Fail)
-		return 
+		return false
 
 	const params: PopupParams = {
 		title: GetPostMessageTypeString(json),
@@ -200,6 +202,7 @@ export const ErrorPopupFromJson = (json: any) => {
 		]
 	};
 	postEvent('web_app_open_popup', params)
+	return true
 }
 
 export const SimplePopup = (title: string, message: string) => {
@@ -231,6 +234,29 @@ export const GetFriends = () => {
 	return fetch(MakeUserRequestLocation() + '/friends', { headers: MakeTelegramAuthHeaders() })
 }
 
+export const PostNewChallenge = (name: string, start: Date, duration: number, todo: string[]) => {
+	let challenge: any = {}
+	challenge.Name = name
+	challenge.Start = ToApiDate(start)
+	challenge.Duration = duration
+	challenge.ToDo = todo 
+	challenge.Type = ChallengeRulesType.Duration
+
+	return fetch(MakeUserRequestLocation() + '/challenges/new', {
+		method: 'POST',
+		headers: MakeTelegramAuthHeaders(),
+		body: JSON.stringify(challenge)
+	})
+}
+
+export const GetChallengeParticipants = (challenge: number) => {
+	return fetch(MakeUserRequestLocation() + '/challenges/participants/' + challenge, { headers: MakeTelegramAuthHeaders() })
+}
+
+export const FetchChallengeParticipants = (challenge: number): Promise<ChallengeParticipantType[]> => {
+	return GetChallengeParticipants(challenge).then(JsonFromResp).then(e => (e || []).map(ParseChallengeParticipantType))
+}
+
 export const GetTgFullUserById = (id: number) => {
 	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
 }
@@ -245,6 +271,12 @@ export const ProfilePhotoUrlFor = (id: number) => {
 
 export const ProfilePhotoUrl = () => {
 	return ProfilePhotoUrlFor(GatherCurrentUserId())
+}
+
+export const PlaceholderUrlFor = (text: string): string => {
+    const urlSafeString = text.replace(/[^a-zA-Z0-9-_\.]/g, '');
+
+    return GatherServerUrl() + '/placeholder/' + urlSafeString;
 }
 
 export const GetPersistentTodo = () => {

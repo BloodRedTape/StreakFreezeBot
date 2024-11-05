@@ -1,4 +1,5 @@
 import { DebugLog } from "../helpers/Debug";
+import { ParseChallengeWithPayloadType } from "./Challenge";
 import { ParseStreakType } from "./Streak";
 import { ProtectionType, StreakFreezeType, UserContextType } from "./UserContext";
 
@@ -8,6 +9,10 @@ export const FromApiDate = (data: any) => {
     } else {
         return new Date(0, 0, 0);
     }
+}
+
+export const ToApiDate = (date: Date) => {
+	return [date.getDate(), date.getMonth() + 1, date.getFullYear()]
 }
 
 export const FromApiDateNullable = (data: any): Date | null => {
@@ -37,6 +42,8 @@ export const ParseProtectionType = (data: any): ProtectionType => {
 		return ProtectionType.Commit
 	if (data == 2)
 		return ProtectionType.Freeze
+	if (data == 3)
+		return ProtectionType.NothingToProtect
 	return ProtectionType.None
 }
 
@@ -77,6 +84,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.Streak = data.Streak || 0
 		context.Friends = (data.Friends || []).map((friend: any): number => friend)
 		context.Streaks = (data.Streaks || []).map((streak: any) => ParseStreakType(streak))
+		context.Challenges = (data.Challenges || []).map((challenge: any) => ParseChallengeWithPayloadType(challenge))
 	} catch (e: any) {
 		DebugLog(e);
 	}

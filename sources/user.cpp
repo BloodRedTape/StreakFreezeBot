@@ -2,6 +2,7 @@
 #include <boost/range/algorithm.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <bsl/log.hpp>
+#include "ranges.hpp"
 
 DEFINE_LOG_CATEGORY(User)
 
@@ -23,10 +24,31 @@ bool User::AddStreak(const std::string& descr) {
 
 bool User::HasStreak(const std::string& descr)const {
 	auto IsSameDescription = [&](const Streak& streak) {
-		return streak.Description == descr && streak.Status != StreakStatus::Removed;
+		return !streak.Challenge.has_value() && streak.Description == descr && streak.Status != StreakStatus::Removed;
 	};
 
 	return boost::count_if(Streaks, IsSameDescription);
+}
+
+void User::AddChallengeStreak(const std::string& descr, std::int64_t challenge) {
+	Streaks.push_back(Streak(descr));
+	Streaks.back().Challenge = challenge;
+}
+
+void User::RemoveStreak(std::int64_t streak_id){
+	if (!IsValidStreak(streak_id)) {
+		LogUser(Error, "trying to remove invalid streak id: %", streak_id);
+		return;
+	}
+	
+	auto &streak = Streaks[streak_id];
+
+	if(streak.IsChallenge()){
+		LogUser(Error, "trying to remove challenge streak with id: %", streak_id);
+		return;
+	}
+	
+	streak.Status = StreakStatus::Removed;
 }
 
 Streak* User::GetStreak(std::int64_t id){
@@ -57,84 +79,6 @@ std::vector<std::int64_t> &User::SubmitionFor(Date today) const {
 
 	return TodaySubmition.Ids;
 }
-std::vector<std::int64_t> User::ActiveStreaks(Date today)const {
-	std::vector<std::int64_t> streaks;
-	for (auto i = 0; i < Streaks.size(); i++) {
-		if(Streaks[i].Count(today, Freezes))
-			streaks.push_back(i);
-	}
-	return streaks;
-}
-
-std::vector<std::string> User::ActiveStreakDescriptions(Date today) const{
-	std::vector<std::string> descrs;
-
-	for (std::int64_t streak_id : ActiveStreaks(today)) {
-		auto *streak = GetStreak(streak_id);
-
-		if(!streak){
-			LogUser(Warning, "Invalid active streak id: %", streak_id);
-			continue;
-		}
-
-		descrs.push_back(streak->Description);
-	}
-
-	return descrs;
-}
-
-std::vector<std::int64_t> User::ActivePendingStreaks(Date today)const {
-	std::vector<std::int64_t> streaks;
-	for (auto i = 0; i < Streaks.size(); i++) {
-		if(Streaks[i].Count(today, Freezes) && !Streaks[i].IsProtectedAt(today, Freezes))
-			streaks.push_back(i);
-	}
-	return streaks;
-}
-
-std::vector<std::int64_t> User::UnactiveStreaks(Date today)const {
-	auto active = ActiveStreaks(today);
-
-	std::vector<std::int64_t> streaks;
-
-	for (auto i = 0; i < Streaks.size(); i++) {
-		if(!boost::count(active, i))
-			streaks.push_back(i);
-	}
-
-	return streaks;
-}
-
-std::int64_t User::ActiveCount(Date today)const {
-	std::int64_t streak = AreActiveCommited(today);
-	
-	date::year_month_day check_date = DateUtils::Yesterday(today);
-
-	while (AreActiveProtected(check_date)) {
-		streak += AreActiveCommited(check_date);
-		check_date = DateUtils::Yesterday(check_date);
-	}
-
-	return streak;
-}
-
-std::vector<Protection> User::ActiveHistory(Date start, Date end)const {
-	std::vector<Protection> history;
-
-	for (auto date : DateUtils::Range(start, end))
-		history.push_back(ActiveProtection(date));
-
-	return history;
-}
-
-std::vector<Protection> User::ActiveHistoryForToday(Date today)const {
-	auto start = FirstCommitEver();
-
-	if(!start.has_value())
-		return {};
-
-	return ActiveHistory(start.value(), today);
-}
 
 bool User::IsFreezedAt(Date date)const {
 	for (auto& freeze : Freezes) {
@@ -157,37 +101,6 @@ bool User::IsFreezedByAt(Date date, FreezeUsedBy by)const {
 	return false;
 }
 
-bool User::AreActiveCommited(Date date)const {
-	if (!ActiveStreaks(date).size())
-		return false;
-
-	for (auto id : ActiveStreaks(date)) {
-		if (id >= Streaks.size()) {
-			LogUser(Error, "Invalid streak id %", id);
-			continue;
-		}
-
-		if (!Streaks[id].IsCommitedAt(date))
-			return false;
-	}
-
-	return true;
-}
-
-bool User::AreActiveProtected(Date date)const {
-	return AreActiveCommited(date) || IsFreezedAt(date);
-}
-
-Protection User::ActiveProtection(Date date)const {
-	if(AreActiveCommited(date))
-		return Protection::Commit;
-
-	if(IsFreezedAt(date))
-		return Protection::Freeze;
-
-	return Protection::None;
-}
-
 void User::AddFreeze(std::int32_t expire_in_days, std::string &&reason, Date today){
 	Date expire = (date::sys_days)today + date::days(expire_in_days);
 
@@ -199,6 +112,26 @@ void User::RemoveFreeze(std::size_t freeze_id) {
 		return;
 
 	Freezes[freeze_id].Removed = true;
+}
+
+bool User::HasAnyFreezable(Date today) const{
+	for (const auto &streak : Streaks) {
+		if(streak.IsFreezable())
+			return true;
+	}
+	return false;
+}
+
+bool User::HasSomethingToFreeze(Date today) const{
+	// I assume that we can freeze
+	if(!HasAnyFreezable(today))
+		return false;
+
+	for(const auto &streak: Streaks)
+		if(streak.Count(today, Freezes) && !streak.IsProtectedAt(today, Freezes))
+			return true;	
+	
+	return false;
 }
 
 std::vector<std::size_t> User::AvailableFreezes(Date today) const{
@@ -223,8 +156,8 @@ bool User::CanAddFreeze(Date today)const {
 }
 
 std::optional<std::int64_t> User::UseAnyFreeze(Date date, FreezeUsedBy by) {
-	if (AreActiveProtected(date)) {
-		LogUser(Error, "Using freeze on a protected day");
+	if (!HasSomethingToFreeze(date)) {
+		LogUser(Error, "using freeze while all freezable streaks are protected");
 		return std::nullopt;
 	}
 
@@ -242,13 +175,8 @@ std::optional<std::int64_t> User::UseAnyFreeze(Date date, FreezeUsedBy by) {
 }
 
 std::optional<std::int64_t> User::UseFreeze(Date date, std::int64_t freeze_id, FreezeUsedBy by) {
-	if(AreActiveProtected(date)){
-		LogUser(Error, "using freeze on an already protected day");
-		return std::nullopt;
-	}
-
-	if(!ActiveStreaks(date).size()){
-		LogUser(Error, "using freeze without a streak");
+	if(!HasSomethingToFreeze(date)){
+		LogUser(Error, "using freeze while all freezable streaks are protected");
 		return std::nullopt;
 	}
 
@@ -314,7 +242,7 @@ std::vector<std::int64_t> User::AutoFreezeExcept(Date today) {
 		if(date == today)
 			break;
 
-		if(AreActiveProtected(date))
+		if(!HasSomethingToFreeze(today))
 			continue;
 
 		std::optional<std::int64_t> index = UseAnyFreeze(date, FreezeUsedBy::Auto);

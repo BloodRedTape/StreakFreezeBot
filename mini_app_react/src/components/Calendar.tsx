@@ -102,6 +102,7 @@ const ProtectionToDayType = (protection: ProtectionType) => {
         [ProtectionType.Commit, DayType.Commit],
         [ProtectionType.Freeze, DayType.Freeze],
         [ProtectionType.None, DayType.None],
+        [ProtectionType.NothingToProtect, DayType.None],
     ])
 
     return map.get(protection) ?? DayType.NotADay
@@ -242,7 +243,7 @@ const StatEntry: React.FC<{ data: StatEntryType }> = ({ data }) => {
             flex: '1'
         }}>
             <Entry
-                before={<Img style={{ width: 30, height: 30, padding: '5px'}} src={data.IconPath}/>}
+                before={<Img style={{ width: '40px', height: '40px', padding: '5px'}} src={data.IconPath}/>}
             >
                 <div>
                     <Text style={{ display: 'block' }} weight="2">{data.Name}</Text>

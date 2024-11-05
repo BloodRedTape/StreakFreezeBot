@@ -9,6 +9,9 @@ export class StreakType{
 	public Start: Date = new Date(0, 0, 0)
 	public Count: number = 0
 	public Id: number = -1
+	public Challenge: number = -1
+	public Required: boolean = false
+	public Freezable: boolean = false
 
 	public ProtectionAt(date: Date): ProtectionType{
 		const index = differenceInDays(date, this.Start)
@@ -20,11 +23,11 @@ export class StreakType{
 		return this.ProtectionAt(date) !== ProtectionType.None
 	}
 
-	public Active(): boolean {
-		return this.Count !== 0
+	public IsRequired(): boolean {
+		return this.Required
 	}
-	public Unactive(): boolean {
-		return this.Count === 0
+	public IsOptional(): boolean {
+		return !this.IsRequired()
 	}
 
 	public HasEverProtected(): boolean {
@@ -48,6 +51,10 @@ export class StreakType{
 		return count;
 	}
 
+	public IsChallenge(): boolean {
+		return this.Challenge !== -1 && this.Challenge !== 0
+	}
+
 };
 
 
@@ -59,6 +66,9 @@ export const ParseStreakType = (data: any): StreakType => {
 	streak.Start = FromApiDate(data.Start)
 	streak.Count = data.Count ?? 0;
 	streak.Id = data.Id ?? -1
+	streak.Challenge = data.Challenge ?? -1
+	streak.Required = data.Required ?? false
+	streak.Freezable = data.Freezable ?? false
 
     return streak;
 }

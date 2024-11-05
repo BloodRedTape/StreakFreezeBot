@@ -12,6 +12,8 @@ import { ErrorPopupFromJson, FetchPendingSubmition, GetPostMessageContent, GetPo
 import { GetCalendarStatImageLinkFor } from "../helpers/Resources";
 import { CalendarWithSelector, GetAnchorDate, MonthStats, StatEntryType } from "./Calendar";
 import { ExtendedStreakModal } from "./ExtendedStreak";
+import { Img } from "../core/Img";
+import { ExtendedType, ParseExtendedType } from "../core/Extended";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -19,7 +21,7 @@ const AlignCenterStyle: CSSProperties = {
 	justifyContent: 'center'
 }
 
-const EntryText: React.FC<{ text: string }> = ({text}) => (
+export const EntryText: React.FC<{ text: string }> = ({text}) => (
 	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
 )	
 
@@ -76,7 +78,7 @@ const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
 					</Modal.Close>
 				</div>
 				<br/>
-				<Text weight="2">{streak.Active() ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
+				<Text weight="2">{streak.Count ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
 				<br/>
 			</div>
 			<CalendarWithSelector
@@ -100,7 +102,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 	const [fetched, setFetched] = useState(false)
 	const [toCommit, setToCommit] = useState<number[]>([])
-	const [extended, setExtended] = useState<string>()
+	const [extended, setExtended] = useState<ExtendedType>()
 
 	if (!fetched) {
 		FetchPendingSubmition()
@@ -120,7 +122,9 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		if (!userContext)
 			return (<div></div>)
 
-		let CanCommit = !streak.IsProtectedAt(userContext.Today) //XXX
+		const IsCommited = streak.ProtectionAt(userContext.Today) == ProtectionType.Commit
+		const IsFreezed = streak.ProtectionAt(userContext.Today) == ProtectionType.Freeze
+		const CanCommit = !IsCommited
 		
 		const IsCheck = () => {
 			return streak.ProtectionAt(userContext.Today) == ProtectionType.Commit || toCommit.includes(streak.Id)
@@ -137,10 +141,17 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 			? (<Checkbox checked disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
 			: (<Checkbox disabled={!CanCommit} onChange={e => SetCheck(e.target.checked)} />)
 
+		const FreezeIcon = (
+			<Img
+				style={{ width: '40px', height: '40px', padding: '5px'}}
+				src={GetCalendarStatImageLinkFor(ProtectionType.Freeze)}
+			/>
+		)
+
 		const EntryContent = (
 			<Entry
 				before={<div style={AlignCenterStyle}>{ Box }</div>}
-				after={<IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
+				after={IsFreezed ? FreezeIcon :<IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
 				style={{ paddingLeft: '10px' }}
 			>
 				<EntryText text={streak.Description}/>
@@ -157,8 +168,8 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 		)
 	}
 
-	const ActiveStreakEntires = userContext?.Streaks.filter(s => s.Active()).map(MakeStreakEntry) ?? []
-	const UnactiveStreakEntires = userContext?.Streaks.filter(s => s.Unactive()).map(MakeStreakEntry) ?? []
+	const ActiveStreakEntires = userContext?.Streaks.filter(s => s.IsRequired()).map(MakeStreakEntry) ?? []
+	const UnactiveStreakEntires = userContext?.Streaks.filter(s => s.IsOptional()).map(MakeStreakEntry) ?? []
 
 	const HandleCommitResult = (json: any) => {
 		const type = GetPostMessageType(json)
@@ -171,7 +182,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 		const data = GetPostMessageContent(json)
 
-		setExtended(data.Comment)
+		setExtended(ParseExtendedType(data))
 	}
 
 	const OnCommit = () => {
@@ -204,7 +215,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 
 	const ActiveStreakSection = (
 		<div>
-			{ActiveStreakEntires.length ? <Text weight="3">Active</Text> : null}
+			{ActiveStreakEntires.length ? <Text weight="3">Required</Text> : null}
 			<Section style={StreakEntriesStyle}>
 				{ActiveStreakEntires}
 			</Section>
@@ -212,7 +223,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	)
 	const UnactiveStreakSection = (
 		<div>
-			{UnactiveStreakEntires.length ? <Text weight="3">Unactive</Text> : null}
+			{UnactiveStreakEntires.length ? <Text weight="3">Optional</Text> : null}
 			<Section style={StreakEntriesStyle}>
 				{UnactiveStreakEntires}
 			</Section>
@@ -224,8 +235,10 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 			<ExtendedStreakModal
 				count={userContext?.Streak ?? 0}
 				extended={extended !== undefined}
-				comment={extended ?? 'Extend your streak!'}
+				comment={extended?.Comment ?? 'Extend your streak!'}
+				show={ extended?.Show ?? [] }
 				onExtendedFinish={() => setExtended(undefined)}
+				challenges={userContext?.GetRunningChallenges() || [] }
 			/>
 			<StreaksHeader icon={<Icon28Edit />} text="Edit" onAction={OnEdit} />
 			{ActiveStreakSection}
@@ -255,7 +268,7 @@ const StreaksEdit: React.FC<{ onChangeMode: OnChangeMode, }> = ({ onChangeMode }
 		.filter(streak => removeStreaks.find(e => e === streak.Id) === undefined)
 		.map((streak) =>
 	{
-		const canRemove = !streak.HasEverProtected();
+		const canRemove = !streak.HasEverProtected() && !streak.IsChallenge();
 
 		const OnRemove = () => {
 			if (!canRemove)

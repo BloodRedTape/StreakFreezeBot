@@ -1,17 +1,10 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
-
-declare global {
-  interface Window {
-    env: {
-      BOT_NAME: string
-      WEB_APP_NAME: string
-    }
-  }
-}
+import { GetGlobalConfig } from "../config_declaration";
 
 export const MakeWebAppLink = () => {
-    const botName = window.env.BOT_NAME
-    const webAppName = window.env.WEB_APP_NAME
+    const config = GetGlobalConfig()
+    const botName = config.BotName 
+    const webAppName = config.WebAppName 
 
     return `https://t.me/${botName}/${webAppName}`
 }

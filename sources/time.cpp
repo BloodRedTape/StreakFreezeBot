@@ -56,6 +56,10 @@ namespace DateUtils{
     }
 
 
+    std::int64_t DaysDiff(Date first, Date second){
+        return (date::sys_days(first) - date::sys_days(second)).count();
+    }
+
     std::vector<Date> Range(Date from, Date to){
         assert(from <= to);
 

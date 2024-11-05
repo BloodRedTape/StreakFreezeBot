@@ -19,3 +19,6 @@
 [submodule "libs/hmac_sha256"]
 	path = libs/hmac_sha256
 	url = https://github.com/h5p9sl/hmac_sha256.git
+[submodule "libs/rx-ranges"]
+	path = libs/rx-ranges
+	url = https://github.com/simonask/rx-ranges.git

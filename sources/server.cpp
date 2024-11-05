@@ -40,8 +40,8 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	m_WebAppPath(
 		config.Get(SectionName, "WebAppPath", ".")
 	),
-	m_WebAppConfigPath(
-		config.Get(SectionName, "WebAppConfigPath", ".")
+	m_RegenerateExtendedCache(
+		config.GetBoolean(SectionName, "RegenerateExtendedCache", true)
 	),
 	m_DB(config),
 	m_OpenAIKey(
@@ -55,7 +55,6 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	),
 	m_Logger(config)
 {
-	Super::set_mount_point("/config/", m_WebAppConfigPath);
 	Super::set_mount_point("/", m_WebAppPath);
 	
 	Get ("/user/:id/full", &ThisClass::GetFullUser);
@@ -76,7 +75,14 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
 	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
 
+
+	Post("/user/:id/challenges/new", &ThisClass::NewChallenge);
+	Post("/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
+	Get ("/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
+
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
+
+	Get ("/placeholder/:text", &ThisClass::GetPlaceholder);
 
 	Post("/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
 	Post("/timer/moment_before_new_day", &ThisClass::OnMomentBeforeNewDay);
@@ -101,6 +107,18 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 		res.set_content(Format("<h1>Error 500</h1><p>%</p>", content), "text/html");
 		res.status = httplib::StatusCode::InternalServerError_500;
 	});
+
+	set_error_handler([](const httplib::Request& req, httplib::Response& res) {
+        // Check if the requested path is not "/"
+        if (req.path != "/") {
+            // Redirect to the home page
+            res.set_redirect("/");
+        } else {
+            // Set a 404 not found response for root if somehow no specific handler exists (usually not the case)
+            res.status = 404;
+            res.set_content("Not Found", "text/text");
+        }
+    });
 
 	m_LastUpdate = std::chrono::steady_clock::now() - 2 * std::chrono::minutes(m_QuoteUpdateMinutes);
 
@@ -127,32 +145,15 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 	auto today = DateUtils::Now();
 	const auto &user = m_DB.GetUser(id, today);
 
-	auto StreakToJson = [user, today](const Streak &streak, std::int64_t id) {
-		return nlohmann::json({ 
-			{"Description", streak.Description},
-			{"History", streak.HistoryForToday(today, user.GetFreezes())},
-			{"Start", streak.FirstCommitDate().value_or(today)},
-			{"Count", streak.Count(today, user.GetFreezes())},
-			{"Id", id}
-		});
-	};
-
 	//NOTE: History is first because it corrects all the other info
 	auto user_json = nlohmann::json(user);
-	user_json["History"] = user.ActiveHistoryForToday(today);
+	user_json["History"] = m_DB.ActiveHistoryForToday(id, today);
 	user_json["Today"] = DateUtils::Now();
-	user_json["Streak"] = user.ActiveCount(today);
+	user_json["Streak"] = m_DB.ActiveStreak(id, today);
 	user_json["StreakStart"] = user.FirstCommitEver().value_or(today);
-	user_json["Streaks"] = nlohmann::json::array();
+	user_json["Challenges"] = m_DB.ChallengesWithPayload(id, today);
+	user_json["Streaks"] = m_DB.StreaksWithPayload(id, today);
 	
-	const auto &streaks = user.GetStreaks();
-	for (auto i = 0; i<streaks.size(); i++){
-		const auto &streak = streaks[i];
-
-		if(streak.Status != StreakStatus::Removed)
-			user_json["Streaks"].push_back(StreakToJson(streak, i));
-	}
-
 	std::string content = user_json.dump();
 
 	resp.status = httplib::StatusCode::OK_200;
@@ -222,14 +223,8 @@ void HttpApiServer::RemoveStreak(const httplib::Request& req, httplib::Response&
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 
-	for (std::int64_t streak_id: streaks) {
-		auto *streak = user.GetStreak(streak_id);
-
-		if(!streak)
-			continue;
-
-		streak->Status = StreakStatus::Removed;
-	}
+	for (std::int64_t streak_id: streaks)
+		user.RemoveStreak(streak_id);
 }
 
 void HttpApiServer::PostPendingSubmition(const httplib::Request& req, httplib::Response& resp){
@@ -299,11 +294,8 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 	auto today = DateUtils::Now();
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
-
-	if(user.IsFreezedAt(today))
-		return Fail(resp, "Freeze is already used!");
-
-	const auto initialAreActiveCommited = user.AreActiveCommited(today);
+	
+	const Protection initialProtection = m_DB.ActiveProtection(id, today);
 
 	std::string error;
 	
@@ -312,6 +304,11 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 		if(!streak){
 			error += "Invalid streak Id\n";
+			continue;
+		}
+
+		if (streak->Challenge.has_value() && !m_DB.CanCommitToChallenge(id, streak->Challenge.value(), today)) {
+			error += "You can't commit to this challenge\n";
 			continue;
 		}
 	
@@ -330,17 +327,33 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 	if(error.size())
 		return Fail(resp, error);
-	
-	if (initialAreActiveCommited == user.AreActiveCommited(today))
-		return Ok(resp, "commited");
 
-	auto descrs = user.ActiveStreakDescriptions(today);
+	auto EmitExtended = [&](const std::vector<std::string> &info) {
+		auto descrs = m_DB.ActiveStreaksDescriptions(id, today);
 
-	nlohmann::json data = nlohmann::json({ 
-		{"Comment", GetOrGenerateExtended(descrs)}
-	});
+		nlohmann::json data = nlohmann::json({ 
+			{"Comment", GetOrGenerateExtended(descrs)},
+			{"Show", info}
+		});
+
+		Data(resp, data);
+	};
 	
-	Data(resp, data);
+	//XXX somethimes i may think, maybe design should somehow congrate about extended streaks which are not challenges
+	// but someday...
+	if (initialProtection == Protection::None && m_DB.ActiveProtection(id, today) == Protection::Freeze) {
+		return EmitExtended({"Challenges"});
+	}
+
+	if (initialProtection == Protection::None && m_DB.ActiveProtection(id, today) == Protection::Commit) {
+		return EmitExtended({"Challenges", "Active"});
+	}
+
+	if (initialProtection == Protection::Freeze && m_DB.ActiveProtection(id, today) == Protection::Commit) {
+		return EmitExtended({"Active"});
+	}
+	
+	return Ok(resp, "commited");
 }
 
 void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& resp) {
@@ -361,11 +374,8 @@ void HttpApiServer::UseFreeze(const httplib::Request& req, httplib::Response& re
 	auto &user = m_DB.GetUser(id, today);
 	defer{ m_DB.SaveUserToFile(id); };
 	
-	if(user.AreActiveProtected(today))
-		return Fail(resp, "Can't use freeze today, already protected!");
-
-	if(!user.ActiveStreaks(today).size())
-		return Fail(resp, "Can't use freeze without a streak!");
+	if(!user.HasSomethingToFreeze(today))
+		return Fail(resp, "Nothing to freeze");
 
 	std::optional<std::int64_t> freeze = user.UseFreeze(today, freeze_id.value(), FreezeUsedBy::User);
 	
@@ -734,6 +744,88 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 	resp.set_content(nlohmann::json(friends).dump(), "application/json");
 }
 
+void HttpApiServer::NewChallenge(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto challenge = GetJsonObject<Challenge>(req.body);
+
+	if (!challenge.has_value() || !challenge.value().Validate(id)) {
+		Fail(resp, "Challenge is invalid or incomplete");
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	
+	std::int64_t challenge_id = m_DB.AddChallenge(std::move(challenge.value()));
+	m_DB.JoinChallenge(id, challenge_id, today);
+	m_DB.SaveChallengeToFile(challenge_id);
+	m_DB.SaveUserToFile(id);
+
+	Ok(resp, "Challenge added");
+}
+
+void HttpApiServer::JoinChallenge(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t challenge = GetIdParam(req, "challenge").value_or(0);
+
+	if (!id || !challenge) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+	
+	auto today = DateUtils::Now();
+
+	if(m_DB.JoinChallenge(id, challenge, today))
+		m_DB.SaveChallengeToFile(challenge);
+
+	Ok(resp, "Joined challenge");
+}
+
+void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t challenge = GetIdParam(req, "challenge").value_or(0);
+
+	if (!id || !challenge) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id) || !m_DB.IsInChallenge(id, challenge)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+
+	auto participants = m_DB.GetChallengeParticipant(challenge, today, [&](std::int64_t user) -> std::string {
+		try {
+			auto chat = m_Bot.getApi().getChat(user);
+
+			return chat->firstName + ' ' + chat->lastName;
+		} catch (...) {
+			return "";
+		}
+	});
+	
+	resp.status = 200;
+	resp.set_content(nlohmann::json(participants).dump(), "application/json");
+}
+
 void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetIdParam(req, "id").value_or(0);
 	std::string item = GetParam(req, "item").value_or("");
@@ -800,6 +892,25 @@ void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) 
 
 	LogTelegramBridge(Error, "Bad request: item %, id %", item, id);
 	resp.status = httplib::StatusCode::BadRequest_400;
+}
+
+void HttpApiServer::GetPlaceholder(const httplib::Request& req, httplib::Response& resp){
+	std::string text = GetParam(req, "text").value_or("");
+
+	if (!text.size()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	auto placeholder = GetOrDownloadPlaceholder(text, "");
+
+	if (placeholder.size()) {
+		resp.status = httplib::StatusCode::OK_200;
+		resp.set_content(placeholder, "image/png");
+	}else{
+		resp.status = httplib::StatusCode::NotFound_404;
+		resp.set_content("Failed to fetch avatar", "text/plain");
+	}
 }
 
 const std::string& HttpApiServer::GetOrDownloadTgFile(const std::string& id) {
@@ -873,8 +984,9 @@ void HttpApiServer::RegenerateExtendedCache(){
 	
 	for (std::int64_t id: m_DB.GetUsers()) {
 		auto &user = m_DB.GetUser(id, today);
+		auto challenges = m_DB.ChallengesWithoutIds(id);
 
-		auto descrs = user.ActiveStreakDescriptions(today);
+		auto descrs = m_DB.ActiveStreaksDescriptions(id, today);
 
 		GetOrGenerateExtended(descrs);
 	}
@@ -883,25 +995,41 @@ void HttpApiServer::RegenerateExtendedCache(){
 void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Response& resp){
 	auto today = DateUtils::Now();
 
+	for (const auto &[challenge_id, challenge] : m_DB.Challenges()) {
+		if(challenge.GetStatus(today) != ChallengeStatus::Running)
+			continue;
+
+		for (std::int64_t user_id : challenge.GetParticipants()) {
+			
+			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today)){
+				m_Notifications.push_back({
+					user_id,
+					Format("😡 You're about to lose in '%' challenge, commit instead!", challenge.GetName()),
+					today
+				});
+			}
+		}
+	}
+
 	for (auto id: m_DB.GetUsers()) {
 		auto &user = m_DB.GetUser(id, today);
 
-		if(user.AreActiveProtected(today))
+		if(m_DB.ActiveProtected(id, today))
 			continue;
 
-		if (!user.AreActiveProtected(today) && user.AreActiveProtected(DateUtils::Yesterday(today))) {
-			bool can_be_freezed = user.AvailableFreezes(today).size();
+		if (!m_DB.ActiveProtected(id, today) && m_DB.ActiveProtected(id, DateUtils::Yesterday(today)) && m_DB.ActiveStreak(id, today)) {
+			bool can_be_freezed = user.HasSomethingToFreeze(today) && user.AvailableFreezes(today).size();
 
 			std::string message = 
 				can_be_freezed
 					? Format(UTF8("😡 The day is almost over! Don't waste your streak freeze, commit instead!"))
-					: Format(UTF8("😡 The day is almost over, don't lose your % days streak!"), user.ActiveCount(today));
+					: Format(UTF8("😡 The day is almost over, don't lose your % days streak!"), m_DB.ActiveStreak(id, today));
 
 			m_Notifications.push_back({id, message, today});
 			continue;
 		} 
 		
-		if (user.ActivePendingStreaks(today).size()) {
+		if (m_DB.ActivePendingStreaks(id, today).size()) {
 			m_Notifications.push_back({id, UTF8("😏 Don't let go, finish what you've started!"), today});
 			continue;
 		}
@@ -911,19 +1039,35 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 void HttpApiServer::OnMomentBeforeNewDay(const httplib::Request& req, httplib::Response& resp){
 	auto today = DateUtils::Now();
 
+	for (const auto &[challenge_id, challenge] : m_DB.Challenges()) {
+		if(challenge.GetStatus(today) != ChallengeStatus::Running)
+			continue;
+
+		for (std::int64_t user_id : challenge.GetParticipants()) {
+			
+			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today)){
+				m_Notifications.push_back({
+					user_id,
+					Format("😱 You're about to lose in '%' challenge!!! Commit now!", challenge.GetName()),
+					today
+				});
+			}
+		}
+	}
+
 	for (auto id: m_DB.GetUsers()) {
 		auto &user = m_DB.GetUser(id, today);
 
-		if(user.AreActiveProtected(today))
+		if(m_DB.ActiveProtected(id, today))
 			continue;
 
-		if (!user.AreActiveProtected(today) && user.AreActiveProtected(DateUtils::Yesterday(today))) {
-			bool can_be_freezed = user.AvailableFreezes(today).size();
+		if (!m_DB.ActiveProtected(id, today) && m_DB.ActiveProtected(id, DateUtils::Yesterday(today)) && m_DB.ActiveStreak(id, today)) {
+			bool can_be_freezed = user.HasSomethingToFreeze(today) && user.AvailableFreezes(today).size();
 
 			std::string message = 
 				can_be_freezed
 					? Format(UTF8("😱 Can't wait anymore!!! Commit now or lose your streak freeze!"))
-					: Format(UTF8("😱 Can't wait anymore!!! Commit now or lose your % days streak!"), user.ActiveCount(today));
+					: Format(UTF8("😱 Can't wait anymore!!! Commit now or lose your % days streak!"), m_DB.ActiveStreak(id, today));
 
 			m_Notifications.push_back({id, message, today});
 			continue;
@@ -935,6 +1079,17 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 	auto today = DateUtils::Now();
 	auto yesterday = DateUtils::Yesterday(today);
 
+	for (const auto &[challenge_id, challenge] : m_DB.Challenges()) {
+		for (std::int64_t user_id : challenge.GetParticipants()) {
+			
+			if(m_DB.HasLost(user_id, challenge_id, today) && !m_DB.HasLost(user_id, challenge_id, yesterday))
+				m_Notifications.push_back({
+					user_id,
+					Format("😭 You've lost in '%' challenge...", challenge.GetName()),
+					today
+				});
+		}
+	}
 
 	for (auto id: m_DB.GetUsers()) {
 		const auto &user = m_DB.GetUser(id, today);
@@ -955,23 +1110,24 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 		if (user.IsFreezedByAt(yesterday, FreezeUsedBy::Auto)) {
 			m_Notifications.push_back({
 				id,
-				Format(UTF8("🥶 Whoa, saved your % days streak with a freeze, be careful next time!"), user.ActiveCount(today)),
+				Format(UTF8("🥶 Whoa, saved your % days streak with a freeze, be careful next time!"), m_DB.ActiveStreak(id, today)),
 				today
 			});
 		}
 
-		if (user.ActiveCount(yesterday) && !user.AreActiveProtected(yesterday)) {
-			auto active = user.ActiveStreaks(today);
+		if (m_DB.ActiveStreak(id, yesterday) && !m_DB.ActiveProtected(id, yesterday)) {
+			auto active = m_DB.ActiveStreaks(id, today);
 
 			m_Notifications.push_back({
 				id,
-				Format(UTF8("😭 You've lost your % days active streak...\n😜 Remember that you still have % streaks to protect!"), user.ActiveCount(yesterday), active.size()),
+				Format(UTF8("😭 You've lost your % days active streak...\n😜 Remember that you still have % streaks to protect!"), m_DB.ActiveStreak(id, yesterday), active.size()),
 				today
 			});
 		}
 	}
-
-	RegenerateExtendedCache();
+	
+	if(m_RegenerateExtendedCache)
+		RegenerateExtendedCache();
 }
 
 void HttpApiServer::GetNotifications(const httplib::Request& req, httplib::Response& resp){

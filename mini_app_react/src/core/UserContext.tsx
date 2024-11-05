@@ -1,6 +1,7 @@
 import { addDays, differenceInDays, getDaysInMonth } from "date-fns"
 import React, { Dispatch, SetStateAction, useContext } from "react"
 import { GetAvailableFreezes, GetFullUser } from "../helpers/Requests"
+import { ChallengeWithPayloadType } from "./Challenge"
 import { StreakType } from "./Streak"
 import { ParseUserContextType } from "./UserContextSerialization"
 
@@ -14,7 +15,8 @@ export class StreakFreezeType {
 export enum ProtectionType {
 	None,
 	Commit,
-	Freeze
+	Freeze,
+	NothingToProtect
 }
 
 export const ProtectionAt = (date: Date, history: ProtectionType[], start: Date): ProtectionType => {
@@ -33,6 +35,7 @@ export class UserContextType{
 	public Streak: number = 0
 	public StreakStart: Date = new Date(0, 0, 0)
 	public Streaks: Array<StreakType> = []
+	public Challenges: Array<ChallengeWithPayloadType> = []
 
 	public AvailableFreezes: Array<number> = []
 
@@ -67,7 +70,7 @@ export class UserContextType{
 	public AreActiveProtected(): boolean {
 		let isProtected = true
 		this.Streaks.forEach((streak) => {
-			if (streak.Active() && !streak.IsProtectedAt(this.Today))
+			if (streak.IsRequired() && !streak.IsProtectedAt(this.Today))
 				isProtected = false
 		})
 
@@ -92,6 +95,10 @@ export class UserContextType{
 
 	public IsAFriend(id: number): boolean {
 		return this.Friends.find(e => e === id) !== undefined
+	}
+
+	public GetRunningChallenges(): Array<ChallengeWithPayloadType> {
+		return this.Challenges.filter(c => c.IsRunning(this.Today) && !c.HasLost)
 	}
 }
 
