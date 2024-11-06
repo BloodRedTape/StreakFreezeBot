@@ -1,19 +1,18 @@
-import { Button, Checkbox, IconButton, Input, Modal, Section, Text, Title } from "@xelene/tgui";
+import { Button, Checkbox, IconButton, Input, Section, Text } from "@xelene/tgui";
 import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle";
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive";
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close";
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit";
 import { CSSProperties, useState } from "react";
 import { Entry } from "../core/Entry";
-import { ForegroundColor } from "../helpers/Theme"
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { ErrorPopupFromJson, FetchPendingSubmition, GetPostMessageContent, GetPostMessageType, JsonFromResp, PostAddStreak, PostCommit, PostMessageType, PostPendingSubmition, PostRemoveStreak } from "../helpers/Requests";
 import { GetCalendarStatImageLinkFor } from "../helpers/Resources";
-import { CalendarWithSelector, GetAnchorDate, MonthStats, StatEntryType } from "./Calendar";
 import { ExtendedStreakModal } from "./ExtendedStreak";
 import { Img } from "../core/Img";
 import { ExtendedType, ParseExtendedType } from "../core/Extended";
+import { useNavigate } from "react-router";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -50,50 +49,6 @@ const StreaksHeader: React.FC<{ icon: JSX.Element, text: string, onAction: () =>
 	return Header;
 }
 
-const StreakEntryModal: React.FC<{ streak: StreakType }> = ({ streak }) => {
-	let [anchor, setAnchor] = useState(GetAnchorDate())
-
-	const stats: StatEntryType[] = [
-		{
-			Name: 'Commited',
-			Value: streak.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
-			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Commit)
-		},
-		{
-			Name: 'Freezed',
-			Value: streak.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0,
-			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Freeze)
-		}
-	]
-	
-
-
-	return (
-		<div style={{paddingBottom: '10%'}}>
-			<div style={{ padding: '5%' }}>
-				<div style={{display: 'flex', alignItems: 'center', justifyItems: 'space-between'}}>
-					<Title weight="1">Streak '{streak.Description}'</Title>
-					<Modal.Close>
-						<IconButton size='s' mode='plain'><Icon28Close /></IconButton>
-					</Modal.Close>
-				</div>
-				<br/>
-				<Text weight="2">{streak.Count ? `Is ${streak.Count} days long` : 'Is inactive now, commit to activate it'}</Text>
-				<br/>
-			</div>
-			<CalendarWithSelector
-				today={anchor}
-				onDateChanged={setAnchor}
-				afterSelector={
-					<MonthStats stats={stats} />
-				}
-				history={streak.History}
-				start={streak.Start}
-			/>
-		</div>
-	)
-}
-
 type OnChangeMode = () => void
 
 const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }) => {
@@ -103,6 +58,7 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 	const [fetched, setFetched] = useState(false)
 	const [toCommit, setToCommit] = useState<number[]>([])
 	const [extended, setExtended] = useState<ExtendedType>()
+	const navigate = useNavigate()
 
 	if (!fetched) {
 		FetchPendingSubmition()
@@ -148,23 +104,22 @@ const StreaksUsage: React.FC<{ onChangeMode: OnChangeMode }> = ({ onChangeMode }
 			/>
 		)
 
-		const EntryContent = (
+		const OnOpen = () => {
+			if (streak.Challenge)
+				navigate('/challenge/' + streak.Challenge)
+			else
+				navigate('/streak/' + streak.Id)
+		}
+
+		return (
 			<Entry
-				before={<div style={AlignCenterStyle}>{ Box }</div>}
-				after={IsFreezed ? FreezeIcon :<IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
+				before={<div style={AlignCenterStyle}>{Box}</div>}
+				after={IsFreezed ? FreezeIcon : <IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
 				style={{ paddingLeft: '10px' }}
+				onClick={OnOpen}
 			>
 				<EntryText text={streak.Description}/>
 			</Entry>
-		)
-
-		return (
-			<Modal
-				trigger={EntryContent}
-				style={{background: ForegroundColor()} }
-			>
-				<StreakEntryModal streak={streak}/>
-			</Modal>
 		)
 	}
 

@@ -13,6 +13,7 @@ import { NextUIProvider } from "@nextui-org/react";
 import { Route, Routes, useHref, useLocation, useNavigate } from 'react-router';
 import { ChallengeInfoPage } from './components/ChallengeInfo';
 import { ChallengeInput } from './components/ChallengeInput';
+import { StreakInfoPage } from './components/StreakInfo';
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ export const App = () => {
                                 <Route path="/" element={ActualAppContent} />
                                 <Route path="/new_challenge" element={<ChallengeInput/>} />
                                 <Route path="/challenge/:id" element={<ChallengeInfoPage/>} />
+                                <Route path="/streak/:id" element={<StreakInfoPage/>} />
                             </Routes>
                         </AppRoot>
                     </main>

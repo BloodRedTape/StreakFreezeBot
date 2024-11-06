@@ -1,11 +1,15 @@
 import { Text, Section, Avatar, Cell } from "@xelene/tgui"
 import { useQuery } from "react-query"
 import { ChallengeParticipantType, ChallengeWithPayloadType } from "../core/Challenge"
+import { useGetUserContext } from "../core/UserContext"
 import { FetchChallengeParticipants, GatherCurrentUserId, ProfilePhotoUrlFor } from "../helpers/Requests"
 import { ForegroundColor } from "../helpers/Theme"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
 
 const ChallengeParticipant: React.FC<{ participant: ChallengeParticipantType, challenge: ChallengeWithPayloadType }> = ({ participant, challenge }) => {
+	const userContext = useGetUserContext()
+
+	const today = userContext?.Today ?? new Date()
 
 	const Icon = (
 		<Avatar
@@ -31,7 +35,7 @@ const ChallengeParticipant: React.FC<{ participant: ChallengeParticipantType, ch
 	return (
 		<Cell
 			before={Icon}
-			subtitle={Progress}
+			subtitle={challenge.IsPending(today) ? undefined : Progress}
 			style={{background: ForegroundColor()}}
 		>
 			<Text

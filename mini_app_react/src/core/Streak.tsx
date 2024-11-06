@@ -9,7 +9,7 @@ export class StreakType{
 	public Start: Date = new Date(0, 0, 0)
 	public Count: number = 0
 	public Id: number = -1
-	public Challenge: number = -1
+	public Challenge: number = 0
 	public Required: boolean = false
 	public Freezable: boolean = false
 
@@ -66,7 +66,7 @@ export const ParseStreakType = (data: any): StreakType => {
 	streak.Start = FromApiDate(data.Start)
 	streak.Count = data.Count ?? 0;
 	streak.Id = data.Id ?? -1
-	streak.Challenge = data.Challenge ?? -1
+	streak.Challenge = data.Challenge ?? 0
 	streak.Required = data.Required ?? false
 	streak.Freezable = data.Freezable ?? false
 
