@@ -90,7 +90,7 @@ export const ChallengesSection = () => {
 	const Finished = userContext?.Challenges?.filter(c=> !Running.includes(c) && !Pending.includes(c)) ?? []
 
 	return (
-		<div>
+		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
 			{Header}
 			{ MakeChallengeSection('Running', Running) }
 			{ MakeChallengeSection('Pending', Pending) }

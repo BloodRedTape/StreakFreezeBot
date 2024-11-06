@@ -14,6 +14,9 @@ import { Route, Routes, useHref, useLocation, useNavigate } from 'react-router';
 import { ChallengeInfoPage } from './components/ChallengeInfo';
 import { ChallengeInput } from './components/ChallengeInput';
 import { StreakInfoPage } from './components/StreakInfo';
+import { StreakEdit } from './components/StreakEdit';
+import { ChallengesSection } from './components/ChallengesSection';
+import { FreezePage } from './components/FreezeSection';
 
 const queryClient = new QueryClient();
 
@@ -74,6 +77,9 @@ export const App = () => {
                                 <Route path="/new_challenge" element={<ChallengeInput/>} />
                                 <Route path="/challenge/:id" element={<ChallengeInfoPage/>} />
                                 <Route path="/streak/:id" element={<StreakInfoPage/>} />
+                                <Route path="/edit_streaks" element={<StreakEdit/>} />
+                                <Route path="/edit_challenges" element={<ChallengesSection/>} />
+                                <Route path="/edit_freezes" element={<FreezePage/>} />
                             </Routes>
                         </AppRoot>
                     </main>

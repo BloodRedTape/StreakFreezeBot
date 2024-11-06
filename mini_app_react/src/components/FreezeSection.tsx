@@ -31,3 +31,11 @@ export const FreezeSection = () => {
 		</div>
 	)
 }
+
+export const FreezePage = () => {
+	return (
+		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
+			<FreezeSection/>
+		</div>
+	)
+}

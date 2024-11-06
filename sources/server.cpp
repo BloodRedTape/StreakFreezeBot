@@ -225,6 +225,8 @@ void HttpApiServer::RemoveStreak(const httplib::Request& req, httplib::Response&
 
 	for (std::int64_t streak_id: streaks)
 		user.RemoveStreak(streak_id);
+
+	Ok(resp, "Removed");
 }
 
 void HttpApiServer::PostPendingSubmition(const httplib::Request& req, httplib::Response& resp){

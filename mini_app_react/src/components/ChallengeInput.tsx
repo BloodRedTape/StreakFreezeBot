@@ -1,6 +1,4 @@
-import { Button, IconButton, Text} from "@xelene/tgui"
-import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
-import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
+import { Button, Text} from "@xelene/tgui"
 import { useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { ErrorPopupFromJson, JsonFromResp, PostNewChallenge } from "../helpers/Requests"
@@ -8,8 +6,8 @@ import { DateInput } from "@nextui-org/date-input";
 import { Input } from "@nextui-org/input";
 import { useNavigate } from "react-router"
 import { Spacer } from "@nextui-org/spacer";
-import { Listbox, ListboxItem } from "@nextui-org/react"
 import { DateValue, CalendarDate, CalendarDateTime, ZonedDateTime } from '@internationalized/date';
+import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
 
 const FromDateInputDate = (date: DateValue) => {
 	if (date instanceof CalendarDate || date instanceof CalendarDateTime || date instanceof ZonedDateTime) {
@@ -46,13 +44,31 @@ export const ChallengeInput = () => {
 	const [name, setName] = useState<string>("")
 	const [date, setStartDate] = useState<DateValue>(ToDateInputDate(today))
 	const [duration, setDuration] = useState<number>(1)
-	const [entry, setEntry] = useState<string>("")
 	const [toDo, setToDo] = useState<string[]>([])
 
 	const navigate = useNavigate()
 	
 	const Refresh = () => {
 		FetchUserContext().then(setUserContext)
+	}
+
+	const MakeEntry = (toDo: string, index: number): ToDoEntry => {
+		const entry: ToDoEntry = {
+			Id: index,
+			Name: toDo,
+			Removable: true
+		}
+		return entry
+	}
+
+	const Entries = toDo.map(MakeEntry)
+
+	const OnAddEntry = (entry: string) => {
+		setToDo(toDo.concat([entry]))	
+	}
+
+	const OnRemoveEntry = (entry: ToDoEntry) => {
+		setToDo(toDo.filter(e => e !== entry.Name))
 	}
 
 	const OnNewChallenge = () => {
@@ -65,60 +81,6 @@ export const ChallengeInput = () => {
 
 		PostNewChallenge(name, ourDate, duration, toDo).then(JsonFromResp).then(OnJson).then(Refresh);
 	}
-
-	const MakeRemoveEntryButton = (entry: string) => {
-		const OnRemove = () => {
-			setToDo(
-				toDo.filter(e => e !== entry)
-			)
-		}
-
-		return (
-			<IconButton size='s' mode='plain' onClick={OnRemove}>
-				<Icon28Close/>
-			</IconButton>
-		)
-	}
-
-	
-	const CanAddEntry = !toDo?.includes(entry);
-
-	const OnAddEntry = () => {
-		if (entry.length === 0 || !CanAddEntry)
-			return
-
-		setToDo(toDo.concat([entry]))
-		setEntry("")
-	}
-
-	const AddCurrentEntry = (
-		<IconButton
-			size='s'
-			mode='plain'
-			onClick={OnAddEntry}
-			style={{ marginLeft: 'auto', marginRight: '0px' }}
-		>
-			<Icon28AddCircle />
-		</IconButton>
-	)
-
-	const ValidateToDoEntry = (e: any) => {
-		if (toDo.includes(e))
-			return `'${e}' is already in todo list`
-
-		return true
-	}
-
-	const EditCurrentEntry = (
-		<Input
-			placeholder="Clean your house!"
-			value={entry}
-			onChange={e => setEntry(e.target.value)}
-			style={{ marginLeft: '0px', marginRight: '0px' }}
-			validate={ValidateToDoEntry}
-			endContent={AddCurrentEntry }
-		/>
-	)
 
 	const DefaultSpacer = (<Spacer y={3}/>)
 
@@ -160,22 +122,11 @@ export const ChallengeInput = () => {
 
 			{DefaultSpacer}
 
-			<Listbox
-				items={toDo.map(e => { return { Name: e } })}
-			>
-				{(item) => (
-					<ListboxItem
-						key={item.Name}
-						endContent={MakeRemoveEntryButton(item.Name)}
-					>
-						{item.Name}
-					</ListboxItem>
-				)}
-			</Listbox>
-
-			{DefaultSpacer}
-
-			{ EditCurrentEntry }
+			<ToDoEdit
+				entries={Entries}
+				addEntry={OnAddEntry }
+				removeEntry={OnRemoveEntry }
+			/>
 
 			{DefaultSpacer}
 

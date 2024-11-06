@@ -6,9 +6,10 @@ export interface EntryProps extends BaseHTMLAttributes<HTMLDivElement> {
     after?: ReactNode
     afterFloatLeft?: boolean
     childrenBoxStyle?: CSSProperties
+    onContentClick?: ()=>void
 }
 
-export const Entry: React.FC<React.PropsWithChildren<EntryProps>> = ({children, before, after, afterFloatLeft, style, childrenBoxStyle, ...restProps}) => {
+export const Entry: React.FC<React.PropsWithChildren<EntryProps>> = ({children, before, after, afterFloatLeft, style, childrenBoxStyle, onContentClick, ...restProps}) => {
     const commonChildStyle: CSSProperties = {
         display: 'inline-block',
         marginTop: 'auto',
@@ -31,7 +32,7 @@ export const Entry: React.FC<React.PropsWithChildren<EntryProps>> = ({children, 
             <div style={commonChildStyle}>
                 {before}
             </div>
-            <div style={{flex: '1', overflow: 'hidden', ...commonChildStyle, ...childrenBoxStyle}}>
+            <div onClick={ onContentClick} style={{flex: '1', overflow: 'hidden', ...commonChildStyle, ...childrenBoxStyle}}>
                 {children}
             </div>
             <div style={afterFloatLeft ?? false ? { ...commonChildStyle } : { ...commonChildStyle, ...floatRight }}>

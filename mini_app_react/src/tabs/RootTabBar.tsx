@@ -2,11 +2,9 @@ import { Tabbar } from '@xelene/tgui';
 import { Icon28Stats } from "@xelene/tgui/dist/icons/28/stats"
 import { Icon28Chat } from "@xelene/tgui/dist/icons/28/chat"
 import { Icon28Heart } from "@xelene/tgui/dist/icons/28/heart"
-import { Icon28Attach } from "@xelene/tgui/dist/icons/28/attach"
 import { CommitTab } from './CommitTab';
 import { FriendsTab } from './FriendsTab';
 import { StreakTab } from './StreakTab';
-import { ChallengesTab } from './ChallengesTab';
 
 class Tab {
     public Id: number = 0
@@ -17,9 +15,8 @@ class Tab {
 
 const tabs: Array<Tab> = [
     {Id: 0, Name: "Streak",  Content: <StreakTab/>, Icon:  <Icon28Stats /> },
-    {Id: 1, Name: "Challenge", Content: <ChallengesTab/>, Icon: <Icon28Attach/>},
-    {Id: 2, Name: "Commit",  Content: <CommitTab/>, Icon: <Icon28Heart/> },
-    {Id: 3, Name: "Friends", Content: <FriendsTab/>, Icon: <Icon28Chat/>},
+    {Id: 1, Name: "Commit",  Content: <CommitTab/>, Icon: <Icon28Heart/> },
+    {Id: 2, Name: "Friends", Content: <FriendsTab/>, Icon: <Icon28Chat/>},
 ];
 
 const CurrentTab = (Id: number) => {
