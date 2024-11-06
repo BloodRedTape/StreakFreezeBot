@@ -14,10 +14,18 @@ module.exports = {
     extend: {},
   },
   darkMode: "class",
-  plugins: [nextui({
-      prefix: "nextui", // prefix for themes variables
-      addCommonColors: false, // override common colors (e.g. "blue", "green", "pink").
-      defaultTheme: "light", // default theme from the themes object
-      defaultExtendTheme: "light", // default theme to extend on custom themes
+    plugins: [nextui({
+        layout: {
+            fontSize: {
+                tiny: "0.75rem", // text-tiny
+                small: "1.100rem", // text-small
+                medium: "1.250rem", // text-medium
+                large: "1.5rem", // text-large
+            },
+        },
+        prefix: "nextui", // prefix for themes variables
+        addCommonColors: false, // override common colors (e.g. "blue", "green", "pink").
+        defaultTheme: "light", // default theme from the themes object
+        defaultExtendTheme: "light", // default theme to extend on custom themes
   })],
 };

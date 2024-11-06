@@ -1,9 +1,11 @@
-import { Avatar, Text } from "@xelene/tgui"
+import { Text } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useParams } from "react-router"
 import { ChallengeWithPayloadType } from "../core/Challenge"
+import { Header } from "../core/Header"
 import { useGetUserContext } from "../core/UserContext"
-import {  PlaceholderUrlFor } from "../helpers/Requests"
+import { MakeChallengeInviteLink } from "../helpers/Challenges"
+import { ChallengeHeader } from "./ChallengeHeader"
 import { ChallengeParticipantList } from "./ChallengeParticipant"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
 
@@ -30,26 +32,35 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 
 	const Status = challenge.IsPending(today) ? PendingStatus : challenge.IsRunning(today) ? StartedStatus : FinishedStatus
 
+	const ShareInviteLink = () => {
+		const link = MakeChallengeInviteLink(challenge.Id)
+
+		if (link === undefined)
+			return
+
+		const text = `Join me on '${challenge.Name}' challenge in StreakFreeze!`
+
+		const telegramLink = `https://t.me/share/url?url=${link}&text=${text}`
+
+		window.Telegram?.WebApp.openTelegramLink(telegramLink)
+	}
+
 	return (
 		<div style={{padding: '5%'}}>
-			<div style={{ paddingTop: '10px', paddingBottom: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-				<Avatar
-					size={48}
-					src={PlaceholderUrlFor(challenge.Name)}
-					style={{
-						marginLeft: 'auto',
-						marginRight: 'auto'
-					}}
-				/>
-				<Text
-					weight="2"
-					style={{ textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}
-				>
-					{challenge.Name}
-				</Text>
-			</div>
+			<ChallengeHeader challenge={challenge}/>
 
 			{ Status }
+
+			<Header
+				title="Participants"
+				actions={[
+					{
+						text: "Invite",
+						icon: <div />,
+						onAction: ShareInviteLink
+					}
+				]}
+			/>
 
 			<ChallengeParticipantList challenge={challenge}/>
 		</div>

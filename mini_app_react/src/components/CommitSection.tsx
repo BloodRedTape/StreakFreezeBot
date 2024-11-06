@@ -1,8 +1,6 @@
-import { Button, Checkbox, IconButton, Section, Text } from "@xelene/tgui";
-import { Icon28Close } from "@xelene/tgui/dist/icons/28/close";
+import { Button, Checkbox, Text } from "@xelene/tgui";
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit";
 import { CSSProperties, useState } from "react";
-import { Entry } from "../core/Entry";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { ErrorPopupFromJson, FetchPendingSubmition, GetPostMessageContent, GetPostMessageType, JsonFromResp, PostCommit, PostMessageType, PostPendingSubmition } from "../helpers/Requests";
@@ -12,6 +10,7 @@ import { Img } from "../core/Img";
 import { ExtendedType, ParseExtendedType } from "../core/Extended";
 import { useNavigate } from "react-router";
 import { Header } from "../core/Header";
+import { Listbox, ListboxItem } from "@nextui-org/react";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -80,33 +79,35 @@ const StreakUsage = () => {
 		}
 
 		return (
-			<Entry
-				before={<div style={AlignCenterStyle}>{Box}</div>}
-				after={IsFreezed ? FreezeIcon : <IconButton style={{ visibility: 'hidden' }} size='s' mode='plain' disabled={true} ><Icon28Close /></IconButton>}
-				style={{ paddingLeft: '10px' }}
-				onContentClick={OnOpen}
+			<ListboxItem
+				key={streak.Description}
+				endContent={IsFreezed ? FreezeIcon : undefined}
+				startContent={<div style={AlignCenterStyle}>{Box}</div>}
 			>
-				<EntryText
-					text={streak.Description}
-				/>
-			</Entry>
+				<div onClick={OnOpen}>
+					{streak.Description}
+				</div>
+			</ListboxItem>
 		)
 	}
 
 	const MakeSection = (name: string, streaks: StreakType[], challenge: boolean = false) => {
-		const EntriesStyle: CSSProperties = {
-			paddingTop: '5px',
-			paddingBottom: '5px',
-		}
-
 		const ShowName = challenge ? streaks.length > 1 : streaks.length > 0
 
+		if (!streaks.length)
+			return undefined
+
 		return (
-			<div>
-				{ShowName ? <Text weight="3">{name}</Text> : null}
-				<Section style={EntriesStyle}>
-					{streaks.map(MakeStreakEntry)}
-				</Section>
+			<div style={{paddingTop: '10px', paddingBottom: '10px'}}>
+				{ShowName ? <Text weight="3" style={{paddingBottom: '5px'}}>{name}</Text> : null}
+				<Listbox 
+					items={streaks}
+					className="bg-content2 rounded-small"
+					emptyContent={<div />}
+					itemClasses={{ base: "h-9" }}
+				>
+					{MakeStreakEntry}
+				</Listbox>
 			</div>
 		)
 	}

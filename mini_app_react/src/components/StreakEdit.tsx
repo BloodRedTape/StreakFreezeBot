@@ -36,7 +36,7 @@ export const StreakEdit = () => {
 	}
 
 	return (
-		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
+		<div style={{ paddingLeft: '5%', paddingRight: '5%', height: '100vh', overflowY: 'scroll' }}>
 			<Text weight="2">{'Streaks'}</Text>
 			<div style={{ paddingTop: '5px' }}>
 				<ToDoEdit

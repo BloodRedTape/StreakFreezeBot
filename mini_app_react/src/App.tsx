@@ -6,7 +6,6 @@ import { FriendRequestModal } from './components/FriendRequest';
 import { FetchUserContext, UserContext, UserContextType } from './core/UserContext';
 import { DebugLog } from './helpers/Debug';
 import { TryParseInviteLink } from './helpers/Friends';
-import { BackgroundColor } from './helpers/Theme';
 import { OnEveryHour } from './helpers/Time';
 import { RootTabBar } from './tabs/RootTabBar';
 import { NextUIProvider } from "@nextui-org/react";
@@ -66,11 +65,10 @@ export const App = () => {
     }, [location.pathname]);
 
     return (
-        <div style={{ background: BackgroundColor(), height: '100vh'}}>
-        <QueryClientProvider client={queryClient}>
-            <UserContext.Provider value={[userContext, setUserContext]}>
-                <NextUIProvider navigate={navigate} useHref={useHref}>
-                    <main className={`${window.Telegram?.WebApp.colorScheme ?? "light"} text-foreground bg-background`}>
+        <NextUIProvider navigate={navigate} useHref={useHref}>
+            <main className={`${window.Telegram?.WebApp.colorScheme ?? "light"} text-foreground bg-background`}>
+                <QueryClientProvider client={queryClient}>
+                    <UserContext.Provider value={[userContext, setUserContext]}>
                         <AppRoot>
                             <Routes>
                                 <Route path="/" element={ActualAppContent} />
@@ -82,10 +80,9 @@ export const App = () => {
                                 <Route path="/edit_freezes" element={<FreezePage/>} />
                             </Routes>
                         </AppRoot>
-                    </main>
-                </NextUIProvider>
-            </UserContext.Provider>
-        </QueryClientProvider>
-        </div>
+                    </UserContext.Provider>
+                </QueryClientProvider>
+            </main>
+        </NextUIProvider>
     )
 }
