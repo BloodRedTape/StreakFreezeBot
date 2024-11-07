@@ -9,10 +9,6 @@ export class FriendType{
 	public TodayProtection: ProtectionType = 0	
 	public Username: string = ""
 	public FullName: string = ""
-
-	public IsValid(): boolean{
-		return this.Id !== 0
-	}
 }
 
 export const ParseFriendType = (data: any): FriendType => {

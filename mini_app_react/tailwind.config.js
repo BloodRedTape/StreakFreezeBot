@@ -17,7 +17,7 @@ module.exports = {
     plugins: [nextui({
         layout: {
             fontSize: {
-                tiny: "0.75rem", // text-tiny
+                tiny: "0.950rem", // text-tiny
                 small: "1.100rem", // text-small
                 medium: "1.250rem", // text-medium
                 large: "1.5rem", // text-large

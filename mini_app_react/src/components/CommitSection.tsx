@@ -105,6 +105,7 @@ const StreakUsage = () => {
 					className="bg-content2 rounded-small"
 					emptyContent={<div />}
 					itemClasses={{ base: "h-9" }}
+					shouldHighlightOnFocus={false}
 				>
 					{MakeStreakEntry}
 				</Listbox>
@@ -181,15 +182,15 @@ const StreakUsage = () => {
 				title={"Streaks"}
 				actions={[
 					{
-						icon: <div/>,
-						text: "Freezes",
-						onAction: () => navigate('/edit_freezes')
-					},
-					{
 						icon: <Icon28Edit />,
 						text: "",
 						onAction: () => navigate('/edit_streaks')
 					},
+					{
+						icon: <div/>,
+						text: "Freezes",
+						onAction: () => navigate('/edit_freezes')
+					}
 				]}
 			/>
 			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()))}

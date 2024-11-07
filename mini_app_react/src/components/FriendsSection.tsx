@@ -1,30 +1,21 @@
-import { Button, Placeholder, Avatar, Text, Cell, Section } from "@xelene/tgui"
-import React, { CSSProperties, useState } from "react"
+import { Button, Placeholder, Avatar, Text } from "@xelene/tgui"
+import { useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
 import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
-import { GetFriendStatusImageLinkFor } from "../helpers/Resources"
+import { GetFriendStatusImageLinkFor, ShareIcon } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
 import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
 import { NudgeButton } from "./Nudge"
-import { ForegroundColor } from "../helpers/Theme"
+import { Listbox, ListboxItem } from "@nextui-org/react"
+import { Header, HeaderActionButton } from "../core/Header"
 
-const AlignCenterStyle: CSSProperties = {
-	display: 'flex',
-	alignItems: 'center',
-	justifyContent: 'center'
-}
-
-const EntryText: React.FC<{ text: string }> = ({text}) => (
-	<Text weight="3" style={{marginLeft: '5px', textAlign: 'justify'}}>{text}</Text>
-)
-
-const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: boolean }> = ({ friend, onRemoved, isEdit }) => {
+const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolean) => {
 	const OnOpenProfile = () => {
 		window.Telegram?.WebApp.openTelegramLink('https://t.me/' + friend.Username)
 	}
@@ -35,6 +26,7 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 			src={ProfilePhotoUrlFor(friend.Id)}
 			fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
 			onClick={OnOpenProfile}
+			style={{marginLeft: '8px', marginRight: '8px'}}
 		/>
 	)
 
@@ -73,6 +65,12 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 		>
 			<Text
 				weight="2"
+				style={{
+					display: 'block',
+					whiteSpace: 'nowrap',
+					textOverflow: 'ellipsis',
+					overflow: 'hidden'
+				}}
 			>
 				{friend.FullName}
 			</Text>
@@ -80,16 +78,21 @@ const FriendEntry: React.FC<{ friend: FriendType, onRemoved: ()=>void, isEdit: b
 	)
 
 	const FriendSubheader = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`
-
+	const EndButton = (
+		<div style={{width: '100px'}}>
+			{ isEdit ? RemoveButton : (<NudgeButton friend={friend }/>) }
+		</div>
+	)
 	return (
-		<Cell
-			before={FriendAvatar}
-			after={isEdit ? RemoveButton : (<NudgeButton friend={friend }/>) }
-			subtitle={FriendSubheader}
-			style={{background: ForegroundColor()}}
+		<ListboxItem
+			key={friend.Id}
+			startContent={FriendAvatar}
+			endContent={EndButton}
+			description={FriendSubheader}
+			shouldHighlightOnFocus={false}
 		>
 			{ Header }
-		</Cell>
+		</ListboxItem>
 	)
 }
 
@@ -122,10 +125,6 @@ export const FriendsSection = () => {
 		window.Telegram?.WebApp.openTelegramLink(telegramLink)
 	}
 
-	const Friends = friends?.map(friend => (
-		<FriendEntry friend={friend} onRemoved={Refresh} isEdit={edit}/>
-	))
-
 	const FriendsPlaceholder = (
 		<Placeholder
 			action={<Button size="l" stretched onClick={OnInvite}>Share Invite Link</Button>}
@@ -140,58 +139,60 @@ export const FriendsSection = () => {
 		</Placeholder>
 	)
 
-	const EditButton = (
-		<Button
-			size='s'
-			mode='bezeled'
-			onClick={()=>setEdit(true)}
-			style={{ marginLeft: 'auto', marginRight: '0px' }}
-		>
-			<div style={AlignCenterStyle}>
-				<Icon28Edit/>
-				<EntryText text=" Edit"/>
-			</div>
-		</Button>
-	)
+	const EditButton: HeaderActionButton = {
+		text: "Edit",
+		icon: <Icon28Edit />,
+		onAction: () => setEdit(true)
+	};
 
-	const SaveButton = (
-		<Button
-			size="s"
-			mode="bezeled"
-			onClick={()=>setEdit(false)}
-			style={{ marginLeft: 'auto', marginRight: '0px' }}
-		>
-			<div style={AlignCenterStyle}>
-				<Icon28Archive/>
-				<EntryText text=" Save"/>
-			</div>
-		</Button>
-	)
+	const SaveButton: HeaderActionButton = {
+		text: "Save",
+		icon: <Icon28Archive />,
+		onAction: () => setEdit(false)
+	};
 
 	const SectionHeader = (
-		<div style={{display: 'flex', alignItems: 'center', justifyItems: 'space-between'}}>
-			<Text weight="2">Friends</Text>
-			{edit ? SaveButton : EditButton }
-		</div>
+		<Header
+			title="Friends"
+			actions={[
+				edit ? SaveButton : EditButton,
+				{
+					icon: <ShareIcon/>,
+					text: "Invite",
+					onAction: OnInvite
+				}
+			]}
+		/>
 	)
+
+	type FriendItemType = FriendType & { Edit: boolean }
+
+	const FriendItems: FriendItemType[] = (friends ?? []).map((friend) => {
+		const item: FriendItemType = {
+			...friend,
+			Edit: edit
+		}	
+		return item
+	})
 
 	const FriendsList = (
 		<div>
 			{ SectionHeader }
-			<Section
-				style={{marginTop: '10px', marginBottom: '10px'}}
+			<Listbox
+				items={FriendItems}
+				style={{ marginTop: '10px', marginBottom: '10px' }}
+				className="bg-content2 rounded-small"
+				emptyContent={<div />}
+				itemClasses={{ base: "h-16" }}
+				shouldHighlightOnFocus={false}
 			>
-				{Friends ?? <div></div>}
-			</Section>
-			{edit
-				? <Button onClick={OnInvite} stretched>Share Invite Link</Button>
-				: null
-			}
+				{(friend) => MakeFriendEntry(friend, Refresh, friend.Edit)}
+			</Listbox>
 		</div>
 	)
 
-	if (Friends === undefined)
+	if (friends === undefined)
 		return (<Loading/>)
 
-	return Friends.length === 0? FriendsPlaceholder : FriendsList
+	return friends.length === 0 ? FriendsPlaceholder : FriendsList
 }

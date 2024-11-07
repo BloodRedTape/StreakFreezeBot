@@ -55,8 +55,10 @@ export const StreakInfoPage = () => {
 
 	const numId = Number(id)
 
-	if(userContext === undefined || numId >= userContext.Streaks.length)
+	const streak = userContext?.Streaks.find(s => s.Id === numId)
+
+	if(streak === undefined)
 		return (<Text weight="2">Internal error, invalid streak id</Text>)
 
-	return (<StreakInfo streak={userContext.Streaks[numId]}/>)
+	return (<StreakInfo streak={streak}/>)
 }

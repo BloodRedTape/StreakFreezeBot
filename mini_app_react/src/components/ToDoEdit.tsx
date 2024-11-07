@@ -85,6 +85,7 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 				className="bg-content2 rounded-small"
 				emptyContent={<Text weight="3">Empty ToDo</Text>}
 				itemClasses={{base: "h-9"}}
+				shouldHighlightOnFocus={false}
 			>
 				{(item) => (
 					<ListboxItem

@@ -5,6 +5,7 @@ import { ChallengeWithPayloadType } from "../core/Challenge"
 import { Header } from "../core/Header"
 import { useGetUserContext } from "../core/UserContext"
 import { MakeChallengeInviteLink } from "../helpers/Challenges"
+import { ShareIcon } from "../helpers/Resources"
 import { ChallengeHeader } from "./ChallengeHeader"
 import { ChallengeParticipantList } from "./ChallengeParticipant"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
@@ -56,7 +57,7 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 				actions={[
 					{
 						text: "Invite",
-						icon: <div />,
+						icon: <ShareIcon/>,
 						onAction: ShareInviteLink
 					}
 				]}
