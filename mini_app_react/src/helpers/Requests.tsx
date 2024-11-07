@@ -1,5 +1,5 @@
 import { PopupParams, postEvent, retrieveLaunchParams } from "@telegram-apps/sdk-react";
-import { ChallengeParticipantType, ChallengeRulesType, ParseChallengeParticipantType } from "../core/Challenge";
+import { ChallengeParticipantType, ChallengeRulesType, ChallengeWithPayloadType, ParseChallengeParticipantType, ParseChallengeWithPayloadType } from "../core/Challenge";
 import { ToDoCompletion, ToDoDescription } from "../core/ToDo";
 import { ToApiDate } from "../core/UserContextSerialization";
 
@@ -249,12 +249,27 @@ export const PostNewChallenge = (name: string, start: Date, duration: number, to
 	})
 }
 
+export const PostJoinChallenge = (challenge: number) => {
+	return fetch(MakeUserRequestLocation() + '/challenges/join/' + challenge, {
+		method: 'POST',
+		headers: MakeTelegramAuthHeaders()
+	})
+}
+
 export const GetChallengeParticipants = (challenge: number) => {
 	return fetch(MakeUserRequestLocation() + '/challenges/participants/' + challenge, { headers: MakeTelegramAuthHeaders() })
 }
 
 export const FetchChallengeParticipants = (challenge: number): Promise<ChallengeParticipantType[]> => {
 	return GetChallengeParticipants(challenge).then(JsonFromResp).then(e => (e || []).map(ParseChallengeParticipantType))
+}
+
+export const GetChallengeInvitePreview = (challenge: number) => {
+	return fetch(MakeUserRequestLocation() + '/challenges/invite_preview/' + challenge, { headers: MakeTelegramAuthHeaders() })
+}
+
+export const FetchChallengeInvitePreview = (challenge: number): Promise<ChallengeWithPayloadType> => {
+	return GetChallengeInvitePreview(challenge).then(JsonFromResp).then(ParseChallengeWithPayloadType)
 }
 
 export const GetTgFullUserById = (id: number) => {

@@ -64,8 +64,9 @@ struct ChallengePayload {
 struct ChallengeParticipant {
 	std::int64_t Id = 0;
 	std::string FullName;
+	std::string Username;
 	std::int64_t Count = 0;
 	bool HasLost = false;
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ChallengeParticipant, Id, FullName, Count, HasLost)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ChallengeParticipant, Id, FullName, Username, Count, HasLost)
 };

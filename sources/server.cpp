@@ -79,6 +79,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/challenges/new", &ThisClass::NewChallenge);
 	Post("/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
 	Get ("/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
+	Get ("/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
@@ -792,10 +793,17 @@ void HttpApiServer::JoinChallenge(const httplib::Request& req, httplib::Response
 	
 	auto today = DateUtils::Now();
 
-	if(m_DB.JoinChallenge(id, challenge, today))
-		m_DB.SaveChallengeToFile(challenge);
+	const auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
 
-	Ok(resp, "Joined challenge");
+	if(m_DB.JoinChallenge(id, challenge, today)){
+		m_DB.SaveChallengeToFile(challenge);
+		
+		Ok(resp, "Joined challenge");
+		return;
+	}
+	
+	Fail(resp, "Failed to join challenge");
 }
 
 void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httplib::Response& resp){
@@ -814,7 +822,8 @@ void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httpli
 
 	auto today = DateUtils::Now();
 
-	auto participants = m_DB.GetChallengeParticipant(challenge, today, [&](std::int64_t user) -> std::string {
+	auto participants = m_DB.GetChallengeParticipant(challenge, today, 
+	[&](std::int64_t user) -> std::string {
 		try {
 			auto chat = m_Bot.getApi().getChat(user);
 
@@ -822,10 +831,52 @@ void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httpli
 		} catch (...) {
 			return "";
 		}
-	});
+	},
+	[&](std::int64_t user) -> std::string {
+		try {
+			auto chat = m_Bot.getApi().getChat(user);
+
+			return chat->username;
+		} catch (...) {
+			return "";
+		}
+	}
+	);
 	
 	resp.status = 200;
 	resp.set_content(nlohmann::json(participants).dump(), "application/json");
+}
+
+void HttpApiServer::GetChallengeInvitePreview(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t challenge = GetIdParam(req, "challenge").value_or(0);
+
+	if (!id || !challenge) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+
+	const auto &challenges = m_DB.Challenges();
+
+	if (!challenges.count(challenge)) {
+		resp.status = httplib::StatusCode::NotFound_404;
+		return;
+	}
+
+	if (!challenges.at(challenge).CanJoin(today)) {
+		resp.status = httplib::StatusCode::Forbidden_403;
+		return;
+	}
+
+	resp.status = 200;
+	resp.set_content(nlohmann::json(challenges.at(challenge)).dump(), "application/json");
 }
 
 void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) {

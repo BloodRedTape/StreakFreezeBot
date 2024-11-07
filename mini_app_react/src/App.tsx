@@ -16,8 +16,18 @@ import { StreakInfoPage } from './components/StreakInfo';
 import { StreakEdit } from './components/StreakEdit';
 import { ChallengesSection } from './components/ChallengesSection';
 import { FreezePage } from './components/FreezeSection';
+import { ChallengeInviteModal } from './components/ChallengeInvite';
+import { TryParseChallengeInviteLink } from './helpers/Challenges';
 
 const queryClient = new QueryClient();
+
+const Page: React.FC<React.PropsWithChildren> = ({children}) => {
+    return (
+        <div style={{ height: '100vh' }}>
+            {children }
+        </div>
+    )
+}
 
 export const App = () => {
 
@@ -44,6 +54,7 @@ export const App = () => {
     const ActualAppContent = (
             <div>
                 <FriendRequestModal from={TryParseInviteLink()} />
+                <ChallengeInviteModal invite={TryParseChallengeInviteLink()} />
                 <RootTabBar onSetTab={setTab} tab={tab}/>
             </div>
     )
@@ -72,12 +83,12 @@ export const App = () => {
                         <AppRoot>
                             <Routes>
                                 <Route path="/" element={ActualAppContent} />
-                                <Route path="/new_challenge" element={<ChallengeInput/>} />
-                                <Route path="/challenge/:id" element={<ChallengeInfoPage/>} />
-                                <Route path="/streak/:id" element={<StreakInfoPage/>} />
-                                <Route path="/edit_streaks" element={<StreakEdit/>} />
-                                <Route path="/edit_challenges" element={<ChallengesSection/>} />
-                                <Route path="/edit_freezes" element={<FreezePage/>} />
+                                <Route path="/new_challenge" element={<Page><ChallengeInput/></Page>} />
+                                <Route path="/challenge/:id" element={<Page><ChallengeInfoPage/></Page>} />
+                                <Route path="/streak/:id" element={<Page><StreakInfoPage/></Page>} />
+                                <Route path="/edit_streaks" element={<Page><StreakEdit/></Page>} />
+                                <Route path="/edit_challenges" element={<Page><ChallengesSection/></Page>} />
+                                <Route path="/edit_freezes" element={<Page><FreezePage/></Page>} />
                             </Routes>
                         </AppRoot>
                     </UserContext.Provider>

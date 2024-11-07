@@ -1,10 +1,10 @@
-import { Button, Placeholder, Avatar, Text } from "@xelene/tgui"
+import { Button, Placeholder, Text } from "@xelene/tgui"
 import { useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
-import { PostRemoveFriend, ProfilePhotoUrlFor } from "../helpers/Requests"
+import { PostRemoveFriend } from "../helpers/Requests"
 import { GetFriendStatusImageLinkFor, ShareIcon } from "../helpers/Resources"
 import { Loading } from "./Loading"
 import { Entry } from "../core/Entry"
@@ -14,21 +14,9 @@ import { useCookies } from "react-cookie"
 import { NudgeButton } from "./Nudge"
 import { Listbox, ListboxItem } from "@nextui-org/react"
 import { Header, HeaderActionButton } from "../core/Header"
+import { ProfileAvatar } from "./ProfileAvatar"
 
 const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolean) => {
-	const OnOpenProfile = () => {
-		window.Telegram?.WebApp.openTelegramLink('https://t.me/' + friend.Username)
-	}
-
-	const FriendAvatar = (
-		<Avatar
-			size={48}
-			src={ProfilePhotoUrlFor(friend.Id)}
-			fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
-			onClick={OnOpenProfile}
-			style={{marginLeft: '8px', marginRight: '8px'}}
-		/>
-	)
 
 	const OnRemove = () => {
 		PostRemoveFriend(friend.Id).finally(onRemoved)
@@ -86,7 +74,7 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 	return (
 		<ListboxItem
 			key={friend.Id}
-			startContent={FriendAvatar}
+			startContent={<ProfileAvatar id={friend.Id} username={friend.Username}/>}
 			endContent={EndButton}
 			description={FriendSubheader}
 			shouldHighlightOnFocus={false}

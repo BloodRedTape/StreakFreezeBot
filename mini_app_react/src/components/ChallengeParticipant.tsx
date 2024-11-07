@@ -1,22 +1,16 @@
-import { Text, Section, Avatar, Cell } from "@xelene/tgui"
+import { Listbox, ListboxItem } from "@nextui-org/react"
+import { Text } from "@xelene/tgui"
 import { useQuery } from "react-query"
 import { ChallengeParticipantType, ChallengeWithPayloadType } from "../core/Challenge"
 import { useGetUserContext } from "../core/UserContext"
-import { FetchChallengeParticipants, GatherCurrentUserId, ProfilePhotoUrlFor } from "../helpers/Requests"
-import { ForegroundColor } from "../helpers/Theme"
+import { FetchChallengeParticipants, GatherCurrentUserId } from "../helpers/Requests"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
+import { ProfileAvatar } from "./ProfileAvatar"
 
-const ChallengeParticipant: React.FC<{ participant: ChallengeParticipantType, challenge: ChallengeWithPayloadType }> = ({ participant, challenge }) => {
+const MakeChallengeParticipant = (participant: ChallengeParticipantType, challenge: ChallengeWithPayloadType) => {
 	const userContext = useGetUserContext()
 
 	const today = userContext?.Today ?? new Date()
-
-	const Icon = (
-		<Avatar
-			size={48}
-			src={ProfilePhotoUrlFor(participant.Id)}
-		/>
-	)
 
 	const commitedToday = participant.Count === challenge.DayOfChallenge + 1
 
@@ -33,54 +27,62 @@ const ChallengeParticipant: React.FC<{ participant: ChallengeParticipantType, ch
 	)
 
 	return (
-		<Cell
-			before={Icon}
-			subtitle={challenge.IsPending(today) ? undefined : Progress}
-			style={{background: ForegroundColor()}}
+		<ListboxItem
+			startContent={<ProfileAvatar id={participant.Id} username={participant.Username} />}
+			description={challenge.IsPending(today) ? undefined : Progress}
+			key={participant.FullName}
 		>
 			<Text
 				weight={isYou ? "2" : "3"}
 			>
 				{ participant.FullName }
 			</Text>
-		</Cell>
+		</ListboxItem>
 	)
 }
 
 export const ChallengeParticipantList: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ challenge }) => {
-	const { error, isLoading, data } = useQuery(['challenge', challenge.Id], () => FetchChallengeParticipants(challenge.Id))
+	const { isError, isLoading, data } = useQuery(['challenge', challenge.Id], () => FetchChallengeParticipants(challenge.Id))
 
 	const ErrorCell = (
-		<Cell
-			style={{background: ForegroundColor()}}
-		>
-			<Text weight="3">Failed to load participants</Text>
-		</Cell>
+		<Text weight="3">Failed to load participants</Text>
 	)
 
 	const LoadingCell = (
-		<Cell
-			style={{background: ForegroundColor()}}
-		>
-			<Text weight="3">Loading...</Text>
-		</Cell>
+		<Text weight="3">Loading...</Text>
 	)
 
 	const ParticipantCompare = (left: ChallengeParticipantType, right: ChallengeParticipantType) => {
 		return right.Count - left.Count
 	}
 
-	const ParticipantCells = (data ?? []).sort(ParticipantCompare).map((participant) =>
-		(<ChallengeParticipant participant={participant} challenge={challenge} />)
-	)
+	type ParticipantEntry = {
+		challenge: ChallengeWithPayloadType,
+		participant: ChallengeParticipantType
+	}
 
-	const Content = error ? ErrorCell : isLoading ? LoadingCell : ParticipantCells
+	const entries = (data ?? []).sort(ParticipantCompare).map((participant): ParticipantEntry => {
+		return {
+			challenge: challenge,
+			participant: participant
+		}
+	})
+
+	if (isError)
+		return ErrorCell;
+
+	if (isLoading)
+		return LoadingCell;
 
 	return (
-		<div>
-			<Section style={{paddingTop: '10px'}}>
-				{ Content }					
-			</Section>
-		</div>
+			<Listbox
+				items={entries}
+				className="bg-content2 rounded-small"
+				emptyContent={<div />}
+				itemClasses={{ base: "h-16" }}
+				shouldHighlightOnFocus={false}
+			>
+				{(entry) => MakeChallengeParticipant(entry.participant, entry.challenge)}
+			</Listbox>
 	)
 }

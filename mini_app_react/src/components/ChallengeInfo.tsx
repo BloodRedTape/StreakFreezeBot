@@ -1,3 +1,4 @@
+import { Spacer } from "@nextui-org/react"
 import { Text } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useParams } from "react-router"
@@ -50,18 +51,22 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 		<div style={{padding: '5%'}}>
 			<ChallengeHeader challenge={challenge}/>
 
-			{ Status }
+			{Status}
+
+			<Spacer y={2}/>
 
 			<Header
 				title="Participants"
 				actions={[
 					{
 						text: "Invite",
-						icon: <ShareIcon/>,
+						icon: <ShareIcon />,
 						onAction: ShareInviteLink
 					}
 				]}
 			/>
+
+			<Spacer y={1}/>
 
 			<ChallengeParticipantList challenge={challenge}/>
 		</div>

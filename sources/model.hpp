@@ -85,7 +85,7 @@ public:
 
     const auto &Challenges()const{ return m_Challenges; }
 
-	std::vector<ChallengeParticipant> GetChallengeParticipant(std::int64_t challenge, Date today, std::function<std::string(std::int64_t)> fetch_fullname)const;
+	std::vector<ChallengeParticipant> GetChallengeParticipant(std::int64_t challenge, Date today, std::function<std::string(std::int64_t)> fetch_fullname, std::function<std::string(std::int64_t)> fetch_username)const;
 
 	std::vector<std::int64_t> GetUsers()const;
 

@@ -51,6 +51,7 @@ export const ParseChallengeWithPayloadType = (data: any): ChallengeWithPayloadTy
 export class ChallengeParticipantType {
 	public Id: number = 0	
 	public FullName: string = ""
+	public Username: string = ""
 	public Count: number = 0
 	public HasLost: boolean = false
 }
@@ -60,6 +61,7 @@ export const ParseChallengeParticipantType = (data: any): ChallengeParticipantTy
 
 	participant.Id = data.Id ?? participant.Id
 	participant.FullName = data.FullName ?? participant.FullName
+	participant.Username = data.Username ?? participant.Username
 	participant.Count = data.Count ?? participant.HasLost
 	participant.HasLost = data.HasLost ?? participant.HasLost
 

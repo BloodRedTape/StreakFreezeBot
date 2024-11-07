@@ -1,9 +1,9 @@
-import { Avatar, Button, Cell, Section, Text } from "@xelene/tgui"
+import { Avatar, Button, Text } from "@xelene/tgui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { useGetUserContext } from "../core/UserContext"
 import { PlaceholderUrlFor } from "../helpers/Requests"
-import { ForegroundColor } from "../helpers/Theme"
 import { useNavigate } from "react-router"
+import { Listbox, ListboxItem } from "@nextui-org/react"
 
 const NewChallengeModal = () => {
 
@@ -48,39 +48,40 @@ export const ChallengesSection = () => {
 			<Avatar
 				size={48}
 				src={PlaceholderUrlFor(challenge.Name)}
-				fallbackIcon="https://avatars.githubusercontent.com/u/84640980?v=4"
 			/>
 		)
 
-		const Entry = (
-			<Cell
-				before={Icon}
-				after={<Text weight="2">{challenge.Participants.length}</Text>}
-				subtitle={"Do your best!"}
-				style={{ background: ForegroundColor() }}
+		return (
+			<ListboxItem
+				key={challenge.Name}
+				startContent={Icon}
+				endContent={<Text weight="2">{challenge.Participants.length}</Text>}
+				description={"Do your best!"}
 				onClick={OnNavigateChallenge }
 			>
 				{ challenge.Name }
-			</Cell>
+			</ListboxItem>
 		)
-
-		return Entry
 	}
 
 	const MakeChallengeSection = (name: string, challenges: ChallengeWithPayloadType[]) => {
 		if (!challenges.length)
 			return null
 
-		const Challenges = challenges.map(MakeChallengeEntry)
-
 		return (
 			<div
 				style={{paddingTop: '10px', paddingBottom: '10px'}}
 			>
 				<Text weight="3">{ name }</Text>
-				<Section>
-					{ Challenges }
-				</Section>
+				<Listbox
+					items={challenges}
+					className="bg-content2 rounded-small"
+					emptyContent={<div />}
+					itemClasses={{ base: "h-16" }}
+					shouldHighlightOnFocus={false}
+				>
+					{ MakeChallengeEntry }
+				</Listbox>
 			</div>
 		)
 	}

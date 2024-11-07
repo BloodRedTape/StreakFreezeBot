@@ -98,7 +98,7 @@ const StreakUsage = () => {
 			return undefined
 
 		return (
-			<div style={{paddingTop: '10px', paddingBottom: '10px'}}>
+			<div style={{paddingBottom: '10px'}}>
 				{ShowName ? <Text weight="3" style={{paddingBottom: '5px'}}>{name}</Text> : null}
 				<Listbox 
 					items={streaks}

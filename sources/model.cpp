@@ -348,6 +348,11 @@ bool StreakDatabase::JoinChallenge(std::int64_t user_id, std::int64_t challenge_
 	auto &challenge = m_Challenges[challenge_id];
 	auto &user = GetUserNoAutoFreeze(user_id, today);
 
+	if (challenge.Has(user_id)) {
+		LogModel(Error, "JoinChallenge: Can't join '%', user '%' is already in", challenge.GetName(), user_id);
+		return false;
+	}
+
 	if (!challenge.CanJoin(today)) {
 		LogModel(Error, "JoinChallenge: Can't join '%'", challenge.GetName());
 		return false;
@@ -477,7 +482,7 @@ Challenge& StreakDatabase::GetChallenge(std::int64_t challenge) const{
 	return m_Challenges[challenge];
 }
 
-std::vector<ChallengeParticipant> StreakDatabase::GetChallengeParticipant(std::int64_t challenge, Date today, std::function<std::string(std::int64_t)> fetch_fullname) const{
+std::vector<ChallengeParticipant> StreakDatabase::GetChallengeParticipant(std::int64_t challenge, Date today, std::function<std::string(std::int64_t)> fetch_fullname, std::function<std::string(std::int64_t)> fetch_username) const{
 	if (!m_Challenges.count(challenge)) {
 		LogModel(Error, "GetChallengeParticipant: challenge '%' does not exist", challenge);
 		return {};
@@ -493,6 +498,7 @@ std::vector<ChallengeParticipant> StreakDatabase::GetChallengeParticipant(std::i
 		ChallengeParticipant participant;
 		participant.Id = id;
 		participant.FullName = fetch_fullname(id);
+		participant.Username = fetch_username(id);
 		participant.Count = Count(id, challenge, today);
 		participant.HasLost = HasLost(id, challenge, today);
 

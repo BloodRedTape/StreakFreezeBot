@@ -85,6 +85,8 @@ public:
 
 	void GetChallengeParticipants(const httplib::Request &req, httplib::Response &resp);
 
+	void GetChallengeInvitePreview(const httplib::Request &req, httplib::Response &resp);
+
 	void GetTg(const httplib::Request &req, httplib::Response &resp);
 
 	void GetPlaceholder(const httplib::Request &req, httplib::Response &resp);
