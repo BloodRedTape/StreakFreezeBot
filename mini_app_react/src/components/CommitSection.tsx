@@ -22,6 +22,8 @@ export const EntryText: React.FC<{ text: string}> = ({text}) => (
 	<Text weight="3" style={{ marginLeft: '5px', textAlign: 'justify' }}>{text}</Text>
 )	
 
+type SetToCommit = (to: number[]) => void;
+
 const StreakUsage = () => {
 	const userContext = useGetUserContext()
 	const setUserContext = useSetUserContext()
@@ -41,7 +43,7 @@ const StreakUsage = () => {
 		FetchUserContext().then(setUserContext)
 	}
 
-	const MakeStreakEntry = (streak: StreakType) => {
+	const MakeStreakEntry = (streak: StreakType, toCommit: number[], setToCommit: SetToCommit) => {
 		if (!userContext)
 			return (<div></div>)
 
@@ -91,23 +93,37 @@ const StreakUsage = () => {
 		)
 	}
 
-	const MakeSection = (name: string, streaks: StreakType[], challenge: boolean = false) => {
+	const MakeSection = (name: string, streaks: StreakType[], toCommit: number[], setToCommit: SetToCommit, challenge: boolean = false) => {
 		const ShowName = challenge ? streaks.length > 1 : streaks.length > 0
 
 		if (!streaks.length)
 			return undefined
 
+		type StreakEntry = {
+			streak: StreakType,
+			toCommit: number[],
+			setToCommit: SetToCommit
+		}
+
+		const Entries = streaks.map((s): StreakEntry => {
+			return {
+				streak: s,
+				toCommit: toCommit,
+				setToCommit: setToCommit
+			}
+		})
+
 		return (
 			<div style={{paddingBottom: '10px'}}>
 				{ShowName ? <Text weight="3" style={{paddingBottom: '5px'}}>{name}</Text> : null}
 				<Listbox 
-					items={streaks}
+					items={Entries}
 					className="bg-content2 rounded-small"
 					emptyContent={<div />}
 					itemClasses={{ base: "h-9" }}
 					shouldHighlightOnFocus={false}
 				>
-					{MakeStreakEntry}
+					{(entry)=>MakeStreakEntry(entry.streak, entry.toCommit, entry.setToCommit)}
 				</Listbox>
 			</div>
 		)
@@ -193,8 +209,8 @@ const StreakUsage = () => {
 					}
 				]}
 			/>
-			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()))}
-			{MakeSection("Optional", Streaks.filter(s => s.IsOptional()))}
+			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()), toCommit, setToCommit)}
+			{MakeSection("Optional", Streaks.filter(s => s.IsOptional()), toCommit, setToCommit)}
 			<Header
 				title={"Challenges"}
 				actions={[
@@ -207,7 +223,7 @@ const StreakUsage = () => {
 			/>
 			{
 				Array.from(ChallengesMap.entries()).map(c => {
-					return MakeSection(ChallengeName(c[0]), c[1], true)
+					return MakeSection(ChallengeName(c[0]), c[1], toCommit, setToCommit, true)
 				})
 			}
 			{CommitButton }
