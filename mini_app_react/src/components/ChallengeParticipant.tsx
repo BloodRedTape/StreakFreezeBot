@@ -2,16 +2,11 @@ import { Listbox, ListboxItem } from "@nextui-org/react"
 import { Text } from "@xelene/tgui"
 import { useQuery } from "react-query"
 import { ChallengeParticipantType, ChallengeWithPayloadType } from "../core/Challenge"
-import { useGetUserContext } from "../core/UserContext"
 import { FetchChallengeParticipants, GatherCurrentUserId } from "../helpers/Requests"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
 import { ProfileAvatar } from "./ProfileAvatar"
 
 const MakeChallengeParticipant = (participant: ChallengeParticipantType, challenge: ChallengeWithPayloadType) => {
-	const userContext = useGetUserContext()
-
-	const today = userContext?.Today ?? new Date()
-
 	const commitedToday = participant.Count === challenge.DayOfChallenge + 1
 
 	const isYou = GatherCurrentUserId() === participant.Id
@@ -29,7 +24,7 @@ const MakeChallengeParticipant = (participant: ChallengeParticipantType, challen
 	return (
 		<ListboxItem
 			startContent={<ProfileAvatar id={participant.Id} username={participant.Username} />}
-			description={challenge.IsPending(today) ? undefined : Progress}
+			description={challenge.IsPending() ? undefined : Progress}
 			key={participant.FullName}
 		>
 			<Text
@@ -42,7 +37,7 @@ const MakeChallengeParticipant = (participant: ChallengeParticipantType, challen
 }
 
 export const ChallengeParticipantList: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ challenge }) => {
-	const { isError, isLoading, data } = useQuery(['challenge', challenge.Id], () => FetchChallengeParticipants(challenge.Id))
+	const { isError, isLoading, data } = useQuery(['challenge_participants', challenge.Id], () => FetchChallengeParticipants(challenge.Id))
 
 	const ErrorCell = (
 		<Text weight="3">Failed to load participants</Text>

@@ -66,3 +66,19 @@ export const ShareIcon = () => (
     </g>
     </svg>
 );
+
+export const Dot: React.FC<{ size: number | string, color: string }> = ({size, color }) => {
+    return (
+        <span
+            style={{
+                height: size,
+                width: size,
+                backgroundColor: color,
+                borderRadius: '50%',
+                display: 'inline-block',
+                marginTop: 'auto',
+                marginBottom: 'auto'
+			}}
+        />
+    )
+}

@@ -34,6 +34,8 @@ public:
 
 	const auto &GetName()const{ return Name; }
 
+	const auto &GetDuration()const{ return Duration; }
+
 	const auto &GetParticipants()const{ return Participants; }
 
 	auto GetStart()const{ return Start; }
@@ -56,8 +58,10 @@ struct ChallengePayload {
 	std::int64_t Count = 0;
 	bool HasLost = false;
 	std::int64_t DayOfChallenge = 0;
+	bool CanJoin = false;
+	ChallengeStatus Status = ChallengeStatus::Pending;
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ChallengePayload, Id, Count, HasLost, DayOfChallenge)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ChallengePayload, Id, Count, HasLost, DayOfChallenge, CanJoin, Status)
 };
 
 

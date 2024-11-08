@@ -1,4 +1,3 @@
-import { Listbox, ListboxItem } from "@nextui-org/react"
 import { Modal, Text, Button } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useQuery } from "react-query"
@@ -7,15 +6,13 @@ import { ChallengeInviteType } from "../helpers/Challenges"
 import { ErrorPopupFromJson, FetchChallengeInvitePreview, GatherCurrentUserId, PostJoinChallenge } from "../helpers/Requests"
 import { ForegroundColor } from "../helpers/Theme"
 import { ChallengeHeader } from "./ChallengeHeader"
+import { ChallengeParticipantPreview } from "./ChallengeParticipantPreview"
+import { ToDoPreview } from "./ToDoPreview"
 
 const Status: React.FC<{ text: string }> = ({text}) => {
 	return (
 		<Text weight="2">{text}</Text>
 	)
-}
-
-type ToDoEntry = {
-	Name: string
 }
 
 const ChallengeInvite: React.FC<{ invite: ChallengeInviteType, onAccepted: ()=>void}> = ({ invite, onAccepted }) => {
@@ -27,7 +24,7 @@ const ChallengeInvite: React.FC<{ invite: ChallengeInviteType, onAccepted: ()=>v
 
 	const userContext = useGetUserContext()
 
-	const {data, isLoading, isError } = useQuery([invite.challenge, invite.from], () => FetchChallengeInvitePreview(invite.challenge))
+	const { data, isLoading, isError } = useQuery([invite.challenge, invite.from], () => FetchChallengeInvitePreview(invite.challenge))
 
 	if (isError)
 		return <Status text={"Expired invite link, can't join challenge"}/>
@@ -41,38 +38,23 @@ const ChallengeInvite: React.FC<{ invite: ChallengeInviteType, onAccepted: ()=>v
 	const today = userContext.Today
 
 	const Starting = (
-		<Text weight="3">
-			{data.IsPending(today) ? `Starts in ${differenceInDays(data.Start, today)} days` : `Starts now!`}
+		<Text weight="3" style={{display: 'block', paddingBottom: '10px'} }>
+			{data.IsPending() ? `Starts in ${differenceInDays(data.Start, today)} days` : `Starts now!`}
 		</Text>
 	)
 
 	return (
 		<div style={{ padding: '5%' }}>
 			<ChallengeHeader challenge={data} />
-			<br/>
 
 			{Starting}
 
-			<br/>
-
 			<Text weight="2">ToDo</Text>
 
-			<br />
-
-			<Listbox
-				items={data.ToDo.map((e): ToDoEntry => { return { Name: e } })}
-				style={{ marginTop: '10px', marginBottom: '10px' }}
-				className="bg-content2 rounded-small"
-				emptyContent={<div />}
-				itemClasses={{ base: "h-9" }}
-				shouldHighlightOnFocus={false}
-			>
-				{(entry) =>
-					<ListboxItem key={entry.Name}>
-						{entry.Name}
-					</ListboxItem>
-				}
-			</Listbox>
+			<ToDoPreview toDo={data.ToDo} />
+			
+			<Text weight="2" style={{paddingBottom: '5px'}}>Participants</Text>
+			<ChallengeParticipantPreview challenge={invite.challenge} />
 
 			<div style={{ paddingTop: '5%', paddingBottom: '5%' }}>
 				<Button

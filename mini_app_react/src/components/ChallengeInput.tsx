@@ -9,7 +9,7 @@ import { Spacer } from "@nextui-org/spacer";
 import { DateValue, CalendarDate, CalendarDateTime, ZonedDateTime } from '@internationalized/date';
 import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
 
-const FromDateInputDate = (date: DateValue) => {
+export const FromDateInputDate = (date: DateValue) => {
 	if (date instanceof CalendarDate || date instanceof CalendarDateTime || date instanceof ZonedDateTime) {
 		return new Date(date.year, date.month - 1, date.day);
 	}
@@ -17,7 +17,7 @@ const FromDateInputDate = (date: DateValue) => {
 	return new Date();
 }
 
-const ToDateInputDate = (date: Date): DateValue => {
+export const ToDateInputDate = (date: Date): DateValue => {
 	return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
@@ -107,7 +107,7 @@ export const ChallengeInput = () => {
 				label="Duration"
 				type="number"
 				value={duration.toString()}
-				validate={ s => ValidateDuration(s, 1, 120) }
+				validate={ s => ValidateDuration(s, 1, 365) }
 				onValueChange={(value) => setDuration(parseInt(value))}
 			/>
 
@@ -118,9 +118,12 @@ export const ChallengeInput = () => {
 				label="Start date"
 				onChange={setStartDate}
 				minValue={ToDateInputDate(today)}
+				defaultValue={ToDateInputDate(today)}
 			/>
 
 			{DefaultSpacer}
+
+			<Text weight="2">To Do</Text>
 
 			<ToDoEdit
 				entries={Entries}

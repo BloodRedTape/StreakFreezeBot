@@ -41,7 +41,7 @@ bool Challenge::Validate(std::int64_t user){
 	if(Creator != user)
 		Creator = user;
 
-	return ToDo.size() && Name.size() && Duration && Type != ChallengeType::Unknown;
+	return ToDo.size() && Name.size() && Duration && Duration <= 365 && Type != ChallengeType::Unknown;
 }
 
 std::int64_t Challenge::DayOfChallenge(Date today) const{

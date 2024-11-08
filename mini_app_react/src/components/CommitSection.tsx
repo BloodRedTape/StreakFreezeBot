@@ -94,10 +94,12 @@ const StreakUsage = () => {
 	}
 
 	const MakeSection = (name: string, streaks: StreakType[], toCommit: number[], setToCommit: SetToCommit, challenge: boolean = false) => {
-		const ShowName = challenge ? streaks.length > 1 : streaks.length > 0
-
 		if (!streaks.length)
 			return undefined
+
+		const IsMinifiedChallenge = userContext?.GetChallenge(streaks[0].Challenge)?.IsMinified() ?? false
+
+		const ShowName = challenge ? !IsMinifiedChallenge : streaks.length > 0
 
 		type StreakEntry = {
 			streak: StreakType,

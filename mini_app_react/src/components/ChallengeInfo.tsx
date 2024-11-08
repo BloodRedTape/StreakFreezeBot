@@ -3,6 +3,7 @@ import { Text } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useParams } from "react-router"
 import { ChallengeWithPayloadType } from "../core/Challenge"
+import { Entry } from "../core/Entry"
 import { Header } from "../core/Header"
 import { useGetUserContext } from "../core/UserContext"
 import { MakeChallengeInviteLink } from "../helpers/Challenges"
@@ -10,16 +11,26 @@ import { ShareIcon } from "../helpers/Resources"
 import { ChallengeHeader } from "./ChallengeHeader"
 import { ChallengeParticipantList } from "./ChallengeParticipant"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
+import { ToDoPreview } from "./ToDoPreview"
 
 const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ challenge }) => {
 	const userContext = useGetUserContext()
 	const today = userContext?.Today || new Date()
 
-	const PendingStatus = <Text weight="3">{`Starts in ${differenceInDays(challenge.Start, today)} days`}</Text>
+	const PendingStatus =
+		<Text weight="3">{`Starts in ${differenceInDays(challenge.Start, today)} days`}</Text>
+
+	const options: Intl.DateTimeFormatOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+
+	const StartText = <Text weight="3">{ `Start${challenge.IsPending() ? " at": "ed"} ${challenge.Start.toLocaleDateString("en-US", options)}` }</Text>
 
 	const StartedStatus = (
 		<div>
-			<Text weight="3">{ `Day ${challenge.DayOfChallenge + 1} of ${challenge.Duration}` }</Text>
+			<Entry
+				after={StartText}
+			>
+				<Text weight="3">{ `Day ${challenge.DayOfChallenge + 1} of ${challenge.Duration}` }</Text>
+			</Entry>
 			<ChallengeParticipantProgress 
 				count={challenge.DayOfChallenge + 1}
 				hasLost={false}
@@ -32,7 +43,7 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 
 	const FinishedStatus = <Text weight="3">{`Challenge took ${challenge.Duration} days`}</Text>
 
-	const Status = challenge.IsPending(today) ? PendingStatus : challenge.IsRunning(today) ? StartedStatus : FinishedStatus
+	const Status = challenge.IsPending() ? PendingStatus : challenge.IsRunning() ? StartedStatus : FinishedStatus
 
 	const ShareInviteLink = () => {
 		const link = MakeChallengeInviteLink(challenge.Id)
@@ -49,21 +60,33 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 
 	return (
 		<div style={{padding: '5%'}}>
-			<ChallengeHeader challenge={challenge}/>
+			<ChallengeHeader challenge={challenge} />
 
-			{Status}
+			<Text weight="2">To Do</Text>
+			<ToDoPreview toDo={challenge.ToDo} />
 
 			<Spacer y={2}/>
 
+			<Text weight="2">Status</Text>
+			<div style={{display: 'block'}}>
+				{Status}
+			</div>
+
+			<Spacer y={2} />
+
 			<Header
 				title="Participants"
-				actions={[
+				actions={
+					challenge.CanJoin
+				? [
 					{
 						text: "Invite",
 						icon: <ShareIcon />,
 						onAction: ShareInviteLink
 					}
-				]}
+				  ]
+				: []
+				}
 			/>
 
 			<Spacer y={1}/>

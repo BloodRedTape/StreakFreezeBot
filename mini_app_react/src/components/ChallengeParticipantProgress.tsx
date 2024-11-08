@@ -22,7 +22,7 @@ export const ChallengeParticipantProgress: React.FC<ChallengeParticipantProgress
 
 	const Label = <Text weight="3">{`${hasLost ? "Lost at" : "Progress"} ${count} of ${duration}`}</Text>
 
-	const Fire = !commited ? undefined :
+	const Fire = 
 		<Img
 			style={{
 				height: '22px',
@@ -34,10 +34,18 @@ export const ChallengeParticipantProgress: React.FC<ChallengeParticipantProgress
 			src={GetFriendStatusImageLinkFor(ProtectionType.Commit)}
 		/>
 
+	const Lost = <span className="text-danger" style={{ fontSize: '22px' }}>❌</span>
+
+	const Status = commited
+		? Fire
+		: hasLost
+			? Lost
+			: undefined
+
 	return (
 		<div>
 			{compact ? undefined : Label }
-			<Entry after={Fire}>
+			<Entry after={Status}>
 				<Progress
 					color={GetColorForProgress(hasLost, commited)}
 					value={count / duration * 100}

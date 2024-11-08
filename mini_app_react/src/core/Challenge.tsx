@@ -1,4 +1,3 @@
-import { differenceInDays } from "date-fns"
 import { FromApiDate } from "./UserContextSerialization"
 
 
@@ -16,13 +15,24 @@ export class ChallengeType {
 	public ToDo: Array<string> = []
 	public Participants: Array<number> = []
 
-	public IsPending(today: Date): boolean {
-		return today < this.Start
+	public IsMinified(): boolean {
+		return this.ToDo.length === 1 && this.ToDo[0] === this.Name;
 	}
+}
 
-	public IsRunning(today: Date): boolean {
-		return today >= this.Start && differenceInDays(today, this.Start) < this.Duration
-	}
+export enum ChallengeStatusType {
+	Pending,
+	Running,
+	Finished
+}
+
+const ParseChallengeStatusType = (data: any) => {
+	if (data === 0)	
+		return ChallengeStatusType.Pending
+	if (data === 1)	
+		return ChallengeStatusType.Running
+
+	return ChallengeStatusType.Finished
 }
 
 export class ChallengeWithPayloadType extends ChallengeType{
@@ -30,6 +40,20 @@ export class ChallengeWithPayloadType extends ChallengeType{
 	public Count: number = 0
 	public HasLost: boolean = false
 	public DayOfChallenge: number = 0
+	public CanJoin: boolean = false
+	public Status: ChallengeStatusType = ChallengeStatusType.Pending
+
+	public IsPending(): boolean {
+		return this.Status === ChallengeStatusType.Pending
+	}
+
+	public IsRunning(): boolean {
+		return this.Status === ChallengeStatusType.Running
+	}
+
+	public IsFinished(): boolean {
+		return this.Status === ChallengeStatusType.Finished
+	}
 }
 
 export const ParseChallengeWithPayloadType = (data: any): ChallengeWithPayloadType => {
@@ -45,6 +69,8 @@ export const ParseChallengeWithPayloadType = (data: any): ChallengeWithPayloadTy
 	challenge.Count = data.Count ?? 0
 	challenge.HasLost = data.HasLost ?? false
 	challenge.DayOfChallenge = data.DayOfChallenge ?? 0
+	challenge.CanJoin = data.CanJoin ?? false
+	challenge.Status = ParseChallengeStatusType(data.Status)
 	return challenge 
 }
 

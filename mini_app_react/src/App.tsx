@@ -23,7 +23,7 @@ const queryClient = new QueryClient();
 
 const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     return (
-        <div style={{ height: '100vh' }}>
+        <div style={{ height: '100vh', overflowY: 'scroll' }}>
             {children }
         </div>
     )

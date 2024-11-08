@@ -5,6 +5,7 @@
 #include <bsl/defer.hpp>
 #include <hmac_sha256.h>
 #include "openai.hpp"
+#include <bsl/file.hpp>
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
@@ -80,6 +81,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Post("/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
 	Get ("/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
 	Get ("/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
+	Get ("/user/:id/challenges/invite_participants_preview/:challenge", &ThisClass::GetChallengeInviteParticipantsPreview);
 
 	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
 
@@ -768,11 +770,13 @@ void HttpApiServer::NewChallenge(const httplib::Request& req, httplib::Response&
 	}
 
 	auto today = DateUtils::Now();
-	
+
+	const auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+
 	std::int64_t challenge_id = m_DB.AddChallenge(std::move(challenge.value()));
 	m_DB.JoinChallenge(id, challenge_id, today);
 	m_DB.SaveChallengeToFile(challenge_id);
-	m_DB.SaveUserToFile(id);
 
 	Ok(resp, "Challenge added");
 }
@@ -842,6 +846,30 @@ void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httpli
 		}
 	}
 	);
+	
+	resp.status = 200;
+	resp.set_content(nlohmann::json(participants).dump(), "application/json");
+}
+
+void HttpApiServer::GetChallengeInviteParticipantsPreview(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t challenge = GetIdParam(req, "challenge").value_or(0);
+
+	if (!id || !challenge) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+
+	auto NoString = [](std::int64_t user) -> std::string { return ""; };
+
+	auto participants = m_DB.GetChallengeParticipant(challenge, today, NoString, NoString);
 	
 	resp.status = 200;
 	resp.set_content(nlohmann::json(participants).dump(), "application/json");

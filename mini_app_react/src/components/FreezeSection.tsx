@@ -34,7 +34,7 @@ export const FreezeSection = () => {
 
 export const FreezePage = () => {
 	return (
-		<div style={{ paddingLeft: '5%', paddingRight: '5%', height: '100vh', overflowY: 'scroll' }}>
+		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
 			<FreezeSection/>
 		</div>
 	)

@@ -86,9 +86,9 @@ export const ChallengesSection = () => {
 		)
 	}
 
-	const Running = userContext?.Challenges?.filter(c => c.IsRunning(userContext?.Today)) ?? []
-	const Pending = userContext?.Challenges?.filter(c => c.IsPending(userContext?.Today)) ?? []
-	const Finished = userContext?.Challenges?.filter(c=> !Running.includes(c) && !Pending.includes(c)) ?? []
+	const Running = userContext?.Challenges?.filter(c => c.IsRunning()) ?? []
+	const Pending = userContext?.Challenges?.filter(c => c.IsPending()) ?? []
+	const Finished = userContext?.Challenges?.filter(c => c.IsFinished()) ?? []
 
 	return (
 		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>

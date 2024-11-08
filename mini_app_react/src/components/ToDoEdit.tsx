@@ -1,5 +1,5 @@
 import { Input, Listbox, ListboxItem, Spacer } from "@nextui-org/react"
-import { IconButton, Text } from "@xelene/tgui"
+import { IconButton } from "@xelene/tgui"
 import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
 import { CSSProperties, useState } from "react"
@@ -83,8 +83,8 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 			<Listbox 
 				items={entries}
 				className="bg-content2 rounded-small"
-				emptyContent={<Text weight="3">Empty ToDo</Text>}
-				itemClasses={{base: "h-9"}}
+				emptyContent={<div/>}
+				itemClasses={{ base: "h-9" }}
 				shouldHighlightOnFocus={false}
 			>
 				{(item) => (

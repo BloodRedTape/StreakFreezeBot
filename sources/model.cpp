@@ -414,7 +414,9 @@ bool StreakDatabase::HasLost(std::int64_t user_id, std::int64_t challenge_id, Da
 
 	if(challenge.GetStatus(today) == ChallengeStatus::Pending)
 		return false;
-
+	
+	if(challenge.GetStatus(today) == ChallengeStatus::Finished)
+		return Count(user_id, challenge_id, today) != challenge.GetDuration();
 
 	std::int64_t min_accepted_count = challenge.DayOfChallenge(today);
 
@@ -448,6 +450,8 @@ std::vector<Payload<Challenge, ChallengePayload>> StreakDatabase::ChallengesWith
 		payload.HasLost = HasLost(user, challenge_id, today);
 		payload.Count = Count(user, challenge_id, today);
 		payload.DayOfChallenge = challenge.DayOfChallenge(today);
+		payload.CanJoin = challenge.CanJoin(today);
+		payload.Status = challenge.GetStatus(today);
 
 		result.emplace_back(challenge, std::move(payload));
 	}

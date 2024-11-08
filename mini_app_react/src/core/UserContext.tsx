@@ -98,7 +98,11 @@ export class UserContextType{
 	}
 
 	public GetRunningChallenges(): Array<ChallengeWithPayloadType> {
-		return this.Challenges.filter(c => c.IsRunning(this.Today) && !c.HasLost)
+		return this.Challenges.filter(c => c.IsRunning() && !c.HasLost)
+	}
+
+	public GetChallenge(id: number): ChallengeWithPayloadType | undefined {
+		return this.Challenges.find(c => c.Id === id)
 	}
 }
 

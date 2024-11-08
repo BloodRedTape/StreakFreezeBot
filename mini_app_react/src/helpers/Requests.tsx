@@ -272,6 +272,15 @@ export const FetchChallengeInvitePreview = (challenge: number): Promise<Challeng
 	return GetChallengeInvitePreview(challenge).then(JsonFromResp).then(ParseChallengeWithPayloadType)
 }
 
+export const GetChallengeInviteParticipantsPreview = (challenge: number) => {
+	return fetch(MakeUserRequestLocation() + '/challenges/invite_participants_preview/' + challenge, { headers: MakeTelegramAuthHeaders() })
+}
+
+export const FetchChallengeInviteParticipantsPreview = (challenge: number): Promise<ChallengeParticipantType[]> => {
+	return GetChallengeInviteParticipantsPreview(challenge).then(JsonFromResp).then(e => (e || []).map(ParseChallengeParticipantType))
+}
+
+
 export const GetTgFullUserById = (id: number) => {
 	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
 }
