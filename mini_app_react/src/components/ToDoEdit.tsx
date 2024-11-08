@@ -3,6 +3,7 @@ import { IconButton } from "@xelene/tgui"
 import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
 import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
 import { CSSProperties, useState } from "react"
+import { ListPlaceholder } from "../core/ListPlaceholder"
 
 export type ToDoEntry = {
 	Id: number
@@ -78,8 +79,7 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 		/>
 	)
 
-	return (
-		<div>
+	const Items = (
 			<Listbox 
 				items={entries}
 				className="bg-content2 rounded-small"
@@ -96,6 +96,11 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 					</ListboxItem>
 				)}
 			</Listbox>
+	)
+
+	return (
+		<div>
+			{ entries.length ? Items : <ListPlaceholder text="Add ToDo entries now!"/> }
 
 			<Spacer y={3}/>
 
