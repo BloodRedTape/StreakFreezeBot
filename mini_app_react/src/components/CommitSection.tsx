@@ -10,7 +10,8 @@ import { Img } from "../core/Img";
 import { ExtendedType, ParseExtendedType } from "../core/Extended";
 import { useNavigate } from "react-router";
 import { Header } from "../core/Header";
-import { Listbox, ListboxItem } from "@nextui-org/react";
+import { Listbox, ListboxItem, Spacer } from "@nextui-org/react";
+import { ListPlaceholder } from "../core/ListPlaceholder";
 
 const AlignCenterStyle: CSSProperties = {
 	display: 'flex',
@@ -186,6 +187,23 @@ const StreakUsage = () => {
 		</Button>
 	)
 
+	const StreakSectionContent = (
+		<div>
+			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()), toCommit, setToCommit)}
+			{MakeSection("Optional", Streaks.filter(s => s.IsOptional()), toCommit, setToCommit)}
+		</div>
+	)
+
+	const ChallengesSectionContent = (
+		<div>
+			{
+				Array.from(ChallengesMap.entries()).map(c => {
+					return MakeSection(ChallengeName(c[0]), c[1], toCommit, setToCommit, true)
+				})
+			}
+		</div>
+	)
+
 	return (
 		<div>
 			<ExtendedStreakModal
@@ -211,8 +229,8 @@ const StreakUsage = () => {
 					}
 				]}
 			/>
-			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()), toCommit, setToCommit)}
-			{MakeSection("Optional", Streaks.filter(s => s.IsOptional()), toCommit, setToCommit)}
+			<Spacer y={1} />
+			{Streaks.length ? StreakSectionContent : <ListPlaceholder text={"You don't have a streak yet, create now!"}/>}
 			<Header
 				title={"Challenges"}
 				actions={[
@@ -223,11 +241,8 @@ const StreakUsage = () => {
 					}
 				]}
 			/>
-			{
-				Array.from(ChallengesMap.entries()).map(c => {
-					return MakeSection(ChallengeName(c[0]), c[1], toCommit, setToCommit, true)
-				})
-			}
+			{ChallengesMap.size ? ChallengesSectionContent : <ListPlaceholder text={"You don't have a challenge yet, create or join now!"}/>}
+			<Spacer y={1 }/>
 			{CommitButton }
 		</div>
 	)
