@@ -2,12 +2,12 @@ import { Button, Text} from "@xelene/tgui"
 import { useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { ErrorPopupFromJson, JsonFromResp, PostNewChallenge } from "../helpers/Requests"
-import { DateInput } from "@nextui-org/date-input";
 import { Input } from "@nextui-org/input";
 import { useNavigate } from "react-router"
 import { Spacer } from "@nextui-org/spacer";
 import { DateValue, CalendarDate, CalendarDateTime, ZonedDateTime } from '@internationalized/date';
 import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
+import { DatePicker } from "@nextui-org/react";
 
 export const FromDateInputDate = (date: DateValue) => {
 	if (date instanceof CalendarDate || date instanceof CalendarDateTime || date instanceof ZonedDateTime) {
@@ -35,6 +35,13 @@ const ValidateDuration = (value: any, min: number, max: number) => {
     return true;
 }
 
+const ValidateDate = (value: DateValue, min: Date) => {
+	if(FromDateInputDate(value) < min)
+		return `Challenge can only start from ${min.toLocaleDateString('en-GB')}`;
+
+	return true
+}
+
 export const ChallengeInput = () => {
 	const setUserContext = useSetUserContext()
 	const userContext = useGetUserContext()
@@ -43,7 +50,7 @@ export const ChallengeInput = () => {
 
 	const [name, setName] = useState<string>("")
 	const [date, setStartDate] = useState<DateValue>(ToDateInputDate(today))
-	const [duration, setDuration] = useState<number>(1)
+	const [duration, setDuration] = useState<number>(7)
 	const [toDo, setToDo] = useState<string[]>([])
 
 	const navigate = useNavigate()
@@ -113,11 +120,12 @@ export const ChallengeInput = () => {
 
 			{DefaultSpacer}
 
-			<DateInput
+			<DatePicker
 				labelPlacement="outside"
 				label="Start date"
 				onChange={setStartDate}
 				minValue={ToDateInputDate(today)}
+				validate={ d => ValidateDate(d, today) }
 				defaultValue={ToDateInputDate(today)}
 			/>
 

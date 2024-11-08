@@ -76,7 +76,7 @@ export const App = () => {
     }, [location.pathname]);
 
     return (
-        <NextUIProvider navigate={navigate} useHref={useHref}>
+        <NextUIProvider navigate={navigate} useHref={useHref} locale="en-GB">
             <main className={`${window.Telegram?.WebApp.colorScheme ?? "light"} text-foreground bg-background`}>
                 <QueryClientProvider client={queryClient}>
                     <UserContext.Provider value={[userContext, setUserContext]}>

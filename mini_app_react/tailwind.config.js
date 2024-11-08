@@ -18,7 +18,7 @@ module.exports = {
         layout: {
             fontSize: {
                 tiny: "0.950rem", // text-tiny
-                small: "1.100rem", // text-small
+                small: "1.050rem", // text-small
                 medium: "1.250rem", // text-medium
                 large: "1.5rem", // text-large
             },
