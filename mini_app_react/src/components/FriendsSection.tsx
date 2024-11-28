@@ -46,7 +46,7 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 						}}
 						src={GetFriendStatusImageLinkFor(friend.TodayProtection)}
 					/>
-					: undefined
+					: <div/> 
 			}
 			afterFloatLeft={true}
 			childrenBoxStyle={{ textOverflow: 'ellipsis' }}
