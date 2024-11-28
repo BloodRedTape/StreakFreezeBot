@@ -104,6 +104,15 @@ export class UserContextType{
 	public GetChallenge(id: number): ChallengeWithPayloadType | undefined {
 		return this.Challenges.find(c => c.Id === id)
 	}
+
+	public CanFreeze(): boolean {
+		for(const streak of this.Streaks) {
+			if (streak.Required && streak.Freezable && !streak.IsProtectedAt(this.Today))
+				return true	
+		}
+
+		return false
+	}
 }
 
 type UserContextPairType = [UserContextType | undefined, Dispatch<SetStateAction<UserContextType | undefined>>]
