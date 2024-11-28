@@ -125,7 +125,7 @@ export const ChallengeInput = () => {
 				label="Start date"
 				onChange={setStartDate}
 				minValue={ToDateInputDate(today)}
-				validate={ d => ValidateDate(d, today) }
+				validate={d => ValidateDate(d, today)}
 				defaultValue={ToDateInputDate(today)}
 			/>
 

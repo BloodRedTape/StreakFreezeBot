@@ -11,7 +11,7 @@ const NewChallengeModal = () => {
 
 	const OnNewChallenge = () => {
 
-		navigation('/new_challenge')
+		navigation('/edit_challenges/new_challenge')
 	}
 
 	const NewChallengeButton = (
@@ -41,7 +41,7 @@ export const ChallengesSection = () => {
 
 	const MakeChallengeEntry = (challenge: ChallengeWithPayloadType) => {
 		const OnNavigateChallenge = () => {
-			navigate('/challenge/' + challenge.Id)
+			navigate('/edit_challenges/challenge/' + challenge.Id)
 		}
 
 		const Icon = (

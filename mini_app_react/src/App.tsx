@@ -62,7 +62,20 @@ export const App = () => {
     const navigate = useNavigate();
 
     window.Telegram?.WebApp.BackButton.onClick(() => {
-        navigate(-1)
+        const segments = location.pathname.split('/').filter(Boolean);
+
+        if (!segments.length) {
+            navigate('/')
+            return
+        }
+
+
+        const id = Number(segments.pop());
+
+        if (!isNaN(id) && segments.length)
+            segments.pop()
+
+        navigate(`/${segments.join('/')}`);
     })
 
     const location = useLocation();
@@ -83,11 +96,15 @@ export const App = () => {
                         <AppRoot>
                             <Routes>
                                 <Route path="/" element={ActualAppContent} />
-                                <Route path="/new_challenge" element={<Page><ChallengeInput/></Page>} />
-                                <Route path="/challenge/:id" element={<Page><ChallengeInfoPage/></Page>} />
                                 <Route path="/streak/:id" element={<Page><StreakInfoPage/></Page>} />
-                                <Route path="/edit_streaks" element={<Page><StreakEdit/></Page>} />
+                                <Route path="/edit_streaks" element={<Page><StreakEdit /></Page>} />
+
+                                <Route path="/challenge/:id" element={<Page><ChallengeInfoPage /></Page>} />
+
                                 <Route path="/edit_challenges" element={<Page><ChallengesSection/></Page>} />
+                                <Route path="/edit_challenges/challenge/:id" element={<Page><ChallengeInfoPage/></Page>} />
+                                <Route path="/edit_challenges/new_challenge" element={<Page><ChallengeInput /></Page>} />
+
                                 <Route path="/edit_freezes" element={<Page><FreezePage/></Page>} />
                             </Routes>
                         </AppRoot>
