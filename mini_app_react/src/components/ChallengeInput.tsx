@@ -89,7 +89,9 @@ export const ChallengeInput = () => {
 		PostNewChallenge(name, ourDate, duration, toDo).then(JsonFromResp).then(OnJson).then(Refresh);
 	}
 
-	const DefaultSpacer = (<Spacer y={3}/>)
+	const DefaultSpacer = (<Spacer y={3} />)
+
+	const DataComplete = name.length && toDo.length
 
 	return (
 		<div style={{padding: '5%'}}>
@@ -145,6 +147,7 @@ export const ChallengeInput = () => {
 				stretched
 				size="m"
 				onClick={OnNewChallenge}
+				disabled={!DataComplete}
 			>
 				Create	
 			</Button>
