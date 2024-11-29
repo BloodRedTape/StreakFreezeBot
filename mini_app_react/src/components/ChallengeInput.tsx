@@ -7,7 +7,7 @@ import { useNavigate } from "react-router"
 import { Spacer } from "@nextui-org/spacer";
 import { DateValue, CalendarDate, CalendarDateTime, ZonedDateTime } from '@internationalized/date';
 import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
-import { DatePicker } from "@nextui-org/react";
+import { DateInput } from "@nextui-org/react";
 
 export const FromDateInputDate = (date: DateValue) => {
 	if (date instanceof CalendarDate || date instanceof CalendarDateTime || date instanceof ZonedDateTime) {
@@ -111,24 +111,24 @@ export const ChallengeInput = () => {
 
 			{DefaultSpacer}
 
-			<Input
-				labelPlacement="outside"
-				label="Duration"
-				type="number"
-				value={duration.toString()}
-				validate={ s => ValidateDuration(s, 1, 365) }
-				onValueChange={(value) => setDuration(parseInt(value))}
-			/>
-
-			{DefaultSpacer}
-
-			<DatePicker
+			<DateInput
 				labelPlacement="outside"
 				label="Start date"
 				onChange={setStartDate}
 				minValue={ToDateInputDate(today)}
 				validate={d => ValidateDate(d, today)}
 				defaultValue={ToDateInputDate(today)}
+			/>
+
+			{DefaultSpacer}
+
+			<Input
+				labelPlacement="outside"
+				label="Duration (days)"
+				type="number"
+				value={duration.toString()}
+				validate={ s => ValidateDuration(s, 1, 365) }
+				onValueChange={(value) => setDuration(parseInt(value))}
 			/>
 
 			{DefaultSpacer}
