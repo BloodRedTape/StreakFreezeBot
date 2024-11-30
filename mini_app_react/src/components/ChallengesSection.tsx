@@ -4,6 +4,7 @@ import { useGetUserContext } from "../core/UserContext"
 import { PlaceholderUrlFor } from "../helpers/Requests"
 import { useNavigate } from "react-router"
 import { Listbox, ListboxItem } from "@nextui-org/react"
+import { ListPlaceholder } from "../core/ListPlaceholder"
 
 const NewChallengeModal = () => {
 
@@ -90,12 +91,15 @@ export const ChallengesSection = () => {
 	const Pending = userContext?.Challenges?.filter(c => c.IsPending()) ?? []
 	const Finished = userContext?.Challenges?.filter(c => c.IsFinished()) ?? []
 
+	const Placeholder = <ListPlaceholder text={"You don't have a challenge yet, create or join now!"}/>
+
 	return (
 		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
-			{Header}
+			{ Header }
 			{ MakeChallengeSection('Running', Running) }
 			{ MakeChallengeSection('Pending', Pending) }
 			{ MakeChallengeSection('Finished', Finished) }
+			{ !Running.length && !Pending.length && !Finished.length ? Placeholder : undefined }
 		</div>
 	)
 }
