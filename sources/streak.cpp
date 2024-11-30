@@ -85,11 +85,11 @@ Protection Streak::ProtectionAt(Date date, const std::vector<StreakFreeze> &free
 	return Protection::None;
 }
 
-StreakPayload::StreakPayload(StreakPayload&& other){
+StreakPayload::StreakPayload(StreakPayload&& other)noexcept{
 	*this = std::move(other);
 }
 
-StreakPayload& StreakPayload::operator=(StreakPayload&& other){
+StreakPayload& StreakPayload::operator=(StreakPayload&& other)noexcept{
 	this->operator=((const StreakPayload &)StreakPayload());
 	std::swap(Id, other.Id);
 	std::swap(History, other.History);

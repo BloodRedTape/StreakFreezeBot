@@ -92,11 +92,11 @@ struct StreakPayload {
 
     StreakPayload(const StreakPayload &) = default;
 
-    StreakPayload(StreakPayload &&other);
+    StreakPayload(StreakPayload &&other)noexcept;
 
     StreakPayload &operator=(const StreakPayload &) = default;
 
-    StreakPayload &operator=(StreakPayload &&other);
+    StreakPayload &operator=(StreakPayload &&other)noexcept;
 
 	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(StreakPayload, Id, History, Start, Count, Required, Freezable)
 };

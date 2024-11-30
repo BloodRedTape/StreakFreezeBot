@@ -309,8 +309,12 @@ std::vector<Payload<Streak, StreakPayload>> StreakDatabase::StreaksWithPayload(s
 		payload.Count = count;
 		payload.Required = count || streak.IsChallenge();
 		payload.Freezable = streak.IsFreezable();
-		
-		result.emplace_back(streak, std::move(payload));
+
+		Payload<Streak, StreakPayload> streak_with_payload;
+		streak_with_payload.Model = streak;
+		streak_with_payload.PayloadData = std::move(payload);
+	
+		result.emplace_back(std::move(streak_with_payload));
 	}
 
 	return result;
