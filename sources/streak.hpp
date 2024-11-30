@@ -88,5 +88,15 @@ struct StreakPayload {
     bool Required = false;
     bool Freezable = false;
 
+    StreakPayload() = default;
+
+    StreakPayload(const StreakPayload &) = default;
+
+    StreakPayload(StreakPayload &&other);
+
+    StreakPayload &operator=(const StreakPayload &) = default;
+
+    StreakPayload &operator=(StreakPayload &&other);
+
 	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(StreakPayload, Id, History, Start, Count, Required, Freezable)
 };
