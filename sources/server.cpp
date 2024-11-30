@@ -482,7 +482,7 @@ std::optional<std::string> HttpApiServer::GetParam(const httplib::Request& req, 
 }
 
 static std::string HMAC_SHA256(const std::string& data, const std::string& key) {
-	std::string result(32, '/0');
+	std::string result(32, '\0');
 	hmac_sha256(key.data(), key.size(), data.data(), data.size(), result.data(), result.size());
 	return result;
 }
