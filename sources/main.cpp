@@ -3,11 +3,16 @@
 #include <INIReader.h>
 #include <mutex>
 #include "server.hpp"
+#include "tgbridge.hpp"
 #include "timer_client.hpp"
 #include "bot.hpp"
 
 void ServerMain(const INIReader &config) {
 	HttpApiServer(config).Run();
+}
+
+void TgBridgeMain(const INIReader &config) {
+	TgBridge(config).Run();
 }
 
 void TimerMain(const INIReader &config) {
@@ -27,6 +32,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::thread server_thread(ServerMain, std::ref(config));
+	std::thread bridge_thread(TgBridgeMain, std::ref(config));
 	std::thread timer_thread(TimerMain, std::ref(config));
 
 	StreakBot bot(config);
