@@ -58,42 +58,42 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 {
 	Super::set_mount_point("/", m_WebAppPath);
 	
-	Get ("/user/:id/full", &ThisClass::GetFullUser);
-	Post("/debug/log", &ThisClass::PostDebugLog);
-	Post("/user/:id/commit", &ThisClass::Commit);
-	Post("/user/:id/add_streak", &ThisClass::AddStreak);
-	Post("/user/:id/remove_streak", &ThisClass::RemoveStreak);
-	Get ("/user/:id/pending_submition", &ThisClass::GetPendingSubmition);
-	Post("/user/:id/pending_submition", &ThisClass::PostPendingSubmition);
-	Post("/user/:id/add_freeze", &ThisClass::AddFreeze);
-	Post("/user/:id/use_freeze", &ThisClass::UseFreeze);
-	Post("/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
-	Get ("/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
-	Get ("/quote", &ThisClass::GetQuote);
-	Post("/quote/invalidate", &ThisClass::PostInvalidateQuote);
-	Post("/quote/push", &ThisClass::PostPushQuote);
-	Get ("/user/:id/friends", &ThisClass::GetFriends);
-	Post("/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
-	Post("/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
+	Get ("/api/user/:id/full", &ThisClass::GetFullUser);
+	Post("/api/debug/log", &ThisClass::PostDebugLog);
+	Post("/api/user/:id/commit", &ThisClass::Commit);
+	Post("/api/user/:id/add_streak", &ThisClass::AddStreak);
+	Post("/api/user/:id/remove_streak", &ThisClass::RemoveStreak);
+	Get ("/api/user/:id/pending_submition", &ThisClass::GetPendingSubmition);
+	Post("/api/user/:id/pending_submition", &ThisClass::PostPendingSubmition);
+	Post("/api/user/:id/add_freeze", &ThisClass::AddFreeze);
+	Post("/api/user/:id/use_freeze", &ThisClass::UseFreeze);
+	Post("/api/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
+	Get ("/api/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
+	Get ("/api/quote", &ThisClass::GetQuote);
+	Post("/api/quote/invalidate", &ThisClass::PostInvalidateQuote);
+	Post("/api/quote/push", &ThisClass::PostPushQuote);
+	Get ("/api/user/:id/friends", &ThisClass::GetFriends);
+	Post("/api/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
+	Post("/api/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
 
 
-	Post("/user/:id/challenges/new", &ThisClass::NewChallenge);
-	Post("/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
-	Get ("/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
-	Get ("/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
-	Get ("/user/:id/challenges/invite_participants_preview/:challenge", &ThisClass::GetChallengeInviteParticipantsPreview);
+	Post("/api/user/:id/challenges/new", &ThisClass::NewChallenge);
+	Post("/api/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
+	Get ("/api/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
+	Get ("/api/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
+	Get ("/api/user/:id/challenges/invite_participants_preview/:challenge", &ThisClass::GetChallengeInviteParticipantsPreview);
 
-	Get ("/tg/user/:id/:item", &ThisClass::GetTg);
+	Get ("/api/tg/user/:id/:item", &ThisClass::GetTg);
 
-	Get ("/placeholder/:text", &ThisClass::GetPlaceholder);
+	Get ("/api/placeholder/:text", &ThisClass::GetPlaceholder);
 
-	Post("/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
-	Post("/timer/moment_before_new_day", &ThisClass::OnMomentBeforeNewDay);
-	Post("/timer/new_day", &ThisClass::OnNewDay);
+	Post("/api/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
+	Post("/api/timer/moment_before_new_day", &ThisClass::OnMomentBeforeNewDay);
+	Post("/api/timer/new_day", &ThisClass::OnNewDay);
 
-	Get ("/notifications", &ThisClass::GetNotifications);
+	Get ("/api/notifications", &ThisClass::GetNotifications);
 
-	Post("/user/:id/nudge/:friend", &ThisClass::NudgeFriend);
+	Post("/api/user/:id/nudge/:friend", &ThisClass::NudgeFriend);
 
 	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
@@ -113,7 +113,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	set_error_handler([](const httplib::Request& req, httplib::Response& res) {
         // Check if the requested path is not "/"
-        if (req.path != "/") {
+        if (req.path != "/" && !req.path.starts_with("/api")) {
             // Redirect to the home page
             res.set_redirect("/");
         } else {

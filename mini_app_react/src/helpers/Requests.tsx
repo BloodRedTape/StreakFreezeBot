@@ -34,7 +34,7 @@ const GatherServerUrl = () => {
 }
 
 const MakeUserRequestLocation = () => {
-    return GatherServerUrl() + '/user/' + GatherCurrentUserId()
+    return GatherServerUrl() + '/api/user/' + GatherCurrentUserId()
 }
 
 export const GetFullUser = () => {
@@ -218,7 +218,7 @@ export const SimplePopup = (title: string, message: string) => {
 
 
 export const GetQuote = () => {
-	return fetch(GatherServerUrl() + '/quote')
+	return fetch(GatherServerUrl() + '/api/quote')
 		.then(JsonFromResp)
 		.then((body) => body.quote ?? 'There is nothing better that extending your streak!')
 }
@@ -282,7 +282,7 @@ export const FetchChallengeInviteParticipantsPreview = (challenge: number): Prom
 
 
 export const GetTgFullUserById = (id: number) => {
-	return fetch(GatherServerUrl() + '/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
+	return fetch(GatherServerUrl() + '/api/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
 }
 
 export const GetTgFullUser = () => {
@@ -290,7 +290,7 @@ export const GetTgFullUser = () => {
 }
 
 export const ProfilePhotoUrlFor = (id: number) => {
-	return GatherServerUrl() + '/tg/user/' + id + '/photo'
+	return GatherServerUrl() + '/api/tg/user/' + id + '/photo'
 }
 
 export const ProfilePhotoUrl = () => {
@@ -300,7 +300,7 @@ export const ProfilePhotoUrl = () => {
 export const PlaceholderUrlFor = (text: string): string => {
     const urlSafeString = text.replace(/[^a-zA-Z0-9-_\.]/g, '');
 
-    return GatherServerUrl() + '/placeholder/' + urlSafeString;
+    return GatherServerUrl() + '/api/placeholder/' + urlSafeString;
 }
 
 export const GetPersistentTodo = () => {

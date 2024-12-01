@@ -64,7 +64,7 @@ void StreakBot::Tick() {
 
 	httplib::Client client(m_WebApiUrl);
 
-	auto resp = client.Get("/notifications", {{"BotToken", getToken()}});
+	auto resp = client.Get("/api/notifications", {{"BotToken", getToken()}});
 
 	if(!resp)
 		return LogBot(Error, "Can't get notifications from %, because of internal error %", client.host(), httplib::to_string(resp.error()));
@@ -90,7 +90,7 @@ void StreakBot::InvalidateQuote(TgBot::Message::Ptr message) {
 	if(message->from->username != Admin)
 		return;
 
-	HttpPost(m_WebApiUrl, "/quote/invalidate", {{"BotToken", getToken()}});
+	HttpPost(m_WebApiUrl, "/api/quote/invalidate", {{"BotToken", getToken()}});
 }
 
 void StreakBot::PushQuote(TgBot::Message::Ptr message) {
@@ -106,7 +106,7 @@ void StreakBot::PushQuote(TgBot::Message::Ptr message) {
 
 	quote = message->text.substr(space + 1);
 
-	HttpPost(m_WebApiUrl, "/quote/push", {{"BotToken", getToken()}}, quote);
+	HttpPost(m_WebApiUrl, "/api/quote/push", {{"BotToken", getToken()}}, quote);
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {
