@@ -32,11 +32,24 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 		</Button>
 	)
 
-	const Header = (
+	const Name = (
+		<Text
+			weight="2"
+			style={{
+				display: 'block',
+				whiteSpace: 'nowrap',
+				textOverflow: 'ellipsis',
+				overflow: 'hidden'
+			}}
+		>
+			{friend.FullName}
+		</Text>
+	)
+
+	const NameWithFire = (
 		<Entry
 			after={
-				friend.TodayProtection !== ProtectionType.None
-					? <Img
+					<Img
 						style={{
 							height: '22px',
 							width: '22px',
@@ -46,24 +59,15 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 						}}
 						src={GetFriendStatusImageLinkFor(friend.TodayProtection)}
 					/>
-					: <div/> 
 			}
 			afterFloatLeft={true}
 			childrenBoxStyle={{ textOverflow: 'ellipsis' }}
 		>
-			<Text
-				weight="2"
-				style={{
-					display: 'block',
-					whiteSpace: 'nowrap',
-					textOverflow: 'ellipsis',
-					overflow: 'hidden'
-				}}
-			>
-				{friend.FullName}
-			</Text>
+			{Name}
 		</Entry>	
 	)
+
+	const Header = friend.TodayProtection !== ProtectionType.None ? NameWithFire : Name
 
 	const FriendSubheader = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`
 	const EndButton = (
@@ -169,7 +173,7 @@ export const FriendsSection = () => {
 			<Listbox
 				items={FriendItems}
 				style={{ marginTop: '10px', marginBottom: '10px' }}
-				className="bg-content2 rounded-small"
+				className="bg-content2 rounded-small overflow-hidden"
 				emptyContent={<div />}
 				itemClasses={{ base: "h-16" }}
 				shouldHighlightOnFocus={false}

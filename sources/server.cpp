@@ -112,12 +112,9 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	});
 
 	set_error_handler([](const httplib::Request& req, httplib::Response& res) {
-        // Check if the requested path is not "/"
         if (req.path != "/" && !req.path.starts_with("/api")) {
-            // Redirect to the home page
             res.set_redirect("/");
         } else {
-            // Set a 404 not found response for root if somehow no specific handler exists (usually not the case)
             res.status = 404;
             res.set_content("Not Found", "text/text");
         }
