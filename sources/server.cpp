@@ -1079,7 +1079,7 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 
 		for (std::int64_t user_id : challenge.GetParticipants()) {
 			
-			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today)){
+			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today) && !m_DB.HasLost(user_id, challenge_id, today)){
 				m_Notifications.push_back({
 					user_id,
 					Format("😡 You're about to lose in '%' challenge, commit instead!", challenge.GetName()),
@@ -1106,11 +1106,6 @@ void HttpApiServer::OnDayAlmostOver(const httplib::Request& req, httplib::Respon
 			m_Notifications.push_back({id, message, today});
 			continue;
 		} 
-		
-		if (m_DB.ActivePendingStreaks(id, today).size()) {
-			m_Notifications.push_back({id, UTF8("😏 Don't let go, finish what you've started!"), today});
-			continue;
-		}
 	}
 }
 
@@ -1123,7 +1118,7 @@ void HttpApiServer::OnMomentBeforeNewDay(const httplib::Request& req, httplib::R
 
 		for (std::int64_t user_id : challenge.GetParticipants()) {
 			
-			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today)){
+			if(!m_DB.CommitedChallengeAt(user_id, challenge_id, today) && !m_DB.HasLost(user_id, challenge_id, today)){
 				m_Notifications.push_back({
 					user_id,
 					Format("😱 You're about to lose in '%' challenge!!! Commit now!", challenge.GetName()),

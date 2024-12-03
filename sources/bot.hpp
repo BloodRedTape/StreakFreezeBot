@@ -36,5 +36,11 @@ public:
 	void AdvanceDate(TgBot::Message::Ptr message);
 #endif
 
+#if WITH_TIMER_TRIGGER
+	void OnNewDay(TgBot::Message::Ptr message);
+	void OnDayAlmostOver(TgBot::Message::Ptr message);
+	void OnMomentBeforeNewDay(TgBot::Message::Ptr message);
+#endif
+
 	void SetupUserUiWith(TgBot::Message::Ptr source, const std::string &text = "");
 };

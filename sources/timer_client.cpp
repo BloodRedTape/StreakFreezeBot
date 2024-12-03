@@ -50,16 +50,16 @@ void TimerClient::Tick(){
 
 void TimerClient::OnDayAlmostOver(){
     m_AlmostOverCalled = true;
-	Post("/timer/day_almost_over");
+	Post("/api/timer/day_almost_over");
 }
 
 void TimerClient::OnMomentBeforeNewDay(){
     m_MomentBeforeNewDayCalled = true;
-	Post("/timer/moment_before_new_day");
+	Post("/api/timer/moment_before_new_day");
 }
 
 void TimerClient::OnNewDay(){
 	m_AlmostOverCalled = false;
 	m_MomentBeforeNewDayCalled = false;
-	Post("/timer/new_day");
+	Post("/api/timer/new_day");
 }

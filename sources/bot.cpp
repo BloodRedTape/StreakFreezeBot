@@ -47,6 +47,12 @@ StreakBot::StreakBot(const INIReader& config):
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
 
+#if WITH_TIMER_TRIGGER
+	OnCommand("new_day",this,&StreakBot::OnNewDay);
+	OnCommand("day_almost_over", this, &StreakBot::OnDayAlmostOver);
+	OnCommand("moment_before_new_day", this, &StreakBot::OnMomentBeforeNewDay);
+#endif
+
 	UpdateCommandDescriptions();
 	
 	OnLog(&m_Logger, &Logger::Log);
@@ -118,6 +124,18 @@ void StreakBot::AdvanceDate(TgBot::Message::Ptr message) {
 	DateUtils::Debug::AdvanceCurrentDate();
 
 	ReplyMessage(message, Format("Advanced date by 1 day: %", DateUtils::Now()));
+}
+#endif
+
+#if WITH_TIMER_TRIGGER
+void StreakBot::OnNewDay(TgBot::Message::Ptr message){
+	HttpPost(m_WebApiUrl, "/api/timer/new_day");
+}
+void StreakBot::OnDayAlmostOver(TgBot::Message::Ptr message){
+	HttpPost(m_WebApiUrl, "/api/timer/day_almost_over");
+}
+void StreakBot::OnMomentBeforeNewDay(TgBot::Message::Ptr message){
+	HttpPost(m_WebApiUrl, "/api/timer/moment_before_new_day");
 }
 #endif
 

@@ -36,7 +36,8 @@ add_executable(StreakFreezeBot
 	"sources/timer_client.cpp"
 	"sources/openai.cpp"
 	"sources/streak.cpp" 
- "sources/challenge.cpp")
+	"sources/challenge.cpp"
+)
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl
@@ -59,6 +60,6 @@ endif()
 
 if(WITH_DEBUG_COMMANDS)
 	target_compile_definitions(StreakFreezeBot PRIVATE WITH_ADVANCE_DATE=1)
-	target_compile_definitions(StreakFreezeBot PRIVATE WITH_DAY_ALMOST_OVER=1)
+	target_compile_definitions(StreakFreezeBot PRIVATE WITH_TIMER_TRIGGER=1)
 endif()
 
