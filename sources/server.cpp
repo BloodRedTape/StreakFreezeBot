@@ -1027,6 +1027,14 @@ const std::string& HttpApiServer::GetOrDownloadPlaceholder(const std::string& fi
 	return Empty;
 }
 
+static std::vector<std::string> FilterDescrs(std::vector<std::string> descrs) {
+	while (descrs.size() > 2) {
+		std::swap(descrs[rand() % descrs.size()], descrs.back());
+		descrs.pop_back();
+	}
+	return descrs;
+}
+
 const std::string& HttpApiServer::GetOrGenerateExtended(const std::vector<std::string>& descrs){
 	std::string key = nlohmann::json(descrs).dump();
 	
@@ -1038,13 +1046,14 @@ You are a joke quote generation system that should give a people with different 
 You can inspire by highlighting benefits of following goal and negative effects of not following the goal. 
 All goals are purely jokes, so if goal is to drink beer daily, you should encourage it to do so.
 I give you array of goals, you respond with a motivational quote. 
+You can make a single abstract quote about success from the whole array.
 
 Quote should be simple and short, one sentence long. 
 You can skip some things in order to fix the length requirements. 
 Don't use quotation characters. Give quote straight away
 )";
 
-	std::string array = nlohmann::json(descrs).dump();
+	std::string array = nlohmann::json(FilterDescrs(descrs)).dump();
 	
 	auto response = OpenAI::Complete(m_OpenAIKey, {{OpenAI::Role::System, system},{OpenAI::Role::User, array}}, 1.f, "gpt-4o-mini");
 	
