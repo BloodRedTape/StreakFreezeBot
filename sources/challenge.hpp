@@ -2,6 +2,7 @@
 
 
 #include <vector>
+#include <limits>
 #include "json.hpp"
 #include "time.hpp"
 
@@ -22,12 +23,14 @@ class Challenge {
 	std::int64_t Creator = 0;
 	ChallengeType Type = ChallengeType::Unknown;
 	std::string Name;
+	std::string Icon = UTF8("😆");
+	std::string IconBackground = "white";
 	Date Start;
 	std::int64_t Duration = 0;
 	std::vector<std::string> ToDo;
 	std::vector<std::int64_t> Participants;
 public:
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Challenge, Type, Name, Start, Duration, Creator, ToDo, Creator, Participants)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Challenge, Type, Name, Icon, IconBackground, Start, Duration, Creator, ToDo, Creator, Participants)
 public:
 	
 	const auto &GetToDo()const{ return ToDo; }

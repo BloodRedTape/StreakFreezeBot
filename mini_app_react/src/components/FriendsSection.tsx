@@ -173,9 +173,9 @@ export const FriendsSection = () => {
 			<Listbox
 				items={FriendItems}
 				style={{ marginTop: '10px', marginBottom: '10px' }}
-				className="bg-content2 rounded-small overflow-hidden"
+				className="bg-content2 rounded-small text-ellipsis overflow-hidden"
 				emptyContent={<div />}
-				itemClasses={{ base: "h-16" }}
+				itemClasses={{ base: "h-16 text-ellipsis overflow-hidden" }}
 				shouldHighlightOnFocus={false}
 			>
 				{(friend) => MakeFriendEntry(friend, Refresh, friend.Edit)}

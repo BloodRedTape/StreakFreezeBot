@@ -12,8 +12,6 @@ DEFINE_LOG_CATEGORY(HttpApiServer)
 DEFINE_LOG_CATEGORY(TelegramBridge)
 DEFINE_LOG_CATEGORY(OpenAI)
 
-#define UTF8(text) ((const char *)u8##text)
-
 void Fail(httplib::Response &resp, const std::string &error) {
 	resp.set_content(nlohmann::json::object({{"Fail", error}}).dump(), "application/json");
 	resp.status = httplib::StatusCode::OK_200;

@@ -23,3 +23,7 @@ struct adl_serializer<std::optional<T>>{
     }
 };
 NLOHMANN_JSON_NAMESPACE_END
+
+#ifndef UTF8
+#define UTF8(text) ((const char *)u8##text)
+#endif

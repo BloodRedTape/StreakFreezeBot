@@ -1,4 +1,4 @@
-import { Button, Text} from "@xelene/tgui"
+import { Button, Modal, Text} from "@xelene/tgui"
 import { useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { ErrorPopupFromJson, JsonFromResp, PostNewChallenge } from "../helpers/Requests"
@@ -8,6 +8,8 @@ import { Spacer } from "@nextui-org/spacer";
 import { DateValue, CalendarDate, CalendarDateTime, ZonedDateTime } from '@internationalized/date';
 import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
 import { DateInput } from "@nextui-org/react";
+import { ChallengeAvatar } from "./ChallengeAvatar";
+import { ForegroundColor } from "../helpers/Theme"
 
 export const FromDateInputDate = (date: DateValue) => {
 	if (date instanceof CalendarDate || date instanceof CalendarDateTime || date instanceof ZonedDateTime) {
@@ -42,13 +44,162 @@ const ValidateDate = (value: DateValue, min: Date) => {
 	return true
 }
 
+type ChallengeAvatarSelectionProps = {
+	icon: string,
+	iconBackground: string
+	onIcon: (icon: string) => void,
+	onIconBackground : (icon: string) => void
+}
+
+const ChallengeAvatarPicker: React.FC<ChallengeAvatarSelectionProps> = ({ icon, iconBackground, onIcon, onIconBackground }) => {
+	const icons = ["😆", "😍", "🥶", "🥵", "😭", "🤮", "😈", "💀", "💪", "👀", "👄", "🙏", "⚡️", "✨", "❤️", "💊", "🌿", "🔔", "🚗", "🏠", "⛰", "🍔", "✏️", "🍷", "🍺", "☕️"]
+	const backgrounds = [
+		"bg-gray-200",    // A light, neutral gray
+		"bg-blue-400",    // A softer blue
+		"bg-blue-500",    // A softer blue
+		"bg-green-300",   // A fresh, soft green
+		"bg-green-500",   // A fresh, soft green
+		"bg-red-300",     // A warmer, softer red
+		"bg-red-500",     // A warmer, softer red
+		"bg-yellow-300",  // A sunny, soft yellow
+		"bg-yellow-500",  // A sunny, soft yellow
+		"bg-purple-300",  // A mild, pleasant purple
+		"bg-indigo-400",  // A slightly toned down indigo
+		"bg-pink-300",    // A calmer pink
+		"bg-teal-300",    // A soft, refreshing teal
+		"bg-orange-300"   // A gentle, warm orange
+	];
+
+	const [open, setOpen] = useState<boolean>(false)
+
+	if (!icon.length)
+		onIcon(icons[Math.floor(Math.random() * icons.length)])
+
+	if (!iconBackground.length)
+		onIconBackground(backgrounds[Math.floor(Math.random() * backgrounds.length)])
+
+	const Avatar = (
+		<ChallengeAvatar
+			size="lg"
+			icon={icon}
+			iconBackground={iconBackground}
+			onClick={()=>setOpen(true) }
+		/>
+	)
+
+	const getRows = (array: string[], columns: number) => {
+		const rows = [];
+		for (let i = 0; i < array.length; i += columns) {
+			rows.push(array.slice(i, i + columns));
+		}
+		return rows;
+	};
+
+	const columns = 6
+
+	const backgroundRows = getRows(backgrounds, columns);
+
+	const iconBackgrounds = (
+		<table
+			style={{
+				marginLeft: 'auto',
+				marginRight: 'auto'
+			}}
+		>
+            <tbody>
+                {backgroundRows.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                        {row.map((color, colIndex) => (
+                            <td key={colIndex}>
+								<Button
+									size='m'
+									mode='outline'
+									onClick={() => onIconBackground(backgrounds[rowIndex * columns + colIndex])}
+									style={{margin: '3px'}}
+								>
+									<div
+										className={color}
+										style={{
+											width: '20px',
+											height: '20px',
+											borderRadius: '50%'
+										}}
+									/>
+                                </Button>
+                            </td>
+                        ))}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+
+	const emojiRows = getRows(icons, columns);
+
+	const iconButtons = (
+		<table
+			style={{
+				marginLeft: 'auto',
+				marginRight: 'auto'
+			}}
+		>
+			<tbody>
+				{emojiRows.map((row, rowIndex) => (
+					<tr key={rowIndex}>
+						{row.map((emoji, colIndex) => (
+							<td key={colIndex}>
+								<Button
+									size='m'
+									mode='outline'
+									onClick={() => onIcon(icons[rowIndex * columns + colIndex])}
+									style={{margin: '3px'}}
+								>
+									<span role="img" aria-label={`emoji-${rowIndex * columns + colIndex}`}>{emoji}</span>
+								</Button>
+							</td>
+						))}
+					</tr>
+				))}
+			</tbody>
+		</table>
+	);
+
+	const Content = (
+		<div
+			style={{
+				padding: '5%',
+			}}
+		>
+			{Avatar}
+			<Spacer y={4} />
+			{iconBackgrounds}
+			<Spacer y={4}/>
+			{iconButtons }
+		</div>
+	)
+
+	return (
+		<Modal
+			trigger={Avatar}
+			open={open}
+			onOpenChange={setOpen}
+			style={{background: ForegroundColor()} }
+		>
+			{Content}
+		</Modal>
+	)
+}
+
 export const ChallengeInput = () => {
 	const setUserContext = useSetUserContext()
 	const userContext = useGetUserContext()
 
 	const today = userContext?.Today ?? new Date()
 
+
 	const [name, setName] = useState<string>("")
+	const [icon, setIcon] = useState<string>("")
+	const [iconBackground, setIconBackground] = useState<string>("")
 	const [date, setStartDate] = useState<DateValue>(ToDateInputDate(today))
 	const [duration, setDuration] = useState<number>(7)
 	const [toDo, setToDo] = useState<string[]>([])
@@ -86,7 +237,7 @@ export const ChallengeInput = () => {
 
 		const ourDate = FromDateInputDate(date)
 
-		PostNewChallenge(name, ourDate, duration, toDo).then(JsonFromResp).then(OnJson).then(Refresh);
+		PostNewChallenge(name, icon, iconBackground, ourDate, duration, toDo).then(JsonFromResp).then(OnJson).then(Refresh);
 	}
 
 	const DefaultSpacer = (<Spacer y={3} />)
@@ -99,7 +250,11 @@ export const ChallengeInput = () => {
 				Enter challenge details!
 			</Text>
 
-			{DefaultSpacer}
+			<Spacer y={1} />
+
+			<ChallengeAvatarPicker icon={icon} iconBackground={iconBackground} onIcon={setIcon} onIconBackground={setIconBackground}/>
+
+			<Spacer y={1}/>
 
 			<Input
 				labelPlacement="outside"
@@ -107,6 +262,7 @@ export const ChallengeInput = () => {
 				placeholder="Do something cool for 30 days."
 				value={name}
 				onChange={e => setName(e.target.value)}
+				classNames={{label: '-z-1'}}
 			/>
 
 			{DefaultSpacer}
@@ -129,6 +285,7 @@ export const ChallengeInput = () => {
 				value={duration.toString()}
 				validate={ s => ValidateDuration(s, 1, 365) }
 				onValueChange={(value) => setDuration(parseInt(value))}
+				classNames={{label: '-z-1'}}
 			/>
 
 			{DefaultSpacer}

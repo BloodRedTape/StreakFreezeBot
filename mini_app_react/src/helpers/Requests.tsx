@@ -234,9 +234,11 @@ export const GetFriends = () => {
 	return fetch(MakeUserRequestLocation() + '/friends', { headers: MakeTelegramAuthHeaders() })
 }
 
-export const PostNewChallenge = (name: string, start: Date, duration: number, todo: string[]) => {
+export const PostNewChallenge = (name: string, icon: string, iconBackground: string, start: Date, duration: number, todo: string[]) => {
 	let challenge: any = {}
 	challenge.Name = name
+	challenge.Icon = icon
+	challenge.IconBackground = iconBackground
 	challenge.Start = ToApiDate(start)
 	challenge.Duration = duration
 	challenge.ToDo = todo 

@@ -1,10 +1,10 @@
-import { Avatar, Button, Text } from "@xelene/tgui"
+import { Button, Text } from "@xelene/tgui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { useGetUserContext } from "../core/UserContext"
-import { PlaceholderUrlFor } from "../helpers/Requests"
 import { useNavigate } from "react-router"
 import { Listbox, ListboxItem } from "@nextui-org/react"
 import { ListPlaceholder } from "../core/ListPlaceholder"
+import { ChallengeAvatar } from "./ChallengeAvatar"
 
 const NewChallengeModal = () => {
 
@@ -46,10 +46,13 @@ export const ChallengesSection = () => {
 		}
 
 		const Icon = (
-			<Avatar
-				size={48}
-				src={PlaceholderUrlFor(challenge.Name)}
-			/>
+			<div style={{display: 'inline-block'}}>
+				<ChallengeAvatar
+					size={'lg'}
+					icon={challenge.Icon }
+					iconBackground={challenge.IconBackground}
+				/>
+			</div>
 		)
 
 		return (

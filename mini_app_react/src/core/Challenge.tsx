@@ -10,6 +10,8 @@ export class ChallengeType {
 	public Creator: number = 0
 	public Type: ChallengeRulesType = 0	
 	public Name: string = ""
+	public Icon: string = "😆"
+	public IconBackground: string = "white"
 	public Start: Date = new Date()
 	public Duration: number = 0
 	public ToDo: Array<string> = []
@@ -61,6 +63,8 @@ export const ParseChallengeWithPayloadType = (data: any): ChallengeWithPayloadTy
 	challenge.Creator = data.Creator ?? -1
 	challenge.Type = data.Type === 1 ? ChallengeRulesType.Duration : ChallengeRulesType.Unknown
 	challenge.Name = data.Name ?? ""
+	challenge.Icon = data.Icon ?? challenge.Icon
+	challenge.IconBackground = data.IconBackground ?? challenge.IconBackground
 	challenge.Start = FromApiDate(data.Start)
 	challenge.Duration = data.Duration ?? 0
 	challenge.ToDo = (data.ToDo || []).map((e: any): string => e)
