@@ -1,6 +1,7 @@
 import { Modal, Text, Button } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useQuery } from "react-query"
+import { Entry } from "../core/Entry"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { ChallengeInviteType } from "../helpers/Challenges"
 import { ErrorPopupFromJson, FetchChallengeInvitePreview, GatherCurrentUserId, PostJoinChallenge } from "../helpers/Requests"
@@ -43,11 +44,21 @@ const ChallengeInvite: React.FC<{ invite: ChallengeInviteType, onAccepted: ()=>v
 		</Text>
 	)
 
+	const Duration = (
+		<Text weight="3" style={{display: 'block', paddingBottom: '10px'} }>
+			{data.Duration } days long
+		</Text>
+	)
+
 	return (
 		<div style={{ padding: '5%' }}>
 			<ChallengeHeader challenge={data} />
 
-			{Starting}
+			<Entry
+				after={Duration}
+			>
+				{Starting}
+			</Entry>
 
 			<Text weight="2">ToDo</Text>
 
