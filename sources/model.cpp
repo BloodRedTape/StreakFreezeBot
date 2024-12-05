@@ -126,6 +126,9 @@ bool StreakDatabase::IsActive(std::int64_t user_id, std::int64_t streak_id, Date
 bool StreakDatabase::IsActive(const Streak& streak, std::int64_t user_id, Date today) const{
 	auto &user = GetUserNoAutoFreeze(user_id, today);
 
+	if(streak.Status == StreakStatus::Removed)
+		return false;
+
 	if(!streak.IsChallenge())
 		return streak.Count(today, user.GetFreezes());
 	
