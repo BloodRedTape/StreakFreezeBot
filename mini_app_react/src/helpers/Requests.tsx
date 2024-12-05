@@ -34,7 +34,7 @@ const GatherServerUrl = () => {
 }
 
 const GatherTgBridgeUrl = () => {
-	return 'https://tgbridge.streak.bloodredtape.com'
+	return 'https://tgbridgestreak.bloodredtape.com'
 }
 
 const MakeUserRequestLocation = () => {
