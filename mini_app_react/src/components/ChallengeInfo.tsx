@@ -2,7 +2,6 @@ import { Spacer } from "@nextui-org/react"
 import { Text } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
 import { useNavigate, useParams } from "react-router"
-import { navigateBack } from "../App"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { Entry } from "../core/Entry"
 import { Header } from "../core/Header"
@@ -69,7 +68,7 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 
 	const LeaveChallenge = () => {
 		PostLeaveChallenge(challenge.Id).then(JsonFromResp).then(ErrorPopupFromJson).then(
-			() => navigateBack(navigate)
+			() => navigate('/edit_challenges')
 		).then(Refresh)
 	}
 

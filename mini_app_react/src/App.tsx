@@ -9,7 +9,7 @@ import { TryParseInviteLink } from './helpers/Friends';
 import { OnEveryHour } from './helpers/Time';
 import { RootTabBar } from './tabs/RootTabBar';
 import { NextUIProvider } from "@nextui-org/react";
-import { NavigateFunction, Route, Routes, useHref, useLocation, useNavigate } from 'react-router';
+import { Route, Routes, useHref, useLocation, useNavigate } from 'react-router';
 import { ChallengeInfoPage } from './components/ChallengeInfo';
 import { ChallengeInput } from './components/ChallengeInput';
 import { StreakInfoPage } from './components/StreakInfo';
@@ -27,23 +27,6 @@ const Page: React.FC<React.PropsWithChildren> = ({children}) => {
             {children }
         </div>
     )
-}
-
-export const navigateBack = (navigate: NavigateFunction) => {
-    const segments = window.location.pathname.split('/').filter(Boolean);
-
-    if (!segments.length) {
-        navigate('/')
-        return
-    }
-
-
-    const id = Number(segments.pop());
-
-    if (!isNaN(id) && segments.length)
-        segments.pop()
-
-    navigate(`/${segments.join('/')}`);
 }
 
 export const App = () => {
@@ -79,7 +62,19 @@ export const App = () => {
     const navigate = useNavigate();
 
     window.Telegram?.WebApp.BackButton.onClick(() => {
-        navigateBack(navigate)
+        const segments = location.pathname.split('/').filter(Boolean);
+
+        if (!segments.length) {
+            navigate('/')
+            return
+        }
+
+        const id = Number(segments.pop());
+
+        if (!isNaN(id) && segments.length)
+            segments.pop()
+
+        navigate(`/${segments.join('/')}`);
     })
 
     const location = useLocation();
