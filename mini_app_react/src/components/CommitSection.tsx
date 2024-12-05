@@ -214,6 +214,7 @@ const StreakUsage = () => {
 				onExtendedFinish={() => setExtended(undefined)}
 				challenges={userContext?.GetRunningChallenges() || [] }
 			/>
+			<Spacer y={1} />
 			<Header
 				title={"Streaks"}
 				actions={[
@@ -241,8 +242,9 @@ const StreakUsage = () => {
 					}
 				]}
 			/>
+			<Spacer y={1} />
 			{ChallengesMap.size ? ChallengesSectionContent : <ListPlaceholder text={"You don't have a challenge yet, create or join now!"}/>}
-			<Spacer y={1 }/>
+			<Spacer y={1}/>
 			{CommitButton }
 		</div>
 	)

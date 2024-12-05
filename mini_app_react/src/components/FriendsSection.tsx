@@ -12,7 +12,7 @@ import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
 import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
 import { NudgeButton } from "./Nudge"
-import { Listbox, ListboxItem } from "@nextui-org/react"
+import { Listbox, ListboxItem, Spacer } from "@nextui-org/react"
 import { Header, HeaderActionButton } from "../core/Header"
 import { ProfileAvatar } from "./ProfileAvatar"
 
@@ -83,7 +83,11 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 			description={FriendSubheader}
 			shouldHighlightOnFocus={false}
 		>
-			{ Header }
+			<div
+				style={{display: 'inline-block'}}
+			>
+				{ Header }
+			</div>
 		</ListboxItem>
 	)
 }
@@ -169,6 +173,7 @@ export const FriendsSection = () => {
 
 	const FriendsList = (
 		<div>
+			<Spacer y={1} />
 			{ SectionHeader }
 			<Listbox
 				items={FriendItems}
