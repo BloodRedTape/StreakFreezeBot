@@ -2,7 +2,7 @@ import { Button, Text } from "@xelene/tgui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { useGetUserContext } from "../core/UserContext"
 import { useNavigate } from "react-router"
-import { Listbox, ListboxItem } from "@nextui-org/react"
+import { Listbox, ListboxItem, Spacer } from "@nextui-org/react"
 import { ListPlaceholder } from "../core/ListPlaceholder"
 import { ChallengeAvatar } from "./ChallengeAvatar"
 
@@ -98,6 +98,7 @@ export const ChallengesSection = () => {
 
 	return (
 		<div style={{ paddingLeft: '5%', paddingRight: '5%' }}>
+			<Spacer y={1} />
 			{ Header }
 			{ MakeChallengeSection('Running', Running) }
 			{ MakeChallengeSection('Pending', Pending) }
