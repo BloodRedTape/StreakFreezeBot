@@ -33,6 +33,10 @@ const GatherServerUrl = () => {
 	return window.location.origin
 }
 
+const GatherTgBridgeUrl = () => {
+	return 'https://tgbridge.streak.bloodredtape.com'
+}
+
 const MakeUserRequestLocation = () => {
     return GatherServerUrl() + '/api/user/' + GatherCurrentUserId()
 }
@@ -290,7 +294,7 @@ export const FetchChallengeInviteParticipantsPreview = (challenge: number): Prom
 }
 
 export const GetTgFullUserById = (id: number) => {
-	return fetch(GatherServerUrl() + '/api/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
+	return fetch(GatherTgBridgeUrl() + '/api/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })
 }
 
 export const GetTgFullUser = () => {
@@ -298,7 +302,7 @@ export const GetTgFullUser = () => {
 }
 
 export const ProfilePhotoUrlFor = (id: number) => {
-	return GatherServerUrl() + '/api/tg/user/' + id + '/photo'
+	return GatherTgBridgeUrl() + '/api/tg/user/' + id + '/photo'
 }
 
 export const ProfilePhotoUrl = () => {
@@ -308,7 +312,7 @@ export const ProfilePhotoUrl = () => {
 export const PlaceholderUrlFor = (text: string): string => {
     const urlSafeString = text.replace(/[^a-zA-Z0-9-_\.]/g, '');
 
-    return GatherServerUrl() + '/api/placeholder/' + urlSafeString;
+    return GatherTgBridgeUrl() + '/api/placeholder/' + urlSafeString;
 }
 
 export const GetPersistentTodo = () => {
