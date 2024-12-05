@@ -258,6 +258,13 @@ export const PostJoinChallenge = (challenge: number) => {
 	})
 }
 
+export const PostLeaveChallenge = (challenge: number) => {
+	return fetch(MakeUserRequestLocation() + '/challenges/leave/' + challenge, {
+		method: 'POST',
+		headers: MakeTelegramAuthHeaders()
+	})
+}
+
 export const GetChallengeParticipants = (challenge: number) => {
 	return fetch(MakeUserRequestLocation() + '/challenges/participants/' + challenge, { headers: MakeTelegramAuthHeaders() })
 }
@@ -281,7 +288,6 @@ export const GetChallengeInviteParticipantsPreview = (challenge: number) => {
 export const FetchChallengeInviteParticipantsPreview = (challenge: number): Promise<ChallengeParticipantType[]> => {
 	return GetChallengeInviteParticipantsPreview(challenge).then(JsonFromResp).then(e => (e || []).map(ParseChallengeParticipantType))
 }
-
 
 export const GetTgFullUserById = (id: number) => {
 	return fetch(GatherServerUrl() + '/api/tg/user/' + id + '/full', { headers: MakeTelegramAuthHeaders() })

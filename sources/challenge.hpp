@@ -49,6 +49,8 @@ public:
 
 	void Add(std::int64_t user);
 
+	void Remove(std::int64_t user);
+
 	bool Has(std::int64_t user)const;
 
 	bool Validate(std::int64_t user);

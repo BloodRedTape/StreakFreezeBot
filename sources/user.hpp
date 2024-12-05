@@ -51,6 +51,8 @@ public:
 
     void RemoveStreak(std::int64_t streak_id);
 
+	void RemoveChallengeStreaks(std::int64_t challenge_id);
+
     Streak *GetStreak(std::int64_t id);
 
     const Streak* GetStreak(std::int64_t id)const {

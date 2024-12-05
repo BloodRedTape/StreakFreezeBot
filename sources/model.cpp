@@ -370,6 +370,31 @@ bool StreakDatabase::JoinChallenge(std::int64_t user_id, std::int64_t challenge_
 	return true;	
 }
 
+bool StreakDatabase::LeaveChallenge(std::int64_t user_id, std::int64_t challenge_id, Date today){
+	if (!m_Users.count(user_id)) {
+		LogModel(Error, "LeaveChallenge: User '%' does not exist", user_id);
+		return false;
+	}
+
+	if (!m_Challenges.count(challenge_id)) {
+		LogModel(Error, "LeaveChallenge: Challenge '%' does not exist", challenge_id);
+		return false;
+	}
+
+	auto &challenge = m_Challenges[challenge_id];
+	auto &user = GetUserNoAutoFreeze(user_id, today);
+
+	if (!challenge.Has(user_id)) {
+		LogModel(Error, "LeaveChallenge: Can't leave '%', user '%' is not in challenge", challenge.GetName(), user_id);
+		return false;
+	}
+	
+	challenge.Remove(user_id);
+	user.RemoveChallengeStreaks(challenge_id);
+
+	return true;
+}
+
 std::int64_t StreakDatabase::Count(std::int64_t user_id, std::int64_t challenge_id, Date today) const {
 	if (!m_Users.count(user_id)) {
 		LogModel(Error, "Count: User '%' does not exist", user_id);

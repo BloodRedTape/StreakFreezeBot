@@ -33,6 +33,26 @@ void Challenge::Add(std::int64_t user){
 	Participants.push_back(user);
 }
 
+void Challenge::Remove(std::int64_t user){
+	if (!Has(user)){
+		assert(false);
+		return;
+	}
+
+	auto it = std::find(Participants.begin(), Participants.end(), (user));
+
+	if(it == Participants.end() || !Participants.size())
+		return;
+
+	auto index = it - Participants.begin();
+
+	for (auto i = index; i < Participants.size() - 1; i++) {
+		std::swap(Participants[i], Participants[i + 1]);
+	}
+
+	Participants.pop_back();
+}
+
 bool Challenge::Has(std::int64_t user)const{
 	return std::count(Participants.begin(), Participants.end(), user);
 }

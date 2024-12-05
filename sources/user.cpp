@@ -51,6 +51,13 @@ void User::RemoveStreak(std::int64_t streak_id){
 	streak.Status = StreakStatus::Removed;
 }
 
+void User::RemoveChallengeStreaks(std::int64_t challenge_id){
+	for (auto& streak : Streaks) {
+		if(streak.Challenge.value_or(0) == challenge_id)
+			streak.Status = StreakStatus::Removed;
+	}
+}
+
 Streak* User::GetStreak(std::int64_t id){
 	if(id >= Streaks.size())
 		return nullptr;

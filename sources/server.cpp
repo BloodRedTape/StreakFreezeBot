@@ -77,6 +77,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Post("/api/user/:id/challenges/new", &ThisClass::NewChallenge);
 	Post("/api/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
+	Post("/api/user/:id/challenges/leave/:challenge", &ThisClass::LeaveChallenge);
 	Get ("/api/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
 	Get ("/api/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
 	Get ("/api/user/:id/challenges/invite_participants_preview/:challenge", &ThisClass::GetChallengeInviteParticipantsPreview);
@@ -803,6 +804,35 @@ void HttpApiServer::JoinChallenge(const httplib::Request& req, httplib::Response
 	}
 	
 	Fail(resp, "Failed to join challenge");
+}
+
+void HttpApiServer::LeaveChallenge(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetIdParam(req, "id").value_or(0);
+	std::int64_t challenge = GetIdParam(req, "challenge").value_or(0);
+
+	if (!id || !challenge) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+	
+	auto today = DateUtils::Now();
+
+	const auto &user = m_DB.GetUser(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+
+	if(m_DB.LeaveChallenge(id, challenge, today)){
+		m_DB.SaveChallengeToFile(challenge);
+		
+		Ok(resp, "Left challenge");
+		return;
+	}
+	
+	Fail(resp, "Failed to leave challenge");
 }
 
 void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httplib::Response& resp){

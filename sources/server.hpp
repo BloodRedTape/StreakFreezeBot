@@ -83,6 +83,8 @@ public:
 
 	void JoinChallenge(const httplib::Request &req, httplib::Response &resp);
 
+	void LeaveChallenge(const httplib::Request &req, httplib::Response &resp);
+
 	void GetChallengeParticipants(const httplib::Request &req, httplib::Response &resp);
 
 	void GetChallengeInviteParticipantsPreview(const httplib::Request &req, httplib::Response &resp);

@@ -67,6 +67,8 @@ public:
 
 	bool JoinChallenge(std::int64_t user, std::int64_t challenge, Date today);
 
+	bool LeaveChallenge(std::int64_t user, std::int64_t challenge, Date today);
+
 	std::int64_t Count(std::int64_t user, std::int64_t challenge, Date today)const;
 
 	bool CommitedChallengeAt(std::int64_t user, std::int64_t challenge, Date today)const;

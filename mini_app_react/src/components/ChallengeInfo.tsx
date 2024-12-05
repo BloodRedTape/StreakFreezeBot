@@ -1,12 +1,14 @@
 import { Spacer } from "@nextui-org/react"
 import { Text } from "@xelene/tgui"
 import { differenceInDays } from "date-fns"
-import { useParams } from "react-router"
+import { useNavigate, useParams } from "react-router"
+import { navigateBack } from "../App"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { Entry } from "../core/Entry"
 import { Header } from "../core/Header"
-import { useGetUserContext } from "../core/UserContext"
+import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { MakeChallengeInviteLink } from "../helpers/Challenges"
+import { ErrorPopupFromJson, JsonFromResp, PostLeaveChallenge } from "../helpers/Requests"
 import { ShareIcon } from "../helpers/Resources"
 import { ChallengeHeader } from "./ChallengeHeader"
 import { ChallengeParticipantList } from "./ChallengeParticipant"
@@ -16,6 +18,13 @@ import { ToDoPreview } from "./ToDoPreview"
 const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ challenge }) => {
 	const userContext = useGetUserContext()
 	const today = userContext?.Today || new Date()
+	const navigate = useNavigate()
+	const setUserContext = useSetUserContext()
+
+	const Refresh = () => {
+		FetchUserContext().then(setUserContext)
+	}
+
 
 	const PendingStatus =
 		<Text weight="3">{`Starts in ${differenceInDays(challenge.Start, today)} days`}</Text>
@@ -58,6 +67,12 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 		window.Telegram?.WebApp.openTelegramLink(telegramLink)
 	}
 
+	const LeaveChallenge = () => {
+		PostLeaveChallenge(challenge.Id).then(JsonFromResp).then(ErrorPopupFromJson).then(
+			() => navigateBack(navigate)
+		).then(Refresh)
+	}
+
 	return (
 		<div style={{padding: '5%'}}>
 			<ChallengeHeader challenge={challenge} />
@@ -83,6 +98,11 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 						text: "Invite",
 						icon: <ShareIcon />,
 						onAction: ShareInviteLink
+					},
+					{
+						text: "Leave",
+						icon: <div/>,
+						onAction: LeaveChallenge
 					}
 				  ]
 				: []
