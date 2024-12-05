@@ -1,4 +1,4 @@
-import { Button, Text } from "@xelene/tgui"
+import { Button, Text } from "@telegram-apps/telegram-ui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { useGetUserContext } from "../core/UserContext"
 import { useNavigate } from "react-router"

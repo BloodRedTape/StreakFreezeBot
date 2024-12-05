@@ -1,5 +1,5 @@
 import { Listbox, ListboxItem } from "@nextui-org/react"
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 
 export const ListPlaceholder: React.FC<{ text: string }> = ({text}) => {
 	return <Listbox

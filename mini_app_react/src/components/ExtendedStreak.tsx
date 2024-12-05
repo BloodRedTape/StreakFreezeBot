@@ -1,4 +1,4 @@
-import { Modal, Text, Button } from "@xelene/tgui"
+import { Modal, Text, Button } from "@telegram-apps/telegram-ui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { ExtendedContentType } from "../core/Extended"
 import { Img } from "../core/Img"

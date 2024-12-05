@@ -1,5 +1,6 @@
-import { Avatar } from "@xelene/tgui"
+import { Avatar } from "@telegram-apps/telegram-ui"
 import { ProfilePhotoUrlFor } from "../helpers/Requests"
+import WebApp from '@twa-dev/sdk'
 
 type ProfileAvatarProps = {
 	username: string
@@ -8,7 +9,7 @@ type ProfileAvatarProps = {
 
 export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({username, id}) => {
 	const OnOpenProfile = () => {
-		window.Telegram?.WebApp.openTelegramLink('https://t.me/' + username)
+		WebApp.openTelegramLink('https://t.me/' + username)
 	}
 
 	return (

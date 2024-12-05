@@ -1,4 +1,4 @@
-import { Banner, Button, Image, List } from "@xelene/tgui";
+import { Banner, Button, Image, List } from "@telegram-apps/telegram-ui";
 import React from "react";
 import { FetchUserContext, StreakFreezeType, useGetUserContext, useSetUserContext } from "../core/UserContext";
 import { JsonFromResp, PopupFromJson, PostRemoveFreeze, PostUseFreeze } from "../helpers/Requests";

@@ -1,4 +1,4 @@
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 import { Avatar, AvatarGroup } from "@nextui-org/react";
 import { useQuery } from "react-query";
 import { FetchChallengeInviteParticipantsPreview, ProfilePhotoUrlFor } from "../helpers/Requests";

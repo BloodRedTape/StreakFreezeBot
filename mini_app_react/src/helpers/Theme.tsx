@@ -1,9 +1,9 @@
-
+import WebApp from '@twa-dev/sdk'
 
 const IsApple = () => {
 	const apple = ["ios", "macos"]
 
-	return apple.includes(window.Telegram?.WebApp.platform ?? 'none')
+	return apple.includes(WebApp.platform ?? 'none')
 }
 
 export const ForegroundColor = () => {

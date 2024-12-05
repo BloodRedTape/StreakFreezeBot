@@ -1,4 +1,4 @@
-import { Button, Input, List, Modal, Section, Slider, Text } from "@xelene/tgui"
+import { Button, Input, List, Modal, Section, Slider, Text } from "@telegram-apps/telegram-ui"
 import { CSSProperties, useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { JsonFromResp, PopupFromJson, PostAddFreeze } from "../helpers/Requests"

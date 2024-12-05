@@ -1,7 +1,7 @@
 import { Input, Listbox, ListboxItem, Spacer } from "@nextui-org/react"
-import { IconButton } from "@xelene/tgui"
-import { Icon28AddCircle } from "@xelene/tgui/dist/icons/28/add_circle"
-import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
+import { IconButton } from "@telegram-apps/telegram-ui"
+import { Icon28AddCircle } from "@telegram-apps/telegram-ui/dist/icons/28/add_circle"
+import { Icon28Close } from "@telegram-apps/telegram-ui/dist/icons/28/close"
 import { CSSProperties, useState } from "react"
 import { ListPlaceholder } from "../core/ListPlaceholder"
 

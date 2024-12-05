@@ -1,4 +1,4 @@
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 import { ChallengeWithPayloadType } from "../core/Challenge"
 import { ChallengeAvatar } from "./ChallengeAvatar"
 

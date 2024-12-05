@@ -1,4 +1,4 @@
-import { Title, Text } from "@xelene/tgui"
+import { Title, Text } from "@telegram-apps/telegram-ui"
 import { useState } from "react"
 import { useParams } from "react-router"
 import { StreakType } from "../core/Streak"

@@ -1,4 +1,4 @@
-import { Button, Placeholder, Text } from "@xelene/tgui"
+import { Button, Placeholder, Text } from "@telegram-apps/telegram-ui"
 import { useState } from "react"
 import { FetchFriends, FriendType } from "../core/Friend"
 import { Img } from "../core/Img"
@@ -7,14 +7,14 @@ import { MakeInviteLink } from "../helpers/Friends"
 import { PostRemoveFriend } from "../helpers/Requests"
 import { GetFriendStatusImageLinkFor, ShareIcon } from "../helpers/Resources"
 import { Loading } from "./Loading"
-import { Entry } from "../core/Entry"
-import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit"
-import { Icon28Archive } from "@xelene/tgui/dist/icons/28/archive"
+import { Icon28Edit } from "@telegram-apps/telegram-ui/dist/icons/28/edit"
+import { Icon28Archive } from "@telegram-apps/telegram-ui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
 import { NudgeButton } from "./Nudge"
 import { Listbox, ListboxItem, Spacer } from "@nextui-org/react"
 import { Header, HeaderActionButton } from "../core/Header"
 import { ProfileAvatar } from "./ProfileAvatar"
+import WebApp from '@twa-dev/sdk'
 
 const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolean) => {
 
@@ -46,28 +46,27 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 		</Text>
 	)
 
-	const NameWithFire = (
-		<Entry
-			after={
-					<Img
-						style={{
-							height: '22px',
-							width: '22px',
-							marginTop: 'auto',
-							marginBottom: 'auto',
-							marginLeft: '5px'
-						}}
-						src={GetFriendStatusImageLinkFor(friend.TodayProtection)}
-					/>
-			}
-			afterFloatLeft={true}
-			childrenBoxStyle={{ textOverflow: 'ellipsis' }}
-		>
-			{Name}
-		</Entry>	
+	const Status = (
+		<Img
+			style={{
+				height: '22px',
+				width: '22px',
+				marginTop: 'auto',
+				marginBottom: 'auto',
+				marginLeft: '5px'
+			}}
+			src={GetFriendStatusImageLinkFor(friend.TodayProtection)}
+		/>
 	)
 
-	const Header = friend.TodayProtection !== ProtectionType.None ? NameWithFire : Name
+	const NameWithStatus = (
+		<div
+			style={{display: 'flex', alignItems: 'center'}}
+		>
+			{Name}
+			{friend.TodayProtection !== ProtectionType.None ? Status : undefined } 
+		</div>
+	)
 
 	const FriendSubheader = friend.Streak === 0 ? 'No streak?' : `${friend.Streak} day${friend.Streak === 1 ? '' : 's'} streak`
 	const EndButton = (
@@ -83,11 +82,7 @@ const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolea
 			description={FriendSubheader}
 			shouldHighlightOnFocus={false}
 		>
-			<div
-				style={{display: 'inline-block'}}
-			>
-				{ Header }
-			</div>
+				{ NameWithStatus }
 		</ListboxItem>
 	)
 }
@@ -118,7 +113,7 @@ export const FriendsSection = () => {
 
 		const telegramLink = `https://t.me/share/url?url=${link}&text=${text}`
 
-		window.Telegram?.WebApp.openTelegramLink(telegramLink)
+		WebApp.openTelegramLink(telegramLink)
 	}
 
 	const FriendsPlaceholder = (

@@ -1,5 +1,5 @@
-﻿import { Avatar, Blockquote, Button, IconButton, Modal, Text} from "@xelene/tgui"
-import { Icon28Close } from "@xelene/tgui/dist/icons/28/close"
+﻿import { Avatar, Blockquote, Button, IconButton, Modal, Text} from "@telegram-apps/telegram-ui"
+import { Icon28Close } from "@telegram-apps/telegram-ui/dist/icons/28/close"
 import { useState } from "react"
 import { Entry } from "../core/Entry"
 import { FriendType } from "../core/Friend"

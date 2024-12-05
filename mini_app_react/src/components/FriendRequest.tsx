@@ -1,4 +1,4 @@
-import { Modal, Text, Button, Avatar} from "@xelene/tgui"
+import { Modal, Text, Button, Avatar} from "@telegram-apps/telegram-ui"
 import { CSSProperties, useState } from "react"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { GatherCurrentUserId, GetTgFullUserById, JsonFromResp, PostAcceptInvite, ProfilePhotoUrlFor, SimplePopup } from "../helpers/Requests"

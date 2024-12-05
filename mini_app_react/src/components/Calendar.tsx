@@ -1,6 +1,7 @@
-import { IconButton, Text } from '@xelene/tgui';
-import { Icon24ChevronLeft } from '@xelene/tgui/dist/icons/24/chevron_left';
-import { Icon24ChevronRight } from '@xelene/tgui/dist/icons/24/chevron_right';
+import { Icon24ChevronLeft } from '@telegram-apps/telegram-ui/dist/icons/24/chevron_left';
+import { Icon24ChevronRight } from '@telegram-apps/telegram-ui/dist/icons/24/chevron_right';
+import { Text } from '@telegram-apps/telegram-ui/dist/components/Typography/Text/Text';
+import { IconButton } from '@telegram-apps/telegram-ui/dist/components/Blocks/IconButton/IconButton';
 import { addMonths, differenceInDays } from 'date-fns';
 import { CSSProperties, ReactNode } from 'react';
 import { Entry } from '../core/Entry';

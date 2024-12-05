@@ -1,4 +1,4 @@
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 import { StreakType } from "../core/Streak"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
 import { ErrorPopupFromJson, JsonFromResp, PostAddStreak, PostRemoveStreak } from "../helpers/Requests"

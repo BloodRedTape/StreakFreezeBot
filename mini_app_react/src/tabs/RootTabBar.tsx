@@ -1,7 +1,7 @@
-import { Tabbar } from '@xelene/tgui';
-import { Icon28Stats } from "@xelene/tgui/dist/icons/28/stats"
-import { Icon28Chat } from "@xelene/tgui/dist/icons/28/chat"
-import { Icon28Heart } from "@xelene/tgui/dist/icons/28/heart"
+import { Tabbar } from '@telegram-apps/telegram-ui';
+import { Icon28Stats } from "@telegram-apps/telegram-ui/dist/icons/28/stats"
+import { Icon28Chat } from "@telegram-apps/telegram-ui/dist/icons/28/chat"
+import { Icon28Heart } from "@telegram-apps/telegram-ui/dist/icons/28/heart"
 import { CommitTab } from './CommitTab';
 import { FriendsTab } from './FriendsTab';
 import { StreakTab } from './StreakTab';

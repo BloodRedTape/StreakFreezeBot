@@ -1,4 +1,4 @@
-import { Modal, Text, Button } from "@xelene/tgui"
+import { Modal, Text, Button } from "@telegram-apps/telegram-ui"
 import { differenceInDays } from "date-fns"
 import { useQuery } from "react-query"
 import { Entry } from "../core/Entry"

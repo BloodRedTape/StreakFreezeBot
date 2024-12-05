@@ -1,5 +1,5 @@
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
-import { AppRoot } from '@xelene/tgui';
+import { AppRoot } from '@telegram-apps/telegram-ui';
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { FriendRequestModal } from './components/FriendRequest';
@@ -18,6 +18,7 @@ import { ChallengesSection } from './components/ChallengesSection';
 import { FreezePage } from './components/FreezeSection';
 import { ChallengeInviteModal } from './components/ChallengeInvite';
 import { TryParseChallengeInviteLink } from './helpers/Challenges';
+import WebApp from '@twa-dev/sdk'
 
 const queryClient = new QueryClient();
 
@@ -44,9 +45,8 @@ export const App = () => {
         FetchUserContext().then(setUserContext);
     })
 
-    window.Telegram?.WebApp.ready()
-    window.Telegram?.WebApp.expand()
-
+    WebApp.ready()
+    WebApp.expand()
     document.body.style.overflow = "hidden"
 
     const [tab, setTab] = useState<number>(0)
@@ -61,7 +61,7 @@ export const App = () => {
 
     const navigate = useNavigate();
 
-    window.Telegram?.WebApp.BackButton.onClick(() => {
+    WebApp.BackButton.onClick(() => {
         const segments = location.pathname.split('/').filter(Boolean);
 
         if (!segments.length) {
@@ -81,15 +81,15 @@ export const App = () => {
 
     useEffect(() => {
         if (location.pathname == '/')
-            window.Telegram?.WebApp.BackButton.hide()
+            WebApp.BackButton.hide()
         else
-            window.Telegram?.WebApp.BackButton.show()
+            WebApp.BackButton.show()
 
     }, [location.pathname]);
 
     return (
         <NextUIProvider navigate={navigate} useHref={useHref} locale="en-GB">
-            <main className={`${window.Telegram?.WebApp.colorScheme ?? "light"} text-foreground bg-background`}>
+            <main className={`${WebApp.colorScheme ?? "light"} text-foreground bg-background`}>
                 <QueryClientProvider client={queryClient}>
                     <UserContext.Provider value={[userContext, setUserContext]}>
                         <AppRoot>

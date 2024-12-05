@@ -1,5 +1,5 @@
 import { Spacer } from "@nextui-org/react"
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 import { differenceInDays } from "date-fns"
 import { useNavigate, useParams } from "react-router"
 import { ChallengeWithPayloadType } from "../core/Challenge"
@@ -13,6 +13,7 @@ import { ChallengeHeader } from "./ChallengeHeader"
 import { ChallengeParticipantList } from "./ChallengeParticipant"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
 import { ToDoPreview } from "./ToDoPreview"
+import WebApp from '@twa-dev/sdk'
 
 const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ challenge }) => {
 	const userContext = useGetUserContext()
@@ -63,7 +64,7 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 
 		const telegramLink = `https://t.me/share/url?url=${link}&text=${text}`
 
-		window.Telegram?.WebApp.openTelegramLink(telegramLink)
+		WebApp.openTelegramLink(telegramLink)
 	}
 
 	const LeaveChallenge = () => {

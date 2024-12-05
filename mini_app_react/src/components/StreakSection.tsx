@@ -1,10 +1,11 @@
-﻿import { List, Text, Blockquote, Title } from '@xelene/tgui';
+﻿import { List, Text, Blockquote, Title } from '@telegram-apps/telegram-ui';
 import { useUserContext } from '../core/UserContext';
 import { CalendarSection } from './CalendarSection';
 import { GatherUserCompleteName, GetQuote } from '../helpers/Requests';
 import { useState } from 'react';
 import { Loading } from './Loading';
 import { useCookies } from 'react-cookie';
+import WebApp from '@twa-dev/sdk'
 
 export const StreakSection = () => {
 	const [userContext] = useUserContext()
@@ -31,7 +32,7 @@ export const StreakSection = () => {
 		const text = `'${quote}' ©️ StreakFreezeBot`
 		const link = `https://t.me/share/url?url=${text}`
 
-		window.Telegram?.WebApp.openTelegramLink(link)
+		WebApp.openTelegramLink(link)
 	}
 
 	return (

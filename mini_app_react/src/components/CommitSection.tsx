@@ -1,5 +1,5 @@
-import { Button, Checkbox, Text } from "@xelene/tgui";
-import { Icon28Edit } from "@xelene/tgui/dist/icons/28/edit";
+import { Button, Checkbox, Text } from "@telegram-apps/telegram-ui";
+import { Icon28Edit } from "@telegram-apps/telegram-ui/dist/icons/28/edit";
 import { CSSProperties, useState } from "react";
 import { StreakType } from "../core/Streak";
 import { FetchUserContext, ProtectionType, useGetUserContext, useSetUserContext } from "../core/UserContext";

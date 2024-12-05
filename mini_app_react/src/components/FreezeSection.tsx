@@ -1,4 +1,4 @@
-import { Text } from "@xelene/tgui";
+import { Text } from "@telegram-apps/telegram-ui";
 import { useGetUserContext } from "../core/UserContext";
 import { AddFreezeModal } from "./AddFreeze";
 import { Freeze } from "./Freeze";

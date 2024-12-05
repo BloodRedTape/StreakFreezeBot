@@ -3,7 +3,7 @@ import { Entry } from "../core/Entry"
 import { Img } from "../core/Img"
 import { ProtectionType } from "../core/UserContext"
 import { GetFriendStatusImageLinkFor } from "../helpers/Resources"
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 
 
 export const GetColorForProgress = (hasLost: boolean, commited: boolean) => {

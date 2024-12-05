@@ -1,4 +1,4 @@
-import { Button, Text } from "@xelene/tgui"
+import { Button, Text } from "@telegram-apps/telegram-ui"
 import { CSSProperties } from "react"
 
 export type HeaderActionButton = {

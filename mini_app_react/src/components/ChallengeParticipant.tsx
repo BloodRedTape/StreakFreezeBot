@@ -1,5 +1,5 @@
 import { Listbox, ListboxItem } from "@nextui-org/react"
-import { Text } from "@xelene/tgui"
+import { Text } from "@telegram-apps/telegram-ui"
 import { useQuery } from "react-query"
 import { ChallengeParticipantType, ChallengeWithPayloadType } from "../core/Challenge"
 import { FetchChallengeParticipants, GatherCurrentUserId } from "../helpers/Requests"
