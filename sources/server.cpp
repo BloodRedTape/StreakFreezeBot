@@ -77,7 +77,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 
 	Super::Post("/api/user/:id/challenges/new", this, &ThisClass::NewChallenge);
 	Super::Post("/api/user/:id/challenges/join/:challenge", this, &ThisClass::JoinChallenge);
-	Super::Post("/api/user/:id/challenges/leave/:challenge", &ThisClass::LeaveChallenge);
+	Super::Post("/api/user/:id/challenges/leave/:challenge", this, &ThisClass::LeaveChallenge);
 	Super::Get ("/api/user/:id/challenges/participants/:challenge", this, &ThisClass::GetChallengeParticipants);
 	Super::Get ("/api/user/:id/challenges/invite_preview/:challenge", this, &ThisClass::GetChallengeInvitePreview);
 	Super::Get ("/api/user/:id/challenges/invite_participants_preview/:challenge", this, &ThisClass::GetChallengeInviteParticipantsPreview);
