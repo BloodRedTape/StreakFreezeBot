@@ -244,8 +244,9 @@ const StreakUsage = () => {
 			/>
 			<Spacer y={1} />
 			{ChallengesMap.size ? ChallengesSectionContent : <ListPlaceholder text={"You don't have a challenge yet, create or join now!"}/>}
-			<Spacer y={1}/>
+			<Spacer y={1} />
 			{CommitButton }
+			<Spacer y={1} />
 		</div>
 	)
 }
