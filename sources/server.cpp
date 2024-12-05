@@ -56,43 +56,42 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 {
 	Super::set_mount_point("/", m_WebAppPath);
 	
-	Get ("/api/user/:id/full", &ThisClass::GetFullUser);
-	Post("/api/debug/log", &ThisClass::PostDebugLog);
-	Post("/api/user/:id/commit", &ThisClass::Commit);
-	Post("/api/user/:id/add_streak", &ThisClass::AddStreak);
-	Post("/api/user/:id/remove_streak", &ThisClass::RemoveStreak);
-	Get ("/api/user/:id/pending_submition", &ThisClass::GetPendingSubmition);
-	Post("/api/user/:id/pending_submition", &ThisClass::PostPendingSubmition);
-	Post("/api/user/:id/add_freeze", &ThisClass::AddFreeze);
-	Post("/api/user/:id/use_freeze", &ThisClass::UseFreeze);
-	Post("/api/user/:id/remove_freeze", &ThisClass::RemoveFreeze);
-	Get ("/api/user/:id/available_freezes", &ThisClass::GetAvailableFreezes);
-	Get ("/api/quote", &ThisClass::GetQuote);
-	Post("/api/quote/invalidate", &ThisClass::PostInvalidateQuote);
-	Post("/api/quote/push", &ThisClass::PostPushQuote);
-	Get ("/api/user/:id/friends", &ThisClass::GetFriends);
-	Post("/api/user/:id/friends/accept/:from", &ThisClass::AcceptFriendInvite);
-	Post("/api/user/:id/friends/remove/:from", &ThisClass::RemoveFriend);
+	Super::Get ("/api/user/:id/full", this, &ThisClass::GetFullUser);
+	Super::Post("/api/debug/log", this, &ThisClass::PostDebugLog);
+	Super::Post("/api/user/:id/commit", this, &ThisClass::Commit);
+	Super::Post("/api/user/:id/add_streak", this, &ThisClass::AddStreak);
+	Super::Post("/api/user/:id/remove_streak", this, &ThisClass::RemoveStreak);
+	Super::Get ("/api/user/:id/pending_submition", this, &ThisClass::GetPendingSubmition);
+	Super::Post("/api/user/:id/pending_submition", this, &ThisClass::PostPendingSubmition);
+	Super::Post("/api/user/:id/add_freeze", this, &ThisClass::AddFreeze);
+	Super::Post("/api/user/:id/use_freeze", this, &ThisClass::UseFreeze);
+	Super::Post("/api/user/:id/remove_freeze", this, &ThisClass::RemoveFreeze);
+	Super::Get ("/api/user/:id/available_freezes", this, &ThisClass::GetAvailableFreezes);
+	Super::Get ("/api/quote", this, &ThisClass::GetQuote);
+	Super::Post("/api/quote/invalidate", this, &ThisClass::PostInvalidateQuote);
+	Super::Post("/api/quote/push", this, &ThisClass::PostPushQuote);
+	Super::Get ("/api/user/:id/friends", this, &ThisClass::GetFriends);
+	Super::Post("/api/user/:id/friends/accept/:from", this, &ThisClass::AcceptFriendInvite);
+	Super::Post("/api/user/:id/friends/remove/:from", this, &ThisClass::RemoveFriend);
 
 
-	Post("/api/user/:id/challenges/new", &ThisClass::NewChallenge);
-	Post("/api/user/:id/challenges/join/:challenge", &ThisClass::JoinChallenge);
-	Post("/api/user/:id/challenges/leave/:challenge", &ThisClass::LeaveChallenge);
-	Get ("/api/user/:id/challenges/participants/:challenge", &ThisClass::GetChallengeParticipants);
-	Get ("/api/user/:id/challenges/invite_preview/:challenge", &ThisClass::GetChallengeInvitePreview);
-	Get ("/api/user/:id/challenges/invite_participants_preview/:challenge", &ThisClass::GetChallengeInviteParticipantsPreview);
+	Super::Post("/api/user/:id/challenges/new", this, &ThisClass::NewChallenge);
+	Super::Post("/api/user/:id/challenges/join/:challenge", this, &ThisClass::JoinChallenge);
+<<<<<<< HEAD
+	Super::Post("/api/user/:id/challenges/leave/:challenge", this, &ThisClass::LeaveChallenge);
+=======
+>>>>>>> 8243ae1 (Separate tgbridge into different server)
+	Super::Get ("/api/user/:id/challenges/participants/:challenge", this, &ThisClass::GetChallengeParticipants);
+	Super::Get ("/api/user/:id/challenges/invite_preview/:challenge", this, &ThisClass::GetChallengeInvitePreview);
+	Super::Get ("/api/user/:id/challenges/invite_participants_preview/:challenge", this, &ThisClass::GetChallengeInviteParticipantsPreview);
 
-	Get ("/api/tg/user/:id/:item", &ThisClass::GetTg);
+	Super::Post("/api/timer/day_almost_over", this, &ThisClass::OnDayAlmostOver);
+	Super::Post("/api/timer/moment_before_new_day", this, &ThisClass::OnMomentBeforeNewDay);
+	Super::Post("/api/timer/new_day", this, &ThisClass::OnNewDay);
 
-	Get ("/api/placeholder/:text", &ThisClass::GetPlaceholder);
+	Super::Get ("/api/notifications", this, &ThisClass::GetNotifications);
 
-	Post("/api/timer/day_almost_over", &ThisClass::OnDayAlmostOver);
-	Post("/api/timer/moment_before_new_day", &ThisClass::OnMomentBeforeNewDay);
-	Post("/api/timer/new_day", &ThisClass::OnNewDay);
-
-	Get ("/api/notifications", &ThisClass::GetNotifications);
-
-	Post("/api/user/:id/nudge/:friend", &ThisClass::NudgeFriend);
+	Super::Post("/api/user/:id/nudge/:friend", this, &ThisClass::NudgeFriend);
 
 	set_exception_handler([&](const auto& req, auto& res, std::exception_ptr ep) {
 		std::string content;
@@ -455,26 +454,6 @@ void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Re
 
 std::optional<std::int64_t> HttpApiServer::GetUser(const httplib::Request& req)const {
 	return GetIdParam(req, "id");
-}
-
-std::optional<std::int64_t> HttpApiServer::GetIdParam(const httplib::Request& req, const std::string &name)const {
-	if (!req.path_params.count(name))
-		return std::nullopt;
-
-	const std::string &user_id = req.path_params.at(name);
-	errno = 0;
-	std::int64_t id = std::atoll(user_id.c_str());
-	if(errno)
-		return std::nullopt;
-
-	return id;
-}
-
-std::optional<std::string> HttpApiServer::GetParam(const httplib::Request& req, const std::string& name)const {
-	if (!req.path_params.count(name))
-		return std::nullopt;
-
-	return req.path_params.at(name);
 }
 
 static std::string HMAC_SHA256(const std::string& data, const std::string& key) {
@@ -932,129 +911,6 @@ void HttpApiServer::GetChallengeInvitePreview(const httplib::Request& req, httpl
 	resp.set_content(nlohmann::json(challenges.at(challenge)).dump(), "application/json");
 }
 
-void HttpApiServer::GetTg(const httplib::Request& req, httplib::Response& resp) {
-	std::int64_t id = GetIdParam(req, "id").value_or(0);
-	std::string item = GetParam(req, "item").value_or("");
-
-	if (!id || !item.size()) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	const auto &user = m_DB.GetUser(id, today);
-
-	auto chat = m_Bot.getApi().getChat(id);
-
-	if (item == "full") {
-		
-		nlohmann::json json = { 
-			{"Username", chat->username},
-			{"FullName", chat->firstName + ' ' + chat->lastName},
-		};
-		
-		resp.status = httplib::StatusCode::OK_200;
-		resp.set_content(json.dump(), "application/json");
-		return;
-	}
-
-    if (item == "photo") {
-        try {
-            TgBot::UserProfilePhotos::Ptr photos = m_Bot.getApi().getUserProfilePhotos(id);
-
-            if (photos->totalCount == 0) {
-				auto placeholder = GetOrDownloadPlaceholder(chat->firstName, chat->lastName);
-			
-				if (placeholder.size()) {
-					resp.status = httplib::StatusCode::OK_200;
-					resp.set_content(placeholder, "image/png");
-				}else{
-					resp.status = httplib::StatusCode::NotFound_404;
-					resp.set_content("Failed to fetch avatar", "text/plain");
-				}
-
-                return;
-            }
-
-            std::string fileId = photos->photos[0][0]->fileId;
-
-			const auto &content = GetOrDownloadTgFile(fileId);
-
-            if (content.size()) {
-                resp.status = httplib::StatusCode::OK_200;
-                resp.set_content(content, "image/jpeg");
-            } else {
-				resp.status = httplib::StatusCode::NotFound_404;
-				resp.set_content("Failed to fetch telegram avatar", "text/plain");
-            }
-        } catch (const std::exception& e) {
-			LogTelegramBridge(Error, "Crashed on photo fetch: %", e.what());
-            resp.status = httplib::StatusCode::InternalServerError_500;
-            resp.set_content(e.what(), "text/plain");
-        }
-
-        return;
-    }
-
-	LogTelegramBridge(Error, "Bad request: item %, id %", item, id);
-	resp.status = httplib::StatusCode::BadRequest_400;
-}
-
-void HttpApiServer::GetPlaceholder(const httplib::Request& req, httplib::Response& resp){
-	std::string text = GetParam(req, "text").value_or("");
-
-	if (!text.size()) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	auto placeholder = GetOrDownloadPlaceholder(text, "");
-
-	if (placeholder.size()) {
-		resp.status = httplib::StatusCode::OK_200;
-		resp.set_content(placeholder, "image/png");
-	}else{
-		resp.status = httplib::StatusCode::NotFound_404;
-		resp.set_content("Failed to fetch avatar", "text/plain");
-	}
-}
-
-const std::string& HttpApiServer::GetOrDownloadTgFile(const std::string& id) {
-	if(m_TelegramCache.count(id))
-		return m_TelegramCache[id];
-
-    TgBot::File::Ptr file = m_Bot.getApi().getFile(id);
-
-    std::string fileUrl = "https://api.telegram.org/file/bot" + m_Bot.getToken() + "/" + file->filePath;
-    httplib::Client cli = MakeSecureClient("https://api.telegram.org");
-    auto res = cli.Get(fileUrl.c_str());
-
-    if (res && res->status == 200) 
-		return (m_TelegramCache[id] = res->body);
-	
-	LogTelegramBridge(Error, "Photo fetch request failed with: %", res ? res->body : httplib::to_string(res.error()));
-	
-	static std::string Empty = "";
-	return Empty;
-}
-
-const std::string& HttpApiServer::GetOrDownloadPlaceholder(const std::string& first, const std::string &last){
-	const std::string key = first + "+" + last;
-
-	if(m_PlaceholdersCache.count(key))
-		return m_PlaceholdersCache[key];
-
-
-	auto fallback = HttpGet("https://avatar.iran.liara.run", Format("/username?username=%", key));
-
-
-	if (fallback.has_value())
-		return (m_PlaceholdersCache[key] = std::move(fallback.value()));
-	
-	static std::string Empty = "";
-	return Empty;
-}
-
 static std::vector<std::string> FilterDescrs(std::vector<std::string> descrs) {
 	while (descrs.size() > 2) {
 		std::swap(descrs[rand() % descrs.size()], descrs.back());
@@ -1299,13 +1155,3 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 	Ok(resp, "Nudged!");
 }
 
-HttpApiServer& HttpApiServer::Get(const std::string& pattern, HttpApiHandler handler){
-	Super::Get(pattern, std::bind(handler, this, std::placeholders::_1, std::placeholders::_2));
-	return *this;
-}
-
-HttpApiServer& HttpApiServer::Post(const std::string& pattern, HttpApiHandler handler){
-	httplib::Server::Handler h = std::bind(handler, this, std::placeholders::_1, std::placeholders::_2);
-	Super::Post(pattern, h);
-	return *this;
-}

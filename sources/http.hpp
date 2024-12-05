@@ -92,3 +92,52 @@ template<typename T>
 T GetJsonPropertyOr(const std::string &json_string, const std::string &property, T value) {
 	return GetJsonProperty<T>(json_string, property).value_or(value);
 }
+
+class HttpServer : public httplib::Server {
+	using Super = httplib::Server;
+public:
+
+	template<typename ServerClass>
+	HttpServer& Get(const std::string& pattern, ServerClass *object, void (ServerClass::*handler)(const httplib::Request &, httplib::Response &)){
+		Super::Get(pattern, std::bind(handler, object, std::placeholders::_1, std::placeholders::_2));
+		return *this;
+	}
+
+	template<typename ServerClass>
+	HttpServer& Get(const std::string& pattern, const ServerClass *object, void (ServerClass::*handler)(const httplib::Request &, httplib::Response &)const){
+		Super::Get(pattern, std::bind(handler, object, std::placeholders::_1, std::placeholders::_2));
+		return *this;
+	}
+
+	template<typename ServerClass>
+	HttpServer& Post(const std::string& pattern, ServerClass *object, void (ServerClass::*handler)(const httplib::Request &, httplib::Response &)){
+		Super::Post(pattern, Super::Handler(std::bind(handler, object, std::placeholders::_1, std::placeholders::_2)));
+		return *this;
+	}
+
+	template<typename ServerClass>
+	HttpServer& Post(const std::string& pattern, const ServerClass *object, void (ServerClass::*handler)(const httplib::Request &, httplib::Response &)const){
+		Super::Post(pattern, std::bind(handler, object, std::placeholders::_1, std::placeholders::_2));
+		return *this;
+	}
+
+	std::optional<std::int64_t> GetIdParam(const httplib::Request& req, const std::string &name)const {
+		if (!req.path_params.count(name))
+			return std::nullopt;
+
+		const std::string &user_id = req.path_params.at(name);
+		errno = 0;
+		std::int64_t id = std::atoll(user_id.c_str());
+		if(errno)
+			return std::nullopt;
+	
+		return id;
+	}
+
+	std::optional<std::string> GetParam(const httplib::Request& req, const std::string& name)const {
+		if (!req.path_params.count(name))
+			return std::nullopt;
+
+		return req.path_params.at(name);
+	}
+};
