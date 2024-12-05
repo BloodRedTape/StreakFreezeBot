@@ -6,6 +6,7 @@ run_tree
 mini_app_react/node_modules
 mini_app_react/yarn.lock
 mini_app_react/src/config.tsx
+mini_app_react/.env
 
 .vs
 .vscode
