@@ -3,17 +3,22 @@ import { useUserContext } from '../core/UserContext';
 import { CalendarSection } from './CalendarSection';
 import { GatherUserCompleteName, GetQuote } from '../helpers/Requests';
 import { useState } from 'react';
-import { Loading } from './Loading';
 import { useCookies } from 'react-cookie';
 import WebApp from '@twa-dev/sdk'
+import { Loader } from '../core/Loader';
 
 export const StreakSection = () => {
 	const [userContext] = useUserContext()
 	const [quoteState, setQuoteState] = useState<string>()
 	const [quoteCookies, setQuoteCookies] = useCookies(['Quote'])
 
-	if (userContext == undefined)
-		return (<Loading/>)
+	if (userContext == undefined) {
+		return (
+			<div style={{paddingTop: '40%'}}>
+				<Loader text="Loading user data..." />
+			</div>
+		)
+	}
 
 	const quote: string = quoteState ?? quoteCookies.Quote ?? 'There is a way...'
 

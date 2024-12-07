@@ -2,6 +2,7 @@ import { Listbox, ListboxItem } from "@nextui-org/react"
 import { Text } from "@telegram-apps/telegram-ui"
 import { useQuery } from "react-query"
 import { ChallengeParticipantType, ChallengeWithPayloadType } from "../core/Challenge"
+import { Loader } from "../core/Loader"
 import { FetchChallengeParticipants, GatherCurrentUserId } from "../helpers/Requests"
 import { ChallengeParticipantProgress } from "./ChallengeParticipantProgress"
 import { ProfileAvatar } from "./ProfileAvatar"
@@ -44,7 +45,7 @@ export const ChallengeParticipantList: React.FC<{ challenge: ChallengeWithPayloa
 	)
 
 	const LoadingCell = (
-		<Text weight="3">Loading...</Text>
+		<Loader text="Participants loading..."/>
 	)
 
 	const ParticipantCompare = (left: ChallengeParticipantType, right: ChallengeParticipantType) => {

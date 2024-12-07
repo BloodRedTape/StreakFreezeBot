@@ -6,7 +6,6 @@ import { ProtectionType } from "../core/UserContext"
 import { MakeInviteLink } from "../helpers/Friends"
 import { PostRemoveFriend } from "../helpers/Requests"
 import { GetFriendStatusImageLinkFor, ShareIcon } from "../helpers/Resources"
-import { Loading } from "./Loading"
 import { Icon28Edit } from "@telegram-apps/telegram-ui/dist/icons/28/edit"
 import { Icon28Archive } from "@telegram-apps/telegram-ui/dist/icons/28/archive"
 import { useCookies } from "react-cookie"
@@ -15,6 +14,7 @@ import { Listbox, ListboxItem, Spacer } from "@nextui-org/react"
 import { Header, HeaderActionButton } from "../core/Header"
 import { ProfileAvatar } from "./ProfileAvatar"
 import WebApp from '@twa-dev/sdk'
+import { Loader } from "../core/Loader"
 
 const MakeFriendEntry = (friend: FriendType, onRemoved: ()=>void, isEdit: boolean) => {
 
@@ -183,8 +183,13 @@ export const FriendsSection = () => {
 		</div>
 	)
 
-	if (friends === undefined)
-		return (<Loading/>)
+	if (friends === undefined) {
+		return (
+			<div style={{paddingTop: '40%'}}>
+				<Loader text="Friends loading..." />)
+			</div>
+		)
+	}
 
 	return friends.length === 0 ? FriendsPlaceholder : FriendsList
 }
