@@ -186,7 +186,7 @@ export const FriendsSection = () => {
 	if (friends === undefined) {
 		return (
 			<div style={{paddingTop: '40%'}}>
-				<Loader text="Friends loading..." />)
+				<Loader text="Friends loading..." />
 			</div>
 		)
 	}
