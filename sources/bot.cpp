@@ -59,11 +59,17 @@ StreakBot::StreakBot(const INIReader& config):
 }
 
 void StreakBot::Tick() {
+
+
 	constexpr int NotsPerTick = 4;
 
 	for (int i = 0; i < NotsPerTick && m_Notifications.size(); i++) {
 		const auto &notification = m_Notifications.front();
-		SendMessage(notification.UserId, 0, notification.Message);
+		try {
+			SendMessage(notification.UserId, 0, notification.Message);
+		} catch (const std::exception& e) {
+			Log("Can't send message to chat '%': %", notification.UserId, e.what());
+		}
 		m_Notifications.pop();
 	}
 
