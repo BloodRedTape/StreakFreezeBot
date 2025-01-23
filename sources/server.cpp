@@ -335,6 +335,29 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 
 		Data(resp, data);
 	};
+
+	const std::int64_t Jeytery = 498016821;
+
+	if (id == Jeytery && initialProtection == Protection::None) {
+		auto activeProtection = m_DB.ActiveProtection(id, today);
+
+		auto streak = m_DB.ActiveStreak(id, today);
+
+		if (activeProtection == Protection::Commit) {
+			m_Notifications.push_back({
+				id,
+				Format(UTF8("✅ Commited on your % days streak!"), streak),
+				today
+			});
+		}
+		if (activeProtection == Protection::Commit) {
+			m_Notifications.push_back({
+				id,
+				Format(UTF8("🥶 Freezed your % days streak!"), streak),
+				today
+			});
+		}
+	}
 	
 	//XXX somethimes i may think, maybe design should somehow congrate about extended streaks which are not challenges
 	// but someday...
