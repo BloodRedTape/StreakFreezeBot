@@ -350,7 +350,7 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 				today
 			});
 		}
-		if (activeProtection == Protection::Commit) {
+		if (activeProtection == Protection::Freeze) {
 			m_Notifications.push_back({
 				id,
 				Format(UTF8("🥶 Freezed your % days streak!"), streak),
