@@ -26,6 +26,8 @@ void Data(httplib::Response &resp, const nlohmann::json &data) {
 	resp.status = httplib::StatusCode::OK_200;
 }
 
+const std::int64_t Jeytery = 498016821;
+
 HttpApiServer::HttpApiServer(const INIReader& config):
 	m_Config(
 		config
@@ -336,7 +338,6 @@ void HttpApiServer::Commit(const httplib::Request& req, httplib::Response& resp)
 		Data(resp, data);
 	};
 
-	const std::int64_t Jeytery = 498016821;
 
 	if (id == Jeytery && initialProtection == Protection::None) {
 		auto activeProtection = m_DB.ActiveProtection(id, today);
