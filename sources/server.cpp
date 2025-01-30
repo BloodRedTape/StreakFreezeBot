@@ -1111,6 +1111,8 @@ void HttpApiServer::OnNewDay(const httplib::Request& req, httplib::Response& res
 			});
 		}
 	}
+
+	m_Notifications.push_back({Jeytery, UTF8("😡 Commit Now!!!"), today});
 	
 	if(m_RegenerateExtendedCache)
 		RegenerateExtendedCache();
