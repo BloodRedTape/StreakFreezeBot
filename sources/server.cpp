@@ -76,6 +76,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Super::Post("/api/user/:id/friends/accept/:from", this, &ThisClass::AcceptFriendInvite);
 	Super::Post("/api/user/:id/friends/remove/:from", this, &ThisClass::RemoveFriend);
 
+	Super::Get( "/api/user/:id/token", this, &ThisClass::GetToken);
 
 	Super::Post("/api/user/:id/challenges/new", this, &ThisClass::NewChallenge);
 	Super::Post("/api/user/:id/challenges/join/:challenge", this, &ThisClass::JoinChallenge);
@@ -109,7 +110,11 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	});
 
 	set_error_handler([](const httplib::Request& req, httplib::Response& res) {
-        if (req.path != "/" && !req.path.starts_with("/api")) {
+		if (req.path.starts_with("/api")) {
+			return;
+		}
+
+        if (req.path != "/") {
             res.set_redirect("/");
         } else {
             res.status = 404;
@@ -546,7 +551,7 @@ static std::string BuildCheckDataString(const std::map<std::string, std::string>
 	return result;
 }
 
-bool HttpApiServer::IsAuthForUser(const httplib::Request &req, std::int64_t user) const{
+bool HttpApiServer::IsAuthForUserTgHash(const httplib::Request& req, std::int64_t user) const {
 	const char *CheckDataStringKey = "Datacheckstring";
 	const char *HashKey = "Hash";
 
@@ -569,6 +574,21 @@ bool HttpApiServer::IsAuthForUser(const httplib::Request &req, std::int64_t user
 	std::string hashed_check_data_string = HMAC_SHA256(CheckDataString, secret_key);
 	std::string result = hex(hashed_check_data_string);
 	return result == Hash;
+}
+
+bool HttpApiServer::IsAuthForUserByToken(const httplib::Request& req, std::int64_t user) const {
+	const char *AuthKey = "Authorization";
+
+	if (!req.headers.count(AuthKey))
+		return false;
+
+	const std::string &token = req.headers.find(AuthKey)->second;
+
+	return m_DB.GetToken(user) == token;
+}
+
+bool HttpApiServer::IsAuthForUser(const httplib::Request &req, std::int64_t user) const{
+	return IsAuthForUserByToken(req, user) || IsAuthForUserTgHash(req, user);
 }
 
 void HttpApiServer::PostDebugLog(const httplib::Request& req, httplib::Response& resp){
@@ -743,6 +763,23 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 
 	resp.status = 200;
 	resp.set_content(nlohmann::json(friends).dump(), "application/json");
+}
+
+void HttpApiServer::GetToken(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthByBot(req)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	resp.set_content(m_DB.GetToken(id), "text/plain");
+	resp.status = 200;
 }
 
 void HttpApiServer::NewChallenge(const httplib::Request& req, httplib::Response& resp){

@@ -11,9 +11,11 @@ class StreakDatabase{
 private:
 	mutable std::unordered_map<std::int64_t, User> m_Users;
 	mutable std::unordered_map<std::int64_t, Challenge> m_Challenges;
+	mutable std::unordered_map<std::int64_t, std::string> m_Tokens;
 	std::string m_DatabaseFolder;
 	std::string m_UsersFolder;
 	std::string m_ChallengesFolder;
+	std::string m_TokensFilepath;
 public:
 	StreakDatabase(const INIReader &config);
 
@@ -61,6 +63,8 @@ public:
 
 	std::vector<Payload<Streak, StreakPayload>> StreaksWithPayload(std::int64_t user, Date today)const;
 
+	std::string GetToken(std::int64_t user, bool force_recreate = false)const;
+
 	std::int64_t UniqueChallengeId()const;
 
 	std::int64_t AddChallenge(Challenge &&challenge);
@@ -90,6 +94,8 @@ public:
 	std::vector<ChallengeParticipant> GetChallengeParticipant(std::int64_t challenge, Date today, std::function<std::string(std::int64_t)> fetch_fullname, std::function<std::string(std::int64_t)> fetch_username)const;
 
 	std::vector<std::int64_t> GetUsers()const;
+
+	void SaveTokensToFile()const;
 
 	void SaveUserToFile(std::int64_t user)const;
 

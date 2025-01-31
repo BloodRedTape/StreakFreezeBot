@@ -43,6 +43,7 @@ StreakBot::StreakBot(const INIReader& config):
 	OnCommand("start", this, &ThisClass::Start, "start");
 	OnCommand("invalidate_quote", this, &ThisClass::InvalidateQuote);
 	OnCommand("push_quote", this, &ThisClass::PushQuote);
+	OnCommand("token", this, &ThisClass::Token);
 #if WITH_ADVANCE_DATE
 	OnCommand("advance_date", this, &ThisClass::AdvanceDate, "Debug - Advance current date");
 #endif
@@ -119,6 +120,17 @@ void StreakBot::PushQuote(TgBot::Message::Ptr message) {
 	quote = message->text.substr(space + 1);
 
 	HttpPost(m_WebApiUrl, "/api/quote/push", {{"BotToken", getToken()}}, quote);
+}
+
+void StreakBot::Token(TgBot::Message::Ptr message){
+	auto token = HttpGet(m_WebApiUrl, Format("/api/user/%/token", message->from->id), {{"BotToken", getToken()}});
+
+	if (!token.has_value() || !token.value().size()) {
+		ReplyMessage(message, "Can't get access token");
+		return;
+	}
+
+	ReplyMessage(message, Format("UserId <code>%</code>\nToken <code>%</code>", message->from->id, token.value()));
 }
 
 bool StreakBot::IsPrivate(TgBot::Message::Ptr message) {

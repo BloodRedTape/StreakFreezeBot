@@ -75,6 +75,8 @@ public:
 
 	void GetFriends(const httplib::Request &req, httplib::Response &resp);
 
+	void GetToken(const httplib::Request &req, httplib::Response &resp);
+
 	void NewChallenge(const httplib::Request &req, httplib::Response &resp);
 
 	void JoinChallenge(const httplib::Request &req, httplib::Response &resp);
@@ -102,6 +104,10 @@ public:
 	void NudgeFriend(const httplib::Request &req, httplib::Response &resp);
 
 	std::optional<std::int64_t> GetUser(const httplib::Request &req)const;
+
+	bool IsAuthForUserByToken(const httplib::Request &req, std::int64_t user)const;
+
+	bool IsAuthForUserTgHash(const httplib::Request &req, std::int64_t user)const;
 
 	bool IsAuthForUser(const httplib::Request &req, std::int64_t user)const;
 };

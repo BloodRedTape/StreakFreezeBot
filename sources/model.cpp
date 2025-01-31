@@ -4,6 +4,7 @@
 #include <bsl/defer.hpp>
 #include <bsl/stdlib.hpp>
 #include <cassert>
+#include <random>
 
 DEFINE_LOG_CATEGORY(Model)
 
@@ -16,6 +17,9 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 	),
 	m_ChallengesFolder(
 		m_DatabaseFolder + "/challenge"
+	),
+	m_TokensFilepath(
+		m_DatabaseFolder + "/tokens.json"
 	)
 {
 	std::filesystem::create_directories(m_UsersFolder);
@@ -67,6 +71,16 @@ StreakDatabase::StreakDatabase(const INIReader& config):
 		} catch(const std::exception &e) {
 			Println("Can't parse challenge at %, because: %", path, e.what());
 		}
+	}
+
+	try {
+		auto tokens_file_content = ReadEntireFile(m_TokensFilepath);
+
+		nlohmann::json tokens = nlohmann::json::parse(tokens_file_content, nullptr, false, true);
+
+		m_Tokens = tokens;
+	} catch (const std::exception& e) {
+		Println("Can't parse tokens, because: %", e.what());
 	}
 }
 
@@ -323,6 +337,32 @@ std::vector<Payload<Streak, StreakPayload>> StreakDatabase::StreaksWithPayload(s
 	return result;
 }
 
+namespace Crypto{
+
+static std::string GenerateToken(size_t length = 32) {
+    static const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    std::default_random_engine rng(std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_int_distribution<> dist(0, charset.size() - 1);
+
+    std::string token;
+    for (size_t i = 0; i < length; ++i) {
+        token += charset[dist(rng)];
+    }
+
+    return token;
+}
+
+}//namespace Utils::
+
+std::string StreakDatabase::GetToken(std::int64_t user, bool force_recreate) const{
+	if(m_Tokens.count(user) && !force_recreate)
+		return m_Tokens.at(user);
+	
+	defer{ SaveTokensToFile(); };
+
+	return (m_Tokens[user] = Crypto::GenerateToken());
+}
+
 std::int64_t StreakDatabase::UniqueChallengeId() const{
 	// zero id is reserved for something, idk
 	std::int64_t id = m_Challenges.size() + 1;
@@ -551,6 +591,10 @@ std::vector<std::int64_t> StreakDatabase::GetUsers() const{
 		users.push_back(user);
 
 	return users;
+}
+
+void StreakDatabase::SaveTokensToFile() const{
+	WriteEntireFile(m_TokensFilepath, nlohmann::json(m_Tokens).dump());
 }
 
 void StreakDatabase::SaveUserToFile(std::int64_t user)const{
