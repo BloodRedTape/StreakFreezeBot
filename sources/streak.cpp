@@ -99,3 +99,15 @@ StreakPayload& StreakPayload::operator=(StreakPayload&& other)noexcept{
 	std::swap(Freezable, other.Freezable);
 	return *this;
 }
+
+std::string ToString(Protection protection){
+	switch (protection) {
+	case Protection::Commit:
+		return "Commit";
+	case Protection::Freeze:
+		return "Freeze";
+	case Protection::NothingToProtect:
+		return "NothingToProtect";
+	}
+	return "None";
+}

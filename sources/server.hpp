@@ -41,6 +41,8 @@ public:
 
 	void GetFullUser(const httplib::Request &req, httplib::Response &resp);
 
+	void GetMinimalUser(const httplib::Request &req, httplib::Response &resp);
+
 	void Commit(const httplib::Request &req, httplib::Response &resp);
 
 	void AddStreak(const httplib::Request &req, httplib::Response &resp);

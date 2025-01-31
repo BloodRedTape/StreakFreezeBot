@@ -59,6 +59,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Super::set_mount_point("/", m_WebAppPath);
 	
 	Super::Get ("/api/user/:id/full", this, &ThisClass::GetFullUser);
+	Super::Get ("/api/user/:id/minimal", this, &ThisClass::GetMinimalUser);
 	Super::Post("/api/debug/log", this, &ThisClass::PostDebugLog);
 	Super::Post("/api/user/:id/commit", this, &ThisClass::Commit);
 	Super::Post("/api/user/:id/add_streak", this, &ThisClass::AddStreak);
@@ -161,6 +162,36 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 	resp.status = httplib::StatusCode::OK_200;
 	resp.set_content(content, "application/json");
 }
+
+void HttpApiServer::GetMinimalUser(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	const auto &user = m_DB.GetUser(id, today);
+
+	auto user_json = nlohmann::json({ 
+		{"Streak", m_DB.ActiveStreak(id, today)},
+		{"Today", today},
+		{"Protection", ToString(m_DB.ActiveProtection(id, today))}
+	});
+	
+	std::string content = user_json.dump();
+
+	resp.status = httplib::StatusCode::OK_200;
+	resp.set_content(content, "application/json");
+}
+
+
 void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);
 

@@ -12,6 +12,8 @@ enum class Protection{
     NothingToProtect
 };
 
+std::string ToString(Protection protection);
+
 enum class StreakStatus {
     Default,
     Removed
