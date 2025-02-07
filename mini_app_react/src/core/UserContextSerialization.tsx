@@ -2,6 +2,7 @@ import { DebugLog } from "../helpers/Debug";
 import { ParseChallengeWithPayloadType } from "./Challenge";
 import { ParseStreakType } from "./Streak";
 import { ProtectionType, StreakFreezeType, UserContextType } from "./UserContext";
+import { ParseUserPreferences } from "./UserPreferences";
 
 export const FromApiDate = (data: any) => {
 	if (Array.isArray(data) && data.length >= 3) {
@@ -82,6 +83,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.MaxFreezes = data.MaxFreezes || 0
 		context.Today = FromApiDate(data.Today)
 		context.Streak = data.Streak || 0
+		context.Preferences = ParseUserPreferences(data.Preferences)
 		context.Friends = (data.Friends || []).map((friend: any): number => friend)
 		context.Streaks = (data.Streaks || []).map((streak: any) => ParseStreakType(streak))
 		context.Challenges = (data.Challenges || []).map((challenge: any) => ParseChallengeWithPayloadType(challenge))

@@ -38,7 +38,7 @@ add_executable(StreakFreezeBot
 	"sources/streak.cpp" 
 	"sources/challenge.cpp" 
 	"sources/tgbridge.cpp"
-)
+ "sources/user_preferences.cpp")
 
 target_link_libraries(StreakFreezeBot
 	PUBLIC bsl

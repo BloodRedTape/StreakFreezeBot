@@ -60,6 +60,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	
 	Super::Get ("/api/user/:id/full", this, &ThisClass::GetFullUser);
 	Super::Get ("/api/user/:id/minimal", this, &ThisClass::GetMinimalUser);
+	Super::Post("/api/user/:id/preferences/set", this, &ThisClass::SetPreferences);
 	Super::Post("/api/debug/log", this, &ThisClass::PostDebugLog);
 	Super::Post("/api/user/:id/commit", this, &ThisClass::Commit);
 	Super::Post("/api/user/:id/add_streak", this, &ThisClass::AddStreak);
@@ -191,6 +192,33 @@ void HttpApiServer::GetMinimalUser(const httplib::Request& req, httplib::Respons
 	resp.set_content(content, "application/json");
 }
 
+void HttpApiServer::SetPreferences(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+
+	if (!id) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUserNoAutoFreeze(id, today);
+	defer{ m_DB.SaveUserToFile(id); };
+	
+	try {
+		UserPreferences new_preferences = nlohmann::json::parse(req.body);
+
+		user.GetPreferences() = new_preferences;
+	} catch (const std::exception& e) {
+		return Fail(resp, Format("Failed to parse UserPreferences: %", e.what()));
+	}
+	
+	Ok(resp, "Preferences are set");
+}
 
 void HttpApiServer::AddStreak(const httplib::Request& req, httplib::Response& resp) {
 	std::int64_t id = GetUser(req).value_or(0);

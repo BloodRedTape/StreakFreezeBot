@@ -6,6 +6,7 @@
 #include "todo.hpp"
 #include "challenge.hpp"
 #include "ranges.hpp"
+#include "user_preferences.hpp"
 
 struct FriendInfo {
     std::int64_t Id = 0;
@@ -34,9 +35,11 @@ private:
     std::vector<std::int64_t> Friends;
     std::vector<Streak> Streaks;
 
+    UserPreferences Preferences;
+
     mutable PendingSubmition TodaySubmition;
 public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User, Freezes, MaxFreezes, Friends, Streaks, TodaySubmition)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User, Freezes, MaxFreezes, Friends, Streaks, Preferences, TodaySubmition)
 public:
 
     User() = default;
@@ -64,6 +67,10 @@ public:
     const std::vector<Streak> &GetStreaks()const{ return Streaks; }
 
     std::vector<Streak> GetStreaksWithPayload()const{ return Streaks; }
+
+    UserPreferences &GetPreferences(){ return Preferences; }
+
+    const UserPreferences &GetPreferences()const{ return Preferences; }
 
     std::vector<std::int64_t> &SubmitionFor(Date today)const;
 

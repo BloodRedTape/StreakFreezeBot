@@ -43,6 +43,8 @@ public:
 
 	void GetMinimalUser(const httplib::Request &req, httplib::Response &resp);
 
+	void SetPreferences(const httplib::Request &req, httplib::Response &resp);
+
 	void Commit(const httplib::Request &req, httplib::Response &resp);
 
 	void AddStreak(const httplib::Request &req, httplib::Response &resp);

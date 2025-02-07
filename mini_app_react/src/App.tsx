@@ -19,6 +19,7 @@ import { FreezePage } from './components/FreezeSection';
 import { ChallengeInviteModal } from './components/ChallengeInvite';
 import { TryParseChallengeInviteLink } from './helpers/Challenges';
 import WebApp from '@twa-dev/sdk'
+import { Preferences } from './components/Preferences';
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ export const App = () => {
     WebApp.expand()
     document.body.style.overflow = "hidden"
 
+
     const [tab, setTab] = useState<number>(0)
 
     const ActualAppContent = (
@@ -60,6 +62,11 @@ export const App = () => {
     )
 
     const navigate = useNavigate();
+
+    WebApp.SettingsButton.show()
+    WebApp.SettingsButton.onClick(() => {
+        navigate('/preferences')
+	})
 
     WebApp.BackButton.onClick(() => {
         const segments = location.pathname.split('/').filter(Boolean);
@@ -104,7 +111,9 @@ export const App = () => {
                                 <Route path="/edit_challenges/challenge/:id" element={<Page><ChallengeInfoPage/></Page>} />
                                 <Route path="/edit_challenges/new_challenge" element={<Page><ChallengeInput /></Page>} />
 
-                                <Route path="/edit_freezes" element={<Page><FreezePage/></Page>} />
+                                <Route path="/edit_freezes" element={<Page><FreezePage /></Page>} />
+
+                                <Route path="/preferences" element={<Page><Preferences/></Page>} />
                             </Routes>
                         </AppRoot>
                     </UserContext.Provider>

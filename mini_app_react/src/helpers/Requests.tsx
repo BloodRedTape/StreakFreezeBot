@@ -2,6 +2,7 @@ import { PopupParams, postEvent, retrieveLaunchParams } from "@telegram-apps/sdk
 import { ChallengeParticipantType, ChallengeRulesType, ChallengeWithPayloadType, ParseChallengeParticipantType, ParseChallengeWithPayloadType } from "../core/Challenge";
 import { ToDoCompletion, ToDoDescription } from "../core/ToDo";
 import { ToApiDate } from "../core/UserContextSerialization";
+import { PreferencePropertyType, UserPreferencesToObject } from "../core/UserPreferences";
 
 export const GatherCurrentUserId = (): number => {
 	const debugId = 399828804
@@ -43,6 +44,10 @@ const MakeUserRequestLocation = () => {
 
 export const GetFullUser = () => {
 	return fetch(MakeUserRequestLocation() + '/full', { headers: MakeTelegramAuthHeaders()})
+}
+
+export const SetPreferences = (preferences: Map<string, PreferencePropertyType[]>) => {
+	return fetch(MakeUserRequestLocation() + '/preferences/set', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(UserPreferencesToObject(preferences))})
 }
 
 export const GetAvailableFreezes = () => {

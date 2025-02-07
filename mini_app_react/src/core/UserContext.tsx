@@ -4,6 +4,7 @@ import { GetAvailableFreezes, GetFullUser } from "../helpers/Requests"
 import { ChallengeWithPayloadType } from "./Challenge"
 import { StreakType } from "./Streak"
 import { ParseUserContextType } from "./UserContextSerialization"
+import { PreferencePropertyType } from "./UserPreferences"
 
 export class StreakFreezeType {
 	public EarnedAt: Date = new Date(0, 0, 0)
@@ -28,7 +29,8 @@ export const ProtectionAt = (date: Date, history: ProtectionType[], start: Date)
 export class UserContextType{
 	public Freezes: Array<StreakFreezeType> = []
 	public MaxFreezes: number = 0
-	public Friends : Array<number> = []
+	public Friends: Array<number> = []
+	public Preferences: Map<string, PreferencePropertyType[]> = new Map()
 
 	public History: Array<ProtectionType> = []
 	public Today: Date = new Date(0, 0, 0)
