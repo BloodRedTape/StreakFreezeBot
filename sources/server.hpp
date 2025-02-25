@@ -34,6 +34,18 @@ private:
 	std::vector<Notification> m_Notifications;
 
 	std::unordered_map<std::string, std::string> m_ExtendedCache;
+
+	struct CachedChatInfo {
+		static constexpr int UpdateIntervalMinutes = 30;
+		std::chrono::steady_clock::time_point LastUpdate;
+
+		std::string Username;
+		std::string FirstName;
+		std::string LastName;
+		bool IsUnknown = false;
+	};
+
+	std::unordered_map<std::int64_t, CachedChatInfo> m_ChatInfoCache;
 public:	
 	HttpApiServer(const INIReader &config);
 
@@ -94,6 +106,8 @@ public:
 	void GetChallengeInvitePreview(const httplib::Request &req, httplib::Response &resp);
 
 	const std::string &GetOrGenerateExtended(const std::vector<std::string> &descrs);
+
+	const CachedChatInfo &GetOrFetchChatInfo(std::int64_t user);
 
 	void RegenerateExtendedCache();
 

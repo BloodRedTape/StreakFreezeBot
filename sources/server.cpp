@@ -840,17 +840,15 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 	auto friends = m_DB.GetFriendsInfo(id, today);
 
 	for (auto& f: friends) {
-		try{
-			auto chat = m_Bot.getApi().getChat(f.Id);
-			f.FullName = chat->firstName + ' ' + chat->lastName;
-			f.Username = chat->username;
-		} catch (const std::exception& e) {
-			LogHttpApiServer(Error, "Failed to get friend info for %", f.Id);
-			f.FullName = "<Unknown User>";
-			f.Username = "<unknown>";
-		}
+		auto chat = GetOrFetchChatInfo(f.Id);
+		f.FullName = chat.FirstName + ' ' + chat.LastName;
+		f.Username = chat.Username;
 	}
-
+#ifdef WITH_ERASE_UNKNOWN
+	friends.erase(std::remove_if(friends.begin(), friends.end(), [this](const FriendInfo &f) {
+		return GetOrFetchChatInfo(f.Id).IsUnknown;
+	}));
+#endif
 	resp.status = 200;
 	resp.set_content(nlohmann::json(friends).dump(), "application/json");
 }
@@ -981,18 +979,18 @@ void HttpApiServer::GetChallengeParticipants(const httplib::Request& req, httpli
 	auto participants = m_DB.GetChallengeParticipant(challenge, today, 
 	[&](std::int64_t user) -> std::string {
 		try {
-			auto chat = m_Bot.getApi().getChat(user);
+			auto chat = GetOrFetchChatInfo(user);
 
-			return chat->firstName + ' ' + chat->lastName;
+			return chat.FirstName + ' ' + chat.LastName;
 		} catch (...) {
 			return "";
 		}
 	},
 	[&](std::int64_t user) -> std::string {
 		try {
-			auto chat = m_Bot.getApi().getChat(user);
+			auto chat = GetOrFetchChatInfo(user);
 
-			return chat->username;
+			return chat.Username;
 		} catch (...) {
 			return "";
 		}
@@ -1094,6 +1092,34 @@ Don't use quotation characters. Give quote straight away
 		return Fallback;
 	
 	return (m_ExtendedCache[key] = response.value());
+}
+
+const HttpApiServer::CachedChatInfo& HttpApiServer::GetOrFetchChatInfo(std::int64_t user){
+	auto now = std::chrono::steady_clock::now();
+
+
+	if (!m_ChatInfoCache.count(user)
+	|| std::chrono::duration_cast<std::chrono::minutes>(now - m_ChatInfoCache[user].LastUpdate).count() > CachedChatInfo::UpdateIntervalMinutes) {
+		
+		CachedChatInfo info;
+		info.LastUpdate = now;
+		try{
+			auto chat = m_Bot.getApi().getChat(user);
+			info.FirstName = chat->firstName;
+			info.LastName = chat->lastName;
+			info.Username = chat->username;
+			info.IsUnknown = false;
+		} catch (const std::exception& e) {
+			info.FirstName = "<Unknown User>";
+			info.LastName = "";
+			info.Username = "<unknown>";
+			info.IsUnknown = true;
+		}
+
+		m_ChatInfoCache[user] = info;
+	}
+	
+	return m_ChatInfoCache[user];
 }
 
 void HttpApiServer::RegenerateExtendedCache(){
@@ -1287,12 +1313,12 @@ void HttpApiServer::NudgeFriend(const httplib::Request& req, httplib::Response& 
 	if (!friend_user.HasFriend(id))
 		return Fail(resp, "Can't nudge, this user is not a friend");
 
-	auto from = m_Bot.getApi().getChat(id);
+	auto from = GetOrFetchChatInfo(id);
 
-	if(!from)
+	if(from.IsUnknown)
 		return Fail(resp, "Can't fetch your chat info");
 
-	std::string message = Format("%: ", ToLink(from->username));
+	std::string message = Format("%: ", ToLink(from.Username));
 	
 	message += req.body;
 
