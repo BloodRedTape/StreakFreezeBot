@@ -840,9 +840,15 @@ void HttpApiServer::GetFriends(const httplib::Request& req, httplib::Response& r
 	auto friends = m_DB.GetFriendsInfo(id, today);
 
 	for (auto& f: friends) {
-		auto chat = m_Bot.getApi().getChat(f.Id);
-		f.FullName = chat->firstName + ' ' + chat->lastName;
-		f.Username = chat->username;
+		try{
+			auto chat = m_Bot.getApi().getChat(f.Id);
+			f.FullName = chat->firstName + ' ' + chat->lastName;
+			f.Username = chat->username;
+		} catch (const std::exception& e) {
+			LogHttpApiServer(Error, "Failed to get friend info for %", f.Id);
+			f.FullName = "<Unknown User>";
+			f.Username = "<unknown>";
+		}
 	}
 
 	resp.status = 200;
