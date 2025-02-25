@@ -29,6 +29,12 @@ bool Streak::IsProtected(Date start, Date end, const std::vector<StreakFreeze>& 
 	return true;
 }
 
+void Streak::SetVisibile(bool visibile){
+	if(IsChallenge())
+		return;
+	Visible = visibile;
+}
+
 std::optional<Date> Streak::FirstCommitDate() const{
 	return Commits.size() ? std::make_optional(Commits.front()) : std::nullopt;
 }

@@ -49,6 +49,8 @@ public:
 
 	void RemoveStreak(const httplib::Request &req, httplib::Response &resp);
 
+	void SetStreakVisible(const httplib::Request &req, httplib::Response &resp);
+
 	void PostPendingSubmition(const httplib::Request &req, httplib::Response &resp);
 
 	void GetPendingSubmition(const httplib::Request &req, httplib::Response &resp);

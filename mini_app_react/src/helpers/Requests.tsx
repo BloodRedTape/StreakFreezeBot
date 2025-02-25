@@ -67,6 +67,10 @@ export const PostRemoveStreak = (streaks: number[]) => {
 	return fetch(MakeUserRequestLocation() + '/remove_streak', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
 
+export const PostSetStreakVisible = (streak: number, visible: boolean) => {
+	return fetch(MakeUserRequestLocation() + '/streak/' + streak + '/set_visible', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(visible)})
+}
+
 export const PostPendingSubmition = (streaks: number[]) => {
 	return fetch(MakeUserRequestLocation() + '/pending_submition', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }

@@ -64,6 +64,7 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Super::Post("/api/user/:id/commit", this, &ThisClass::Commit);
 	Super::Post("/api/user/:id/add_streak", this, &ThisClass::AddStreak);
 	Super::Post("/api/user/:id/remove_streak", this, &ThisClass::RemoveStreak);
+	Super::Post("/api/user/:id/streak/:streak/set_visible", this, &ThisClass::SetStreakVisible);
 	Super::Get ("/api/user/:id/pending_submition", this, &ThisClass::GetPendingSubmition);
 	Super::Post("/api/user/:id/pending_submition", this, &ThisClass::PostPendingSubmition);
 	Super::Post("/api/user/:id/add_freeze", this, &ThisClass::AddFreeze);
@@ -260,6 +261,43 @@ void HttpApiServer::RemoveStreak(const httplib::Request& req, httplib::Response&
 		user.RemoveStreak(streak_id);
 
 	Ok(resp, "Removed");
+}
+
+void HttpApiServer::SetStreakVisible(const httplib::Request& req, httplib::Response& resp){
+	std::int64_t id = GetUser(req).value_or(0);
+	std::optional<std::int64_t> streak_id = GetIdParam(req, "streak");
+
+	std::optional<bool> visibility = GetJsonObject<bool>(req.body);
+
+	if (!id || !streak_id.has_value() || !visibility.has_value()) {
+		resp.status = httplib::StatusCode::BadRequest_400;
+		return;
+	}
+
+	if (!IsAuthForUser(req, id)) {
+		resp.status = httplib::StatusCode::Unauthorized_401;
+		return;
+	}
+
+	auto today = DateUtils::Now();
+	auto &user = m_DB.GetUser(id, today);
+	
+	Streak *streak = user.GetStreak(streak_id.value());
+
+	if (!streak) {
+		Fail(resp, "Invalid streak Id");
+		return;
+	}
+
+	if (streak->IsChallenge()) {
+		Fail(resp, "Can't change challenge streak visibility");
+		return;
+	}
+
+	defer{ m_DB.SaveUserToFile(id); };
+	
+	streak->Visible = visibility.value();
+	Ok(resp, "Set");
 }
 
 void HttpApiServer::PostPendingSubmition(const httplib::Request& req, httplib::Response& resp){

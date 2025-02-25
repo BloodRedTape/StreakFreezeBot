@@ -25,9 +25,10 @@ struct Streak{
     std::vector<Date> Commits;
 	std::string Description;
     StreakStatus Status = StreakStatus::Default;
+    bool Visible = true;
     std::optional<std::int32_t> Challenge;
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Streak, Commits, Description, Status, Challenge)
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Streak, Commits, Description, Status, Visible, Challenge)
 
     Streak() = default;
     
@@ -65,6 +66,8 @@ struct Streak{
     bool IsFreezable()const {
         return !IsChallenge();
     }
+
+    void SetVisibile(bool visibile);
 
     std::optional<Date> FirstCommitDate()const;
 

@@ -190,7 +190,7 @@ const StreakUsage = () => {
 	const StreakSectionContent = (
 		<div>
 			{MakeSection("Required", Streaks.filter(s=>s.IsRequired()), toCommit, setToCommit)}
-			{MakeSection("Optional", Streaks.filter(s => s.IsOptional()), toCommit, setToCommit)}
+			{MakeSection("Optional", Streaks.filter(s => s.IsOptional() && s.Visible), toCommit, setToCommit)}
 		</div>
 	)
 

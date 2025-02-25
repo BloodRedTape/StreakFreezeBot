@@ -1,7 +1,7 @@
 import { Text } from "@telegram-apps/telegram-ui"
 import { StreakType } from "../core/Streak"
 import { FetchUserContext, useGetUserContext, useSetUserContext } from "../core/UserContext"
-import { ErrorPopupFromJson, JsonFromResp, PostAddStreak, PostRemoveStreak } from "../helpers/Requests"
+import { ErrorPopupFromJson, JsonFromResp, PostAddStreak, PostRemoveStreak, PostSetStreakVisible } from "../helpers/Requests"
 import { ToDoEdit, ToDoEntry } from "./ToDoEdit"
 
 
@@ -19,7 +19,8 @@ export const StreakEdit = () => {
 		const entry: ToDoEntry = {
 			Id: streak.Id,
 			Name: streak.Description,
-			Removable: !streak.HasEverProtected()
+			Removable: !streak.HasEverProtected(),
+			Visible: streak.IsOptional() ? streak.Visible : undefined
 		}
 
 		return entry
@@ -35,6 +36,10 @@ export const StreakEdit = () => {
 		PostRemoveStreak([entry.Id]).then(JsonFromResp).then(ErrorPopupFromJson).then(Refresh)
 	}
 
+	const OnSetVisibility = (id: number, visible: boolean) => {
+		PostSetStreakVisible(id, visible).then(Refresh);
+	}
+
 	return (
 		<div style={{ paddingLeft: '5%', paddingRight: '5%'}}>
 			<Text weight="2">{'Streaks'}</Text>
@@ -42,7 +47,8 @@ export const StreakEdit = () => {
 				<ToDoEdit
 					entries={Entries}
 					addEntry={OnAddEntry}
-					removeEntry={OnRemoveEntry }
+					removeEntry={OnRemoveEntry}
+					setVisibility={OnSetVisibility}
 				/>
 			</div>
 		</div>

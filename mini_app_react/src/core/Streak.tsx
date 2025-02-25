@@ -8,6 +8,7 @@ export class StreakType{
 	public History: Array<ProtectionType> = []
 	public Start: Date = new Date(0, 0, 0)
 	public Count: number = 0
+	public Visible: boolean = true
 	public Id: number = -1
 	public Challenge: number = 0
 	public Required: boolean = false
@@ -65,6 +66,7 @@ export const ParseStreakType = (data: any): StreakType => {
 	streak.History = (data.History || []).map((protection: any) => ParseProtectionType(protection));
 	streak.Start = FromApiDate(data.Start)
 	streak.Count = data.Count ?? 0;
+	streak.Visible = data.Visible ?? streak.Visible
 	streak.Id = data.Id ?? -1
 	streak.Challenge = data.Challenge ?? 0
 	streak.Required = data.Required ?? false

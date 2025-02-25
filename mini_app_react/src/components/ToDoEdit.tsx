@@ -1,23 +1,25 @@
 import { Input, Listbox, ListboxItem, Spacer } from "@nextui-org/react"
 import { IconButton } from "@telegram-apps/telegram-ui"
 import { Icon28AddCircle } from "@telegram-apps/telegram-ui/dist/icons/28/add_circle"
-import { Icon28Close } from "@telegram-apps/telegram-ui/dist/icons/28/close"
 import { CSSProperties, useState } from "react"
 import { ListPlaceholder } from "../core/ListPlaceholder"
+import { DeleteForeverIcon, NotVisibleIcon, VisibleIcon } from "../helpers/Resources"
 
 export type ToDoEntry = {
 	Id: number
 	Name: string
-	Removable: boolean
+	Removable: boolean 
+	Visible?: boolean
 }
 
 export type ToDoEditProps = {
 	entries: Array<ToDoEntry>
 	addEntry: (entry: string)=>void
 	removeEntry: (entry: ToDoEntry)=>void
+	setVisibility?: (id: number, visibility: boolean) => void
 }
 
-export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEntry }) => {
+export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEntry, setVisibility}) => {
 	const [entry, setEntry] = useState<string>("")
 
 	const ValidateToDoEntry = (e: any) => {
@@ -52,10 +54,38 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 
 		return (
 			<IconButton size='s' mode='plain' onClick={OnRemove} style={buttonStyle}>
-				<Icon28Close />
+				{ DeleteForeverIcon() }
 			</IconButton>
 		)
 	}
+
+	const MakeChangeEntryVisibilityButton = (entry: ToDoEntry) => {
+		if (entry.Visible === null || entry.Visible === undefined || setVisibility === undefined || setVisibility === null)
+			return <div />;
+
+
+		const OnToggle = () => {
+			setVisibility(entry.Id, !entry.Visible);
+		}
+
+		return (
+			<IconButton size='s' mode='plain' onClick={OnToggle}>
+				{ entry.Visible ? VisibleIcon() : NotVisibleIcon() }
+			</IconButton>
+		)
+	}
+
+	const MakeEntryEndContent = (entry: ToDoEntry) => {
+		return (
+			<div>
+				{[
+					MakeChangeEntryVisibilityButton(entry),
+					MakeRemoveEntryButton(entry)
+				]}
+			</div>
+		)
+	}
+
 
 	const AddCurrentEntry = (
 		<IconButton
@@ -90,7 +120,7 @@ export const ToDoEdit: React.FC<ToDoEditProps> = ({ entries, addEntry, removeEnt
 				{(item) => (
 					<ListboxItem
 						key={item.Name}
-						endContent={MakeRemoveEntryButton(item)}
+						endContent={MakeEntryEndContent(item)}
 					>
 						{item.Name}
 					</ListboxItem>
