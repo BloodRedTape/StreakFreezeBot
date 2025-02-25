@@ -5,6 +5,7 @@
 #include <bsl/stdlib.hpp>
 #include <cassert>
 #include <random>
+#include "perf.hpp"
 
 DEFINE_LOG_CATEGORY(Model)
 
@@ -144,7 +145,7 @@ bool StreakDatabase::IsActive(const Streak& streak, std::int64_t user_id, Date t
 		return false;
 
 	if(!streak.IsChallenge())
-		return streak.Count(today, user.GetFreezes());
+		return streak.IsActiveWithoutChallenge(today, user.GetFreezes());
 	
 	std::int64_t challenge_id = streak.Challenge.value();
 
@@ -160,20 +161,17 @@ bool StreakDatabase::IsActive(const Streak& streak, std::int64_t user_id, Date t
 
 	assert(!streak.IsFreezable());
 
-	return streak.Count(today, {}) || challenge.GetStart() == today;
+	return streak.IsActiveWithoutChallenge(today, {}) || challenge.GetStart() == today;
 }
 
 bool StreakDatabase::AreActiveCommited(std::int64_t user_id, Date today)const{
 	const auto &user = GetUserNoAutoFreeze(user_id, today);
-	auto challenges = ChallengesWithoutIds(user_id);
 
-	if(!ActiveStreaks(user_id, today).size())
+	if(!ActiveStreaksCount(user_id, today))
 		return false;
 
-	for (auto streak_id : user.StreakIdsRange()) {
-		auto streak = user.GetStreak(streak_id);
-
-		if(IsActive(*streak, user_id, today) && !streak->IsCommitedAt(today))
+	for (const Streak &streak: user.GetStreaks()) {
+		if(IsActive(streak, user_id, today) && !streak.IsCommitedAt(today))
 			return false;
 	}
 
@@ -182,18 +180,15 @@ bool StreakDatabase::AreActiveCommited(std::int64_t user_id, Date today)const{
 
 bool StreakDatabase::AreActiveFreezedOrCommited(std::int64_t user_id, Date today) const{
 	const auto &user = GetUserNoAutoFreeze(user_id, today);
-	auto challenges = ChallengesWithoutIds(user_id);
 
-	if(!ActiveStreaks(user_id, today).size())
+	if(!ActiveStreaksCount(user_id, today))
 		return false;
 
-	for (auto streak_id : user.StreakIdsRange()) {
-		auto streak = user.GetStreak(streak_id);
-
-		if(!IsActive(*streak, user_id, today))
+	for (const Streak &streak: user.GetStreaks()) {
+		if(!IsActive(streak, user_id, today))
 			continue;
 
-		if(streak->ProtectionAt(today, user.GetFreezes()) == Protection::None)
+		if(streak.ProtectionAt(today, user.GetFreezes()) == Protection::None)
 			return false;
 	}
 
@@ -202,7 +197,8 @@ bool StreakDatabase::AreActiveFreezedOrCommited(std::int64_t user_id, Date today
 
 std::vector<Protection> StreakDatabase::ActiveHistory(std::int64_t user, Date start, Date end)const {
 	std::vector<Protection> history;
-
+	history.reserve(DateUtils::DaysDiff(end, start) + 1);
+	
 	for (auto date : DateUtils::Range(start, end))
 		history.push_back(ActiveProtection(user, date));
 
@@ -234,6 +230,17 @@ std::int64_t StreakDatabase::ActiveStreak(std::int64_t user_id, Date today) cons
 	}
 
 	return streak;
+}
+
+std::int64_t StreakDatabase::ActiveStreaksCount(std::int64_t user_id, Date today) const{
+	const auto &user = GetUserNoAutoFreeze(user_id, today);
+	std::int64_t count = 0;
+
+	for (const auto& streak : user.GetStreaks()) {
+		count += IsActive(streak, user_id, today);
+	}
+
+	return count;
 }
 
 std::vector<std::int64_t> StreakDatabase::ActiveStreaks(std::int64_t user_id, Date today) const{
@@ -290,7 +297,7 @@ std::vector<std::int64_t> StreakDatabase::ActivePendingStreaks(std::int64_t user
 Protection StreakDatabase::ActiveProtection(std::int64_t user_id, Date today)const {
 	const auto &user = GetUserNoAutoFreeze(user_id, today);
 
-	if(!ActiveStreaks(user_id, today).size())
+	if(!ActiveStreaksCount(user_id, today))
 		return Protection::NothingToProtect;
 
 	if(AreActiveCommited(user_id, today))

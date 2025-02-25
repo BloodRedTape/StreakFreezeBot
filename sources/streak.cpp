@@ -61,6 +61,10 @@ std::int64_t Streak::Count(Date today, const std::vector<StreakFreeze> &freezes)
 	return streak;
 }
 
+std::int64_t Streak::IsActiveWithoutChallenge(Date today, const std::vector<StreakFreeze>& freezes) const{
+	return IsProtectedAt(today, freezes) || IsProtectedAt(DateUtils::Yesterday(today), freezes);
+}
+
 std::vector<Protection> Streak::History(Date start, Date end, const std::vector<StreakFreeze> &freezes)const{
 	std::vector<Protection> history;
 

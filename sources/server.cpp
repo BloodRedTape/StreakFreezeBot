@@ -6,6 +6,7 @@
 #include <hmac_sha256.h>
 #include "openai.hpp"
 #include <bsl/file.hpp>
+#include "perf.hpp"
 
 DEFINE_LOG_CATEGORY(HttpApiDebug)
 DEFINE_LOG_CATEGORY(HttpApiServer)
@@ -134,6 +135,8 @@ void HttpApiServer::Run(){
 }
 
 void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& resp){
+	PROFILE_SCOPE("GetFullUser", 0);
+
 	std::int64_t id = GetUser(req).value_or(0);
 
 	if (!id) {
@@ -151,12 +154,24 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 
 	//NOTE: History is first because it corrects all the other info
 	auto user_json = nlohmann::json(user);
-	user_json["History"] = m_DB.ActiveHistoryForToday(id, today);
+	{
+		PROFILE_SCOPE("History", 1);
+		user_json["History"] = m_DB.ActiveHistoryForToday(id, today);
+	}
 	user_json["Today"] = DateUtils::Now();
-	user_json["Streak"] = m_DB.ActiveStreak(id, today);
+	{
+		PROFILE_SCOPE("ActiveStreak", 1);
+		user_json["Streak"] = m_DB.ActiveStreak(id, today);
+	}
 	user_json["StreakStart"] = user.FirstCommitEver().value_or(today);
-	user_json["Challenges"] = m_DB.ChallengesWithPayload(id, today);
-	user_json["Streaks"] = m_DB.StreaksWithPayload(id, today);
+	{
+		PROFILE_SCOPE("Challenges", 1);
+		user_json["Challenges"] = m_DB.ChallengesWithPayload(id, today);
+	}
+	{
+		PROFILE_SCOPE("Streaks", 1);
+		user_json["Streaks"] = m_DB.StreaksWithPayload(id, today);
+	}
 	
 	std::string content = user_json.dump();
 

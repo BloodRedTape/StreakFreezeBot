@@ -45,6 +45,8 @@ public:
 
     std::int64_t ActiveStreak(std::int64_t user, Date today)const;
 
+    std::int64_t ActiveStreaksCount(std::int64_t user, Date today)const;
+
     std::vector<std::int64_t> ActiveStreaks(std::int64_t user, Date today)const;
 
 	std::vector<std::string> ActiveStreaksDescriptions(std::int64_t user, Date today)const;

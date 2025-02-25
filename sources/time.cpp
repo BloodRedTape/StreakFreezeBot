@@ -64,6 +64,7 @@ namespace DateUtils{
         assert(from <= to);
 
         std::vector<Date> range;
+        range.reserve(DaysDiff(to, from));
 
         for (auto date = (date::sys_days)from; date != (date::sys_days)to; date += date::days(1)) {
             range.push_back(date);
