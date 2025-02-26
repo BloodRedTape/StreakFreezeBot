@@ -1,10 +1,8 @@
 import { Tabbar } from '@telegram-apps/telegram-ui';
-import { Icon28Stats } from "@telegram-apps/telegram-ui/dist/icons/28/stats"
-import { Icon28Chat } from "@telegram-apps/telegram-ui/dist/icons/28/chat"
-import { Icon28Heart } from "@telegram-apps/telegram-ui/dist/icons/28/heart"
 import { CommitTab } from './CommitTab';
 import { FriendsTab } from './FriendsTab';
 import { StreakTab } from './StreakTab';
+import { Checklist28Icon, Fire28Icon, Public28Icon } from '../helpers/Resources';
 
 class Tab {
     public Id: number = 0
@@ -14,9 +12,9 @@ class Tab {
 }
 
 const tabs: Array<Tab> = [
-    {Id: 0, Name: "Streak",  Content: <StreakTab/>, Icon:  <Icon28Stats /> },
-    {Id: 1, Name: "Commit",  Content: <CommitTab/>, Icon: <Icon28Heart/> },
-    {Id: 2, Name: "Friends", Content: <FriendsTab/>, Icon: <Icon28Chat/>},
+    {Id: 0, Name: "Streak",  Content: <StreakTab/>, Icon:  Fire28Icon() },
+    {Id: 1, Name: "Commit",  Content: <CommitTab/>, Icon: Checklist28Icon() },
+    {Id: 2, Name: "Friends", Content: <FriendsTab/>, Icon: Public28Icon()},
 ];
 
 const CurrentTab = (Id: number) => {
