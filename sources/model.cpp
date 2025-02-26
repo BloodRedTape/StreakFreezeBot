@@ -161,7 +161,7 @@ bool StreakDatabase::IsActive(const Streak& streak, std::int64_t user_id, Date t
 
 	assert(!streak.IsFreezable());
 
-	return streak.IsActiveWithoutChallenge(today, {}) || challenge.GetStart() == today;
+	return streak.Count(today, {}) || challenge.GetStart() == today;
 }
 
 bool StreakDatabase::AreActiveCommited(std::int64_t user_id, Date today)const{

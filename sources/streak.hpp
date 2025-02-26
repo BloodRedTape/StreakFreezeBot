@@ -75,7 +75,7 @@ struct Streak{
 
     std::int64_t Count(Date today, const std::vector<StreakFreeze> &freezes)const;
 
-    std::int64_t IsActiveWithoutChallenge(Date today, const std::vector<StreakFreeze> &freezes)const;
+    bool IsActiveWithoutChallenge(Date today, const std::vector<StreakFreeze> &freezes)const;
 
     bool NoCount(Date today, const std::vector<StreakFreeze> &freezes)const{ return Count(today, freezes) == 0; }
 

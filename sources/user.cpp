@@ -276,13 +276,10 @@ void User::AddFriend(std::int64_t id) {
 }
 
 void User::RemoveFriend(std::int64_t id) {
-	auto it = boost::find(Friends, id);
-
-	if(it == Friends.end())
+	if(!boost::count(Friends, id))
 		return LogUser(Error, "Removing non-existing friend");
-		
-	std::swap(Friends.back(), *it);
-	Friends.pop_back();
+
+	Friends.erase(std::remove(Friends.begin(), Friends.end(), id));
 }
 
 bool User::HasFriend(std::int64_t id)const {
