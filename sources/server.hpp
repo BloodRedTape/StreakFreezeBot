@@ -73,8 +73,6 @@ public:
 
 	void RemoveFreeze(const httplib::Request &req, httplib::Response &resp);
 
-	void GetAvailableFreezes(const httplib::Request &req, httplib::Response &resp);
-
 	void PostDebugLog(const httplib::Request &req, httplib::Response &resp);
 
 	void PostPushQuote(const httplib::Request &req, httplib::Response &resp);

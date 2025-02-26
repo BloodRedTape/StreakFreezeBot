@@ -85,6 +85,7 @@ export const ParseUserContextType = (data: any): UserContextType => {
 		context.Friends = (data.Friends || []).map((friend: any): number => friend)
 		context.Streaks = (data.Streaks || []).map((streak: any) => ParseStreakType(streak))
 		context.Challenges = (data.Challenges || []).map((challenge: any) => ParseChallengeWithPayloadType(challenge))
+		context.AvailableFreezes = 	(data.AvailableFreezes || []).map((freeze: number) => freeze)
 	} catch (e: any) {
 		DebugLog(e);
 	}

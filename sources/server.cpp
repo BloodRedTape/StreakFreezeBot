@@ -71,7 +71,6 @@ HttpApiServer::HttpApiServer(const INIReader& config):
 	Super::Post("/api/user/:id/add_freeze", this, &ThisClass::AddFreeze);
 	Super::Post("/api/user/:id/use_freeze", this, &ThisClass::UseFreeze);
 	Super::Post("/api/user/:id/remove_freeze", this, &ThisClass::RemoveFreeze);
-	Super::Get ("/api/user/:id/available_freezes", this, &ThisClass::GetAvailableFreezes);
 	Super::Get ("/api/quote", this, &ThisClass::GetQuote);
 	Super::Post("/api/quote/invalidate", this, &ThisClass::PostInvalidateQuote);
 	Super::Post("/api/quote/push", this, &ThisClass::PostPushQuote);
@@ -171,6 +170,10 @@ void HttpApiServer::GetFullUser(const httplib::Request& req, httplib::Response& 
 	{
 		PROFILE_SCOPE("Streaks", 1);
 		user_json["Streaks"] = m_DB.StreaksWithPayload(id, today);
+	}
+	{
+		PROFILE_SCOPE("AvailableFreezes", 1);
+		user_json["AvailableFreezes"] = user.AvailableFreezes(today);
 	}
 	
 	std::string content = user_json.dump();
@@ -541,25 +544,6 @@ void HttpApiServer::RemoveFreeze(const httplib::Request& req, httplib::Response&
 	defer{ m_DB.SaveUserToFile(id); };
 	
 	user.RemoveFreeze(freeze_id.value());
-}
-
-void HttpApiServer::GetAvailableFreezes(const httplib::Request& req, httplib::Response& resp) {
-	std::int64_t id = GetUser(req).value_or(0);
-
-	if (!id) {
-		resp.status = httplib::StatusCode::BadRequest_400;
-		return;
-	}
-
-	if (!IsAuthForUser(req, id)) {
-		resp.status = httplib::StatusCode::Unauthorized_401;
-		return;
-	}
-
-	auto today = DateUtils::Now();
-	auto &user = m_DB.GetUser(id, today);
-	
-	resp.set_content(nlohmann::json(user.AvailableFreezes(today)).dump(), "application/json");
 }
 
 std::optional<std::int64_t> HttpApiServer::GetUser(const httplib::Request& req)const {

@@ -45,10 +45,6 @@ export const GetFullUser = () => {
 	return fetch(MakeUserRequestLocation() + '/full', { headers: MakeTelegramAuthHeaders()})
 }
 
-export const GetAvailableFreezes = () => {
-	return fetch(MakeUserRequestLocation() + '/available_freezes', { headers: MakeTelegramAuthHeaders()})
-}
-
 export const PostCommit = (streaks: number[]) => {
 	return fetch(MakeUserRequestLocation() + '/commit', {method: 'POST', headers: MakeTelegramAuthHeaders(), body: JSON.stringify(streaks)})
 }
