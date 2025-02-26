@@ -10,23 +10,31 @@ export const CalendarSection = () => {
 	const stats: StatEntryType[] = [
 		{
 			Name: 'Commited',
-			Value: userContext?.CountProtectionsInMonth(anchor, ProtectionType.Commit) ?? 0,
+			Value: userContext?.CountTotalProtections(ProtectionType.Commit) ?? 0,
 			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Commit)
 		},
 		{
 			Name: 'Freezed',
-			Value: userContext?.CountProtectionsInMonth(anchor, ProtectionType.Freeze) ?? 0,
+			Value: userContext?.CountTotalProtections(ProtectionType.Freeze) ?? 0,
 			IconPath: GetCalendarStatImageLinkFor(ProtectionType.Freeze)
 		}
 	]
 	
 	return (
-		<CalendarWithSelector
-			history={userContext?.History ?? []}
-			start={userContext?.StreakStart ?? anchor}
-			today={anchor}
-			onDateChanged={setAnchor}
-			afterSelector={<MonthStats stats={stats} />}
-		/>
+		<div>
+			<div style={{
+				paddingLeft: '5%',
+				paddingRight: '5%'
+			}}>
+				<MonthStats stats={stats} />
+			</div>
+			<CalendarWithSelector
+				history={userContext?.History ?? []}
+				start={userContext?.StreakStart ?? anchor}
+				today={anchor}
+				onDateChanged={setAnchor}
+				afterSelector={<div style={{ paddingTop: '10px' }}/> }
+			/>
+		</div>
 	)
 }

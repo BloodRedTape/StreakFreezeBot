@@ -77,6 +77,18 @@ export class UserContextType{
 		return isProtected;
 	}
 
+	public CountTotalProtections(protection: ProtectionType): number{
+		let count = 0;
+
+		for (const day of this.History) {
+			if (day === protection)
+				count++;
+		}
+
+		return count;
+	}
+
+
 	public CountProtectionsInMonth(anchor: Date, protection: ProtectionType): number{
 		let count = 0;
 
