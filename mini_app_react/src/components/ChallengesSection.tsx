@@ -29,6 +29,16 @@ const NewChallengeModal = () => {
 	return NewChallengeButton;
 }
 
+const DaysToMilliseconds = (days: number): number => {
+    const millisecondsPerSecond = 1000;
+    const secondsPerMinute = 60;
+    const minutesPerHour = 60;
+    const hoursPerDay = 24;
+
+    const millisecondsPerDay = millisecondsPerSecond * secondsPerMinute * minutesPerHour * hoursPerDay;
+    return days * millisecondsPerDay;
+}
+
 export const ChallengesSection = () => {
 	const userContext = useGetUserContext()
 	const navigate = useNavigate()
@@ -90,9 +100,13 @@ export const ChallengesSection = () => {
 		)
 	}
 
-	const Running = userContext?.Challenges?.filter(c => c.IsRunning()) ?? []
-	const Pending = userContext?.Challenges?.filter(c => c.IsPending()) ?? []
-	const Finished = userContext?.Challenges?.filter(c => c.IsFinished()) ?? []
+	const Running = (userContext?.Challenges || []).filter(c => c.IsRunning())
+	const Pending = (userContext?.Challenges || []).filter(c => c.IsPending()).sort((a: ChallengeWithPayloadType, b: ChallengeWithPayloadType) => {
+		return a.Start.getTime() - b.Start.getTime();
+	})
+	const Finished = (userContext?.Challenges || []).filter(c => c.IsFinished()).sort((a: ChallengeWithPayloadType, b: ChallengeWithPayloadType) => {
+		return b.Start.getTime() + DaysToMilliseconds(b.Duration) - (a.Start.getTime() + DaysToMilliseconds(a.Duration));
+	})
 
 	const Placeholder = <ListPlaceholder text={"You don't have a challenge yet, create or join now!"}/>
 
