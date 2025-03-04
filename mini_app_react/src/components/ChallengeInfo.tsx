@@ -1,5 +1,5 @@
 import { Spacer } from "@nextui-org/react"
-import { Text } from "@telegram-apps/telegram-ui"
+import { Button, Text } from "@telegram-apps/telegram-ui"
 import { differenceInDays } from "date-fns"
 import { useNavigate, useParams } from "react-router"
 import { ChallengeWithPayloadType } from "../core/Challenge"
@@ -50,7 +50,12 @@ const ChallengeInfo: React.FC<{ challenge: ChallengeWithPayloadType }> = ({ chal
 		</div>
 	)
 
-	const FinishedStatus = <Text weight="3">{`Challenge took ${challenge.Duration} days`}</Text>
+	const FinishedStatus = (
+		<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+			<Text weight="3">{`Challenge took ${challenge.Duration} days`}</Text>
+			<Button size="s" mode="bezeled" onClick={()=>navigate(`/edit_challenges/challenge/${challenge.Id}/repeat`) }>Repeat</Button>
+		</div>
+	)
 
 	const Status = challenge.IsPending() ? PendingStatus : challenge.IsRunning() ? StartedStatus : FinishedStatus
 

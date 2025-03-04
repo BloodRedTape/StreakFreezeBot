@@ -19,6 +19,7 @@ import { FreezePage } from './components/FreezeSection';
 import { ChallengeInviteModal } from './components/ChallengeInvite';
 import { TryParseChallengeInviteLink } from './helpers/Challenges';
 import WebApp from '@twa-dev/sdk'
+import { ChallengeRepeat } from './components/ChallengeRepeat';
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ export const App = () => {
 
                                 <Route path="/edit_challenges" element={<Page><ChallengesSection/></Page>} />
                                 <Route path="/edit_challenges/challenge/:id" element={<Page><ChallengeInfoPage/></Page>} />
+                                <Route path="/edit_challenges/challenge/:id/repeat" element={<Page><ChallengeRepeat/></Page>} />
                                 <Route path="/edit_challenges/new_challenge" element={<Page><ChallengeInput /></Page>} />
 
                                 <Route path="/edit_freezes" element={<Page><FreezePage/></Page>} />

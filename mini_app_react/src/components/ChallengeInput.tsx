@@ -190,19 +190,30 @@ const ChallengeAvatarPicker: React.FC<ChallengeAvatarSelectionProps> = ({ icon, 
 	)
 }
 
-export const ChallengeInput = () => {
+type InitialChallengeInputData = {
+	name: string,
+	icon: string,
+	iconBackground: string,
+	duration: number,
+	toDo: string[]
+}
+
+type ChallengeInputProps = {
+	initial?: InitialChallengeInputData
+}
+
+export const ChallengeInput: React.FC<ChallengeInputProps> = ({ initial }) => {
 	const setUserContext = useSetUserContext()
 	const userContext = useGetUserContext()
 
 	const today = userContext?.Today ?? new Date()
 
-
-	const [name, setName] = useState<string>("")
-	const [icon, setIcon] = useState<string>("")
-	const [iconBackground, setIconBackground] = useState<string>("")
+	const [name, setName] = useState<string>(initial?.name ?? "")
+	const [icon, setIcon] = useState<string>(initial?.icon ?? "")
+	const [iconBackground, setIconBackground] = useState<string>(initial?.iconBackground ?? "")
 	const [date, setStartDate] = useState<DateValue>(ToDateInputDate(today))
-	const [duration, setDuration] = useState<number>(7)
-	const [toDo, setToDo] = useState<string[]>([])
+	const [duration, setDuration] = useState<number>(initial?.duration ?? 7)
+	const [toDo, setToDo] = useState<string[]>(initial?.toDo ?? [])
 
 	const navigate = useNavigate()
 	
