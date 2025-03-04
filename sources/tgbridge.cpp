@@ -44,14 +44,19 @@ void TgBridge::GetTg(const httplib::Request& req, httplib::Response& resp) {
 	}
 
 	auto today = DateUtils::Now();
+	
+	const auto &chat = GetOrFetchChatInfo(id);
 
-	auto chat = m_Bot.getApi().getChat(id);
+	if (chat.IsUnknown) {
+		resp.status = httplib::StatusCode::NotFound_404;
+		return;
+	}
 
 	if (item == "full") {
 		
 		nlohmann::json json = { 
-			{"Username", chat->username},
-			{"FullName", chat->firstName + ' ' + chat->lastName},
+			{"Username", chat.Username},
+			{"FullName", chat.FirstName + ' ' + chat.LastName},
 		};
 		
 		resp.status = httplib::StatusCode::OK_200;
@@ -61,10 +66,8 @@ void TgBridge::GetTg(const httplib::Request& req, httplib::Response& resp) {
 
     if (item == "photo") {
         try {
-            TgBot::UserProfilePhotos::Ptr photos = m_Bot.getApi().getUserProfilePhotos(id);
-
-            if (photos->totalCount == 0) {
-				auto placeholder = GetOrDownloadPlaceholder(chat->firstName, chat->lastName);
+            if (!chat.PhotoFileId.size()) {
+				auto placeholder = GetOrDownloadPlaceholder(chat.FirstName, chat.LastName);
 			
 				if (placeholder.size()) {
 					resp.status = httplib::StatusCode::OK_200;
@@ -77,9 +80,7 @@ void TgBridge::GetTg(const httplib::Request& req, httplib::Response& resp) {
                 return;
             }
 
-            std::string fileId = photos->photos[0][0]->fileId;
-
-			const auto &content = GetOrDownloadTgFile(fileId);
+			const auto &content = GetOrDownloadTgFile(chat.PhotoFileId);
 
             if (content.size()) {
                 resp.status = httplib::StatusCode::OK_200;
@@ -154,4 +155,35 @@ const std::string& TgBridge::GetOrDownloadPlaceholder(const std::string& first, 
 	
 	static std::string Empty = "";
 	return Empty;
+}
+
+const TgBridge::CachedChatInfo& TgBridge::GetOrFetchChatInfo(std::int64_t user){
+	auto now = std::chrono::steady_clock::now();
+
+	static const std::string Empty;
+
+	if (!m_ChatInfoCache.count(user)
+	|| std::chrono::duration_cast<std::chrono::minutes>(now - m_ChatInfoCache[user].LastUpdate).count() > CachedChatInfo::UpdateIntervalMinutes) {
+		
+		CachedChatInfo info;
+		info.LastUpdate = now;
+		try{
+			auto chat = m_Bot.getApi().getChat(user);
+			info.FirstName = chat->firstName;
+			info.LastName = chat->lastName;
+			info.Username = chat->username;
+			info.IsUnknown = false;
+			info.PhotoFileId = chat->photo ? chat->photo->smallFileId : Empty;
+		} catch (const std::exception& e) {
+			info.FirstName = "<Unknown User>";
+			info.LastName = Empty;
+			info.Username = "<unknown>";
+			info.IsUnknown = true;
+			info.PhotoFileId = Empty;
+		}
+
+		m_ChatInfoCache[user] = info;
+	}
+	
+	return m_ChatInfoCache[user];
 }
