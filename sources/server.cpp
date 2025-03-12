@@ -1038,7 +1038,7 @@ void HttpApiServer::GetChallengeInvitePreview(const httplib::Request& req, httpl
 	}
 
 	resp.status = 200;
-	resp.set_content(nlohmann::json(challenges.at(challenge)).dump(), "application/json");
+	resp.set_content(nlohmann::json(m_DB.ChallengeWithPayload(id, challenge, today)).dump(), "application/json");
 }
 
 static std::vector<std::string> FilterDescrs(std::vector<std::string> descrs) {

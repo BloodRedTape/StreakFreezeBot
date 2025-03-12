@@ -85,6 +85,10 @@ public:
 
 	std::vector<Payload<Challenge, ChallengePayload>> ChallengesWithPayload(std::int64_t user, Date today)const;
 
+	Payload<Challenge, ChallengePayload> ChallengeWithPayload(std::int64_t user, std::int64_t challenge_id, Date today)const;
+
+	ChallengePayload GatherChallengePayload(std::int64_t user, std::int64_t challenge_id, Date today)const;
+
 	std::vector<Challenge> ChallengesWithoutIds(std::int64_t user)const;
 
 	bool IsInChallenge(std::int64_t user, std::int64_t challenge)const;

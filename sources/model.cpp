@@ -524,18 +524,46 @@ std::vector<Payload<Challenge, ChallengePayload>> StreakDatabase::ChallengesWith
 		if(!challenge.Has(user))
 			continue;
 
-		ChallengePayload payload;
-		payload.Id = challenge_id;
-		payload.HasLost = HasLost(user, challenge_id, today);
-		payload.Count = Count(user, challenge_id, today);
-		payload.DayOfChallenge = challenge.DayOfChallenge(today);
-		payload.CanJoin = challenge.CanJoin(today);
-		payload.Status = challenge.GetStatus(today);
+		ChallengePayload payload = GatherChallengePayload(user, challenge_id, today);
 
 		result.emplace_back(challenge, std::move(payload));
 	}
 
 	return result;
+}
+
+Payload<Challenge, ChallengePayload> StreakDatabase::ChallengeWithPayload(std::int64_t user, std::int64_t challenge_id, Date today) const{
+
+	if (!m_Challenges.count(challenge_id)) {
+		LogModel(Error, "Can't find challenge % for user %", challenge_id, user);
+		return {};
+	}
+
+
+	Payload<Challenge, ChallengePayload> result;
+	result.Model = m_Challenges.at(challenge_id);
+	result.PayloadData = GatherChallengePayload(user, challenge_id, today);
+	return result;
+}
+
+ChallengePayload StreakDatabase::GatherChallengePayload(std::int64_t user, std::int64_t challenge_id, Date today) const{
+	if (!m_Challenges.count(challenge_id)) {
+		LogModel(Error, "Can't find challenge % for user %", challenge_id, user);
+
+		return {};
+	}
+
+	const auto &challenge = m_Challenges.at(challenge_id);
+
+	ChallengePayload payload;
+	payload.Id = challenge_id;
+	payload.HasLost = HasLost(user, challenge_id, today);
+	payload.Count = Count(user, challenge_id, today);
+	payload.DayOfChallenge = challenge.DayOfChallenge(today);
+	payload.CanJoin = challenge.CanJoin(today);
+	payload.Status = challenge.GetStatus(today);
+
+	return payload;
 }
 
 std::vector<Challenge> StreakDatabase::ChallengesWithoutIds(std::int64_t user) const{
